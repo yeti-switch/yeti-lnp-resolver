@@ -1,0 +1,10 @@
+project(yeti_lnp_resolver)
+cmake_minimum_required(VERSION 2.8)
+
+include(common.txt)
+
+set(CPACK_PACKAGE_NAME "yeti-lnp-resolver")
+set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}${PACKAGE_FILE_NAME_SUFFIX})
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "lnp resolver for YETI project")
+
+include(CPack)

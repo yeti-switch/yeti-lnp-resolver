@@ -1,0 +1,74 @@
+#set(CPACK_DEBIAN_PACKAGE_DEBUG ON)
+
+set(MAJOR_VERSION @MAJOR_VERSION@)
+set(MINOR_VERSION @MINOR_VERSION@)
+set(PATCH_VERSION @PATCH_VERSION@)
+
+set(DEB_VERSION ${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION})
+
+#get arch
+
+execute_process(COMMAND dpkg --print-architecture OUTPUT_VARIABLE DEB_ARCH)
+string(REGEX REPLACE "(\r?\n)+$" "" DEB_ARCH "${DEB_ARCH}")
+
+#set common variables
+set(CPACK_TOPLEVEL_TAG ${DEB_ARCH})
+
+set(CPACK_PACKAGE_CONTACT "Furmur Michael <michael.f@didww.com>")
+set(CPACK_PACKAGE_VENDOR "yeti")
+set(CPACK_DEBIAN_PACKAGE_SECTION "net")
+set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${DEB_ARCH}")
+
+set(CPACK_PACKAGE_VERSION_MAJOR ${MAJOR_VERSION})
+set(CPACK_PACKAGE_VERSION_MINOR ${MINOR_VERSION})
+set(CPACK_PACKAGE_VERSION_PATCH ${PATCH_VERSION})
+set(PACKAGE_FILE_NAME_SUFFIX _${DEB_VERSION}_${CPACK_DEBIAN_PACKAGE_ARCHITECTURE})
+
+set(INSTALL_HEADERS "@TARGET_HEADERS@")
+set(INSTALL_LIBS "@TARGET_LIBS@")
+set(INSTALL_BINS "@TARGET_BINS@")
+set(INSTALL_CFGS "@TARGET_CFGS@")
+
+#disable shlibdeps for non-binary packages
+if(INSTALL_LIBS OR INSTALL_BINS)
+	#we have at least one binary in package
+	message(STATUS "enable shlibdeps")
+	set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+else(INSTALL_LIBS OR INSTALL_BINS)
+	message(STATUS "disable shlibdeps")
+	set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS OFF)
+endif(INSTALL_LIBS OR INSTALL_BINS)
+
+#fix: extend INSTALL_LIBS for versioned libraries
+if(INSTALL_LIBS)
+	set(TMP_INSALL_LIBS "")
+	FOREACH (LIB ${INSTALL_LIBS})
+		list(APPEND TMP_INSTALL_LIBS ${LIB})
+		list(APPEND TMP_INSTALL_LIBS ${LIB}.${MAJOR_VERSION})
+		list(APPEND TMP_INSTALL_LIBS ${LIB}.${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION})
+	ENDFOREACH(LIB)
+	set(INSTALL_LIBS ${TMP_INSTALL_LIBS})
+endif(INSTALL_LIBS)
+
+#apply package specific control files
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA ${CONTROL_FILES})
+
+#append conffiles control file for package
+FOREACH(cfg_path ${INSTALL_CFGS})
+	get_filename_component(cfg_name ${cfg_path} NAME)
+	file(APPEND conffiles "@CFG_DIR@/${cfg_name}\n")
+ENDFOREACH(cfg_path)
+
+#add conffiles to extra control files if we have configs
+if(INSTALL_CFGS)
+	list(APPEND CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA conffiles)
+	list(REMOVE_DUPLICATES CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA)
+endif(INSTALL_CFGS)
+
+
+#install actions
+
+install(FILES ${INSTALL_HEADERS} DESTINATION "@HDRS_DIR@")
+install(FILES ${INSTALL_LIBS} DESTINATION "@LIB_DIR@")
+install(PROGRAMS ${INSTALL_BINS} DESTINATION "@RUNTIME_DIR@")
+install(FILES ${INSTALL_CFGS} DESTINATION "@CFG_DIR@")
