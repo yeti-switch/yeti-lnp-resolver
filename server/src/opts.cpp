@@ -11,7 +11,7 @@
 void parse_opts(int argc, char *argv[])
 {
 	int c;
-	while ((c = getopt(argc, argv, "hfpu:v"))!=-1){ switch(c){
+	while ((c = getopt(argc, argv, "hfp:u:v"))!=-1){ switch(c){
 		case 'h': usage(); exit(EXIT_SUCCESS); break;
 		case 'f': cfg.daemonize = false; break;
 		case 'p': cfg.pid_file = optarg; break;
