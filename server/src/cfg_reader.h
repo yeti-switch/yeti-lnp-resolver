@@ -5,7 +5,7 @@
 using std::string;
 
 class cfg_reader {
-	cfg_t *c = NULL;
+	cfg_t *c;
   public:
 	cfg_reader();
 	~cfg_reader();
