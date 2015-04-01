@@ -15,6 +15,10 @@ struct global_cfg_t {
 		string get_conn_string();
 	} db;
 
+	struct sip_cfg {
+		string contact, from_uri, from_name;
+	} sip;
+
 	global_cfg_t();
 
 	bool validate_opts();

@@ -5,6 +5,13 @@
 #include <errno.h>
 #include <cstring>
 
+cfg_opt_t sip_opts[] = {
+	CFG_STR("contact_user","yeti-lnp-resolver",CFGF_NONE),
+	CFG_STR("from_uri","sip:yeti-lnp-resolver@localhost",CFGF_NONE),
+	CFG_STR("from_name","yeti-lnp-resolver",CFGF_NONE),
+	CFG_END()
+};
+
 cfg_opt_t db_opts[] = {
 	CFG_STR("host","127.0.0.1",CFGF_NONE),
 	CFG_INT("port",5432,CFGF_NONE),
@@ -19,6 +26,7 @@ cfg_opt_t db_opts[] = {
 
 cfg_opt_t opts[] = {
 	CFG_SEC("db",db_opts,CFGF_NONE),
+	CFG_SEC("sip",sip_opts,CFGF_NONE),
 	CFG_END()
 };
 
@@ -65,20 +73,26 @@ out:
 }
 
 bool cfg_reader::apply(){
-	cfg_t *dbc;
+	cfg_t *s;
 	//database section
-	dbc = cfg_getsec(c,"db");
+	s = cfg_getsec(c,"db");
 
 	global_cfg_t::db_cfg &gdbc = cfg.db;
 
-	gdbc.host = cfg_getstr(dbc,"host");
-	gdbc.port = cfg_getint(dbc,"port");
-	gdbc.user = cfg_getstr(dbc,"username");
-	gdbc.pass = cfg_getstr(dbc,"password");
-	gdbc.database = cfg_getstr(dbc,"database");
-	gdbc.schema = cfg_getstr(dbc,"schema");
-	gdbc.timeout = cfg_getint(dbc,"conn_timeout");
-	gdbc.check_timeout = cfg_getint(dbc,"check_interval");
+	gdbc.host = cfg_getstr(s,"host");
+	gdbc.port = cfg_getint(s,"port");
+	gdbc.user = cfg_getstr(s,"username");
+	gdbc.pass = cfg_getstr(s,"password");
+	gdbc.database = cfg_getstr(s,"database");
+	gdbc.schema = cfg_getstr(s,"schema");
+	gdbc.timeout = cfg_getint(s,"conn_timeout");
+	gdbc.check_timeout = cfg_getint(s,"check_interval");
+
+	//sip section
+	s = cfg_getsec(c,"sip");
+	cfg.sip.contact = cfg_getstr(s,"contact_user");
+	cfg.sip.from_uri = cfg_getstr(s,"from_uri");
+	cfg.sip.from_name = cfg_getstr(s,"from_name");
 
 	return true;
 }
