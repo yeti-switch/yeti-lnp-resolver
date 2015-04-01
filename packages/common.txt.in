@@ -59,6 +59,13 @@ FOREACH(cfg_path ${INSTALL_CFGS})
 	file(APPEND conffiles "@CFG_DIR@/${cfg_name}\n")
 ENDFOREACH(cfg_path)
 
+
+#process init.d scripts
+FOREACH(init_path ${INIT_FILES})
+	get_filename_component(init_name ${init_path} NAME_WE)
+	install(FILES ${init_path} DESTINATION "@INIT_DIR@" RENAME ${init_name})
+ENDFOREACH(init_path)
+
 #process init.d default files
 FOREACH(def_path ${DEF_FILES})
 	get_filename_component(def_name ${def_path} NAME)

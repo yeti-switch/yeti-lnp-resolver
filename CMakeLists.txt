@@ -10,6 +10,7 @@ set(HDRS_DIR /usr/include/yeti)
 set(CFG_DIR /etc/yeti)
 set(DEF_CFG_DIR /etc/default)
 set(SYSLOG_CFG_DIR /etc/rsyslog.d)
+set(INIT_DIR /etc/init.d)
 
 option(VERBOSE_LOGGING "Compile with verbose logging (file,lineno,func)" ON)
 
