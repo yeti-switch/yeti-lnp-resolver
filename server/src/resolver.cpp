@@ -1,23 +1,12 @@
 #include "resolver.h"
 #include <pqxx/pqxx>
 #include "cfg.h"
+
 #include "cache.h"
 
+#include "resolver_driver_sip.h"
+
 #define LOAD_LNP_STMT "SELECT * FROM load_lnp_databases()"
-
-enum drivers_t {
-	RESOLVER_DRIVER_SIP = 1
-};
-
-static const char *driver_id2name(int id)
-{
-	static const char *sip = "SIP";
-	static const char *unknown = "unknown";
-	switch(id){
-		case RESOLVER_DRIVER_SIP: return sip; break;
-		default: return unknown;
-	}
-}
 
 resolver_driver::resolver_driver(string host, unsigned short port, int id):
 	host(host), port(port), id(id)
@@ -34,6 +23,15 @@ _resolver::~_resolver()
 	for(databases_t::const_iterator i = databases.begin();
 		i!=databases.end();++i) delete i->second;
 	databases.clear();
+}
+
+void _resolver::stop()
+{
+	for(databases_t::const_iterator i = databases.begin();
+		i!=databases.end();++i)
+	{
+		i->second->driver->on_stop();
+	}
 }
 
 bool _resolver::configure()
@@ -66,8 +64,15 @@ bool _resolver::configure()
 				continue;
 			}}
 
-			dbg("insert database %d <%s> with driver %s",
-				database_id,name.c_str(),driver_id2name(driver_id));
+			if(port){
+				dbg("add database %d:%s %s <%s:%d>",
+					database_id,name.c_str(),driver_id2name(driver_id),
+					host.c_str(),port);
+			} else {
+				dbg("add database %d:%s %s <%s>",
+					database_id,name.c_str(),driver_id2name(driver_id),
+					host.c_str());
+			}
 
 			databases.insert(std::make_pair<int,database_entry *>(
 						 database_id,
@@ -89,19 +94,18 @@ void _resolver::resolve(int database_id, const string &in, string &out)
 	if(i==databases.end()){
 		throw resolve_exception(1,"uknown database id");
 	}
-	i->second->driver->resolve(in,out);
-	//cache resolved lnr
-	lnp_cache::instance()->sync(new cache_entry(database_id,in,out,string()));
+	string data;
 
+	try {
+		i->second->driver->resolve(in,out,data);
+		dbg("resolved: %s -> %s using database %d",
+			in.c_str(),out.c_str(),database_id);
+	} catch(resolve_exception &e){
+		throw e;
+	} catch(...){
+		dbg("unknown resolve exeption");
+		throw resolve_exception(1,"internal error");
+	}
+	//lnp_cache::instance()->sync(new cache_entry(database_id,in,out,data));
 }
 
-
-resolver_driver_sip::resolver_driver_sip(string host, unsigned short port):
-	resolver_driver(host,port,RESOLVER_DRIVER_SIP)
-{}
-
-void resolver_driver_sip::resolve(const string &in, string &out)
-{
-	//!TODO: implement SIP resolving here
-	out = "1212";
-}
