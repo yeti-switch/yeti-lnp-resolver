@@ -11,7 +11,7 @@
 #include <pqxx/pqxx>
 
 using std::string;
-using std::list;
+//using std::list;
 using std::pair;
 
 struct cache_entry {
@@ -25,7 +25,7 @@ struct cache_entry {
 };
 
 class _cache: public thread {
-	typedef list<cache_entry *> queue_t;
+	typedef std::list<cache_entry *> queue_t;
 	queue_t q;
 	mutex q_m;
 	condition<bool> q_run;

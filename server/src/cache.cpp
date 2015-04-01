@@ -76,8 +76,7 @@ int _cache::connect_db()
 
 void _cache::run()
 {
-	set_name("yeti-lnp-cache");
-
+	set_name("db-cache-wr");
 	if(!connect_db()){
 		throw std::logic_error("can't connect to the database");
 	}
