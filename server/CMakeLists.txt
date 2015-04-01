@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 2.8)
-cmake_policy(SET CMP0026 OLD)
 
+cmake_policy(VERSION 2.8)
 set(BIN_NAME yeti_lnp_resolver)
 
 find_package(Threads REQUIRED)
