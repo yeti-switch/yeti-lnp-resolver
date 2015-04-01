@@ -9,10 +9,24 @@
 #include "cfg.h"
 
 void create_pid_file(){
+	int file_pid;
+
 	if(!cfg.pid) return;
 	if(!cfg.pid_file) return;
 
-	FILE* f = fopen(cfg.pid_file, "w");
+	FILE* f = fopen(cfg.pid_file, "r");
+	if(f) {
+		if(fscanf(f,"%d",&file_pid)==1){
+			if(file_pid!=cfg.pid){
+				cerr("there is another instance with pid: %d or staled pid file '%s'",
+					 file_pid,cfg.pid_file);
+				exit(EXIT_FAILURE);
+			}
+		}
+		fclose(f);
+	}
+
+	f = fopen(cfg.pid_file, "w");
 	if(!f){
 		cerr("can't create pid_file: '%s'",cfg.pid_file);
 		exit(EXIT_FAILURE);
@@ -39,7 +53,7 @@ void delete_pid_file(){
 	}
 
 	if(cfg.pid!=file_pid){
-		err("pid in pid_file doesn't matched with our own. skip unlink",cfg.pid_file);
+		//err("pid in pid_file doesn't matched with our own. skip unlink",cfg.pid_file);
 		return;
 	}
 	unlink(cfg.pid_file);

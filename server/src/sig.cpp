@@ -4,14 +4,16 @@
 
 #include "dispatcher.h"
 #include "cache.h"
+#include "resolver.h"
 
 void sig_handler(int sig){
-	dbg_func("got sig = %d",sig);
+	dbg("got sig = %d",sig);
 	if(sig==SIGHUP){
 		//!TODO: reload configuration here
 		return;
 	}
 	dispatcher::instance()->stop();
+	resolver::instance()->stop();
 	lnp_cache::instance()->stop();
 }
 
