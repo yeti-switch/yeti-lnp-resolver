@@ -5,6 +5,11 @@ set(CONTROL_FILES
 	init
 )
 
+set(DEF_FILES
+	yeti_lnp_resolver
+)
+
+
 include(common.txt)
 
 set(CPACK_PACKAGE_NAME "yeti-lnp-resolver")

@@ -59,6 +59,13 @@ FOREACH(cfg_path ${INSTALL_CFGS})
 	file(APPEND conffiles "@CFG_DIR@/${cfg_name}\n")
 ENDFOREACH(cfg_path)
 
+#process init.d default files
+FOREACH(def_path ${DEF_FILES})
+	get_filename_component(def_name ${def_path} NAME)
+	install(FILES ${def_path} DESTINATION "@DEF_CFG_DIR@")
+	file(APPEND conffiles "@CFG_DIR@/${def_name}\n")
+ENDFOREACH(def_path)
+
 #add conffiles to extra control files if we have configs
 if(INSTALL_CFGS)
 	list(APPEND CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA conffiles)
