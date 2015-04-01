@@ -9,11 +9,20 @@ set(DEF_FILES
 	yeti_lnp_resolver
 )
 
+set(SYSLOG_FILES
+	yeti-lnp-resolver.conf
+)
 
 include(common.txt)
 
 set(CPACK_PACKAGE_NAME "yeti-lnp-resolver")
 set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}${PACKAGE_FILE_NAME_SUFFIX})
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "lnp resolver for YETI project")
+
+set(CPACK_DEBIAN_PACKAGE_DEPENDS_LIST
+	"libre (=0.4.12)"
+	"libpqxx-3.1"
+)
+STRING(REPLACE ";" ", " CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS_LIST}")
 
 include(CPack)

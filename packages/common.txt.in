@@ -66,6 +66,13 @@ FOREACH(def_path ${DEF_FILES})
 	file(APPEND conffiles "@CFG_DIR@/${def_name}\n")
 ENDFOREACH(def_path)
 
+#process syslog files
+FOREACH(cfg_path ${SYSLOG_FILES})
+	get_filename_component(cfg_name ${cfg_path} NAME)
+	install(FILES ${cfg_path} DESTINATION "@SYSLOG_CFG_DIR@")
+	file(APPEND conffiles "@SYSLOG_CFG_DIR@/${cfg_name}\n")
+ENDFOREACH(cfg_path)
+
 #add conffiles to extra control files if we have configs
 if(INSTALL_CFGS)
 	list(APPEND CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA conffiles)
