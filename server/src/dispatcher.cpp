@@ -15,14 +15,14 @@ void _dispatcher::loop()
 	if(s < 0){
 		throw std::string("nn_socket() = %d",s);
 	}
-	int ret = nn_bind(s, cfg.bind_url);
+	int ret = nn_bind(s, cfg.bind_url.c_str());
 	if(ret < 0){
-		err("can't bind to url '%s': %d(%s)",cfg.bind_url,
+		err("can't bind to url '%s': %d(%s)",cfg.bind_url.c_str(),
 			 errno,nn_strerror(errno));
 		throw std::string("can't bind to url");
 	}
 
-	info("listen on %s",cfg.bind_url);
+	info("listen on %s",cfg.bind_url.c_str());
 	while(!_stop){
 		char *msg = NULL;
 		int l = nn_recv(s, &msg, NN_MSG, 0);

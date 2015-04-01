@@ -13,11 +13,9 @@ void usage(){
 	"usage:"
 		opt(h,"this help")
 		opt(f,"run foreground (don't daemonize)")
-		opt_arg_ext(p,"pid_file","use another pid file","default: "DEFAULT_PID_FILE)
+		opt_arg_ext(p,"pid_file","use custom pid file","default: "DEFAULT_PID_FILE)
 		opt(v,"verbosity level. (type once for INFO level. repeat twice for DEBUG)")
-	"\nmandatory options:"
-		opt_arg_ext(u,"bind_url","url to open server socket","e.g: tcp://127.0.0.1:4444")
-	"\n"
+	"\n\n"
 	);
 #undef opt_arg_ext
 #undef opt_arg

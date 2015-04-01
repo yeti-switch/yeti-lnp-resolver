@@ -7,7 +7,7 @@ struct global_cfg_t {
 	bool daemonize;
 	int pid;
 	char *pid_file;
-	char *bind_url;
+	string bind_url;
 
 	struct db_cfg {
 		string host,user,pass,database,schema;

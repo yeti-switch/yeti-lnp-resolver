@@ -10,18 +10,12 @@ struct global_cfg_t cfg;
 global_cfg_t::global_cfg_t():
 	daemonize(true),
 	pid(0),
-	pid_file(0),
-	bind_url(0)
+	pid_file(0)
 {}
 
 bool global_cfg_t::validate_opts()
 {
-	bool valid = true;
-	if(!bind_url) {
-		cerr("missed bind_url");
-		valid = false;
-	}
-	return valid;
+	return true;
 }
 
 string global_cfg_t::db_cfg::get_conn_string() {

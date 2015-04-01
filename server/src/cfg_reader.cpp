@@ -5,6 +5,11 @@
 #include <errno.h>
 #include <cstring>
 
+cfg_opt_t daemon_opts[] = {
+	CFG_STR("listen_uri","tcp://127.0.0.1:4444",CFGF_NONE),
+	CFG_END()
+};
+
 cfg_opt_t sip_opts[] = {
 	CFG_STR("contact_user","yeti-lnp-resolver",CFGF_NONE),
 	CFG_STR("from_uri","sip:yeti-lnp-resolver@localhost",CFGF_NONE),
@@ -25,6 +30,7 @@ cfg_opt_t db_opts[] = {
 };
 
 cfg_opt_t opts[] = {
+	CFG_SEC("daemon",daemon_opts,CFGF_NONE),
 	CFG_SEC("db",db_opts,CFGF_NONE),
 	CFG_SEC("sip",sip_opts,CFGF_NONE),
 	CFG_END()
@@ -93,6 +99,10 @@ bool cfg_reader::apply(){
 	cfg.sip.contact = cfg_getstr(s,"contact_user");
 	cfg.sip.from_uri = cfg_getstr(s,"from_uri");
 	cfg.sip.from_name = cfg_getstr(s,"from_name");
+
+	//daemon section
+	s = cfg_getsec(c,"daemon");
+	cfg.bind_url = cfg_getstr(s,"listen_uri");
 
 	return true;
 }

@@ -19,7 +19,6 @@ PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
 RUN="no"
-LISTEN_URI="tcp://127.0.0.1:4444"
 
 # Exit if the package is not installed
 [ -x "$DAEMON" ] || exit 0
@@ -27,7 +26,7 @@ LISTEN_URI="tcp://127.0.0.1:4444"
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
-DAEMON_ARGS="-vv -p $PIDFILE -u $LISTEN_URI"
+DAEMON_ARGS="-vv -p $PIDFILE"
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
