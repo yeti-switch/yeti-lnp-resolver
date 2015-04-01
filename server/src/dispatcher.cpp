@@ -39,11 +39,6 @@ void _dispatcher::loop()
 
 int _dispatcher::process_peer(char *msg, int len)
 {
-	//dbg_func("msg[%p] len = %d",msg,len);
-	/*for(int i = 0; i<len; i++){
-		dbg("0x%02x: 0x%02x",i,msg[i]&0xff);
-	}*/
-
 	char *reply = NULL;
 	int reply_len = 0;
 
@@ -65,20 +60,25 @@ int _dispatcher::process_peer(char *msg, int len)
 	return 0;
 }
 
+void _dispatcher::str2reply(char *&msg,int &len,int code,const std::string &s)
+{
+	int l = s.size();
+	len = l+PDU_HDR_SIZE;
+	msg = new char[len];
+	msg[0]  = code;
+	msg[1] = l;
+	memcpy(msg+PDU_HDR_SIZE,s.c_str(),l);
+}
+
 void _dispatcher::create_error_reply(char *&msg, int &len,
 									 int code, std::string description)
 {
-	int l = description.size();
-	len = l+PDU_HDR_SIZE;
-	msg = new char[len];
-	msg[0] = code;
-	msg[1] = l;
-	memcpy(msg+PDU_HDR_SIZE,description.c_str(),l);
+	str2reply(msg,len,code,description);
 }
 
 void _dispatcher::create_reply(char *&msg, int &len, const char *req, int req_len)
 {
-	std::string number;
+	std::string lnr;
 
 	if(req_len < PDU_HDR_SIZE){
 		throw resolve_exception(1,"request too small");
@@ -91,19 +91,12 @@ void _dispatcher::create_reply(char *&msg, int &len, const char *req, int req_le
 	}
 	int database_id = req[0];
 
-	std::string lnp(req+2,req_len);
+	std::string lnp(req+2,data_len);
 
-	dbg("process request: database: %d, number: %s",
+	dbg("process request: database: %d, lnp: %s",
 		database_id,lnp.c_str());
 
-	resolver::instance()->resolve(database_id,lnp,number);
+	resolver::instance()->resolve(database_id,lnp,lnr);
 
-	dbg("number = %s",number.c_str());
-
-	int l = number.size();
-	len = l+PDU_HDR_SIZE;
-	msg = new char[len];
-	msg[0]  = 0; //successfull code
-	msg[1] = l;
-	memcpy(msg+PDU_HDR_SIZE,number.c_str(),l);
+	str2reply(msg,len,0,lnr);
 }

@@ -19,6 +19,7 @@ class _dispatcher {
 	int s;
 
 	int process_peer(char *msg, int len);
+	void str2reply(char *&msg,int &len,int code,const std::string &s);
 	void create_reply(char *&msg, int &len, const char *req, int req_len);
 	void create_error_reply(char *&msg, int &len,int code, std::string description);
 
