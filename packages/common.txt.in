@@ -63,7 +63,7 @@ ENDFOREACH(cfg_path)
 #process init.d scripts
 FOREACH(init_path ${INIT_FILES})
 	get_filename_component(init_name ${init_path} NAME_WE)
-	install(FILES ${init_path} DESTINATION "@INIT_DIR@" RENAME ${init_name})
+	install(PROGRAMS ${init_path} DESTINATION "@INIT_DIR@" RENAME ${init_name})
 ENDFOREACH(init_path)
 
 #process init.d default files
