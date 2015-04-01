@@ -3,6 +3,9 @@
 #include <syslog.h>
 #include <cstdio>
 
+#include <unistd.h>
+#include <sys/syscall.h>
+
 enum log_levels {
 	L_ERR = 1,
 	L_INFO,
@@ -13,7 +16,7 @@ extern int log_level;
 #define cerr(fmt,args...) fprintf(stderr,"error: "fmt"\n",##args);
 
 #ifdef VERBOSE_LOGGING
-#define _LOG(level,fmt,args...) syslog(level,"%s:%d:%s "fmt,__FILENAME__,__LINE__,__PRETTY_FUNCTION__,##args);
+#define _LOG(level,fmt,args...) syslog(level,"[%u] %s:%d:%s "fmt,syscall(__NR_gettid), __FILENAME__,__LINE__,__PRETTY_FUNCTION__,##args);
 #else
 #define _LOG(level,fmt,args...) syslog(level,fmt,##args);
 #endif
@@ -22,12 +25,8 @@ extern int log_level;
 #define info(fmt,args...) if(log_level > L_ERR) _LOG(LOG_INFO,"info: "fmt,##args);
 #define dbg(fmt,args...) if(log_level > L_INFO) _LOG(LOG_DEBUG,"dbg: "fmt,##args);
 
-#define dbg_func(fmt,args...) dbg("%s "fmt,__PRETTY_FUNCTION__,##args);
-
 void open_log();
 void close_log();
 
 #include <execinfo.h>
-#include "log.h"
-
 void log_stacktrace();
