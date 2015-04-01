@@ -18,7 +18,7 @@ enum drivers_t {
 };
 static const char *driver_id2name(int id)
 {
-	static const char *sip = "SIP";
+	static const char *sip = "SIP/301-302";
 	static const char *unknown = "unknown";
 	switch(id){
 		case RESOLVER_DRIVER_SIP: return sip; break;
@@ -39,4 +39,5 @@ class resolver_driver {
 
 	const string& get_host() { return host; }
 	unsigned short get_port() { return port; }
+	int get_id() { return id; }
 };

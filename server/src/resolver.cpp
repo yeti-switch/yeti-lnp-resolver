@@ -51,33 +51,49 @@ bool _resolver::configure()
 			int database_id = row["o_id"].as<int>(),
 				driver_id = row["o_driver_id"].as<int>(),
 				port = row["o_port"].as<int>(0);
-			string name = row["o_driver_id"].c_str(),
+			string name = row["o_name"].c_str(),
 					host = row["o_host"].c_str();
 
 			resolver_driver *d = NULL;
 			switch(driver_id){
 			case RESOLVER_DRIVER_SIP:
 				d = new resolver_driver_sip(host,port);
+				if(!d) {
+					err("can't load resolve driver");
+					throw std::string("can't load resolve driver");
+				}
 				break;
 			default: {
 				err("unsupported driver_id: %d",driver_id);
 				continue;
 			}}
 
-			if(port){
-				dbg("add database %d:%s %s <%s:%d>",
-					database_id,name.c_str(),driver_id2name(driver_id),
-					host.c_str(),port);
-			} else {
-				dbg("add database %d:%s %s <%s>",
-					database_id,name.c_str(),driver_id2name(driver_id),
-					host.c_str());
-			}
+			dbg("add database %d:<%s>",database_id,name.c_str());
 
 			databases.insert(std::make_pair<int,database_entry *>(
 						 database_id,
 						 new database_entry(name,d)
 						 ));
+		}
+		info("loaded %ld databases:",databases.size());
+		for(databases_t::const_iterator it = databases.begin();
+			it != databases.end();++it)
+		{
+			const database_entry &e = *it->second;
+			if(!e.driver) {
+				info("id: %d, name %s, no driver",
+					 it->first,e.name.c_str());
+				continue;
+			}
+			if(e.driver->get_port()){
+				info("id: %d, name: <%s>, driver: %s, addr: <%s:%d>",
+					 it->first,e.name.c_str(),driver_id2name(e.driver->get_id()),
+					e.driver->get_host().c_str(),e.driver->get_port());
+			} else {
+				info("id: %d, name: <%s>, driver: %s, addr: <%s>",
+					 it->first,e.name.c_str(),driver_id2name(e.driver->get_id()),
+					e.driver->get_host().c_str());
+			}
 		}
 		ret = true;
 	} catch(const pqxx::pqxx_exception &e){
