@@ -176,7 +176,7 @@ bool _cache::update_cache(cache_entry *e)
 		invoc(e->database_id);
 		invoc(e->dst);
 		invoc(e->lrn);
-		invoc(); //data
+		invoc(e->data);
 
 		invoc.exec();
 
