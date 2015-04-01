@@ -63,7 +63,7 @@ ENDFOREACH(cfg_path)
 FOREACH(def_path ${DEF_FILES})
 	get_filename_component(def_name ${def_path} NAME)
 	install(FILES ${def_path} DESTINATION "@DEF_CFG_DIR@")
-	file(APPEND conffiles "@CFG_DIR@/${def_name}\n")
+	file(APPEND conffiles "@DEF_CFG_DIR@/${def_name}\n")
 ENDFOREACH(def_path)
 
 #process syslog files
