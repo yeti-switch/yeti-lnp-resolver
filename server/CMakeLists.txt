@@ -5,18 +5,20 @@ set(BIN_NAME yeti_lnp_resolver)
 
 find_package(Threads REQUIRED)
 find_package(PQXX REQUIRED)
+find_package(LIBRE REQUIRED)
 find_package(NanoMsg REQUIRED)
 find_package(Confuse REQUIRED)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-write-strings")
 
-include_directories(${PQXX_INCLUDE_DIRECTORIES})
+include_directories(${PQXX_INCLUDE_DIRECTORIES} ${LIBRE_INCLUDE_DIRECTORIES})
 
 file(GLOB_RECURSE SRCS src/*.cpp)
 add_executable (${BIN_NAME} ${SRCS})
 target_link_libraries(${BIN_NAME}
 	${CMAKE_THREAD_LIBS_INIT}
 	${PQXX_LIBRARIES}
+	${LIBRE_LIBRARIES}
 	${NanoMsg_LIBRARIES}
 	${Confuse_LIBRARIES})
 
