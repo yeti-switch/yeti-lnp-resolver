@@ -20,9 +20,9 @@ void * thread::_start(void * _t)
 	thread* _this = (thread*)_t;
 	_this->_pid = (unsigned long) _this->_td;
 	_this->thread_pid = syscall(SYS_gettid);
-	dbg("starting %lu",(unsigned long)_this->_pid);
+	dbg("starting %lu",(unsigned long)_this->thread_pid);
 	_this->run();
-	dbg("ending %lu",(unsigned long)_this->_pid);
+	dbg("ended %lu",(unsigned long)_this->thread_pid);
 	_this->_stopped.set(true);
 	return NULL;
 }
@@ -64,8 +64,7 @@ void thread::stop()
 	}
 
 	// gives the thread a chance to clean up
-	dbg("thread %lu (%lu) calling on_stop",
-		(unsigned long int) _pid, (unsigned long int) _td);
+	dbg("stop thread %lu", (unsigned long int)thread_pid);
 
 	try { on_stop(); } catch(...) {}
 
@@ -80,7 +79,7 @@ void thread::stop()
 		}
 	}
 
-	dbg("thread %lu (%lu) detached", (unsigned long int) _pid, (unsigned long int) _td);
+	dbg("thread %lu detached", (unsigned long int)thread_pid);
 
 	_m_td.unlock();
 }
@@ -96,6 +95,6 @@ void thread::set_name(const char *thread_name)
 	_m_td.lock();
 	if(thread_name != NULL &&
 		(pthread_setname_np(_td, thread_name)!=0))
-		err("can't set name '%s' for thread %ld[%p] ",thread_name,_td,this);
+		err("can't set name '%s' for thread %lu[%p] ",thread_name,thread_pid,this);
 	_m_td.unlock();
 }
