@@ -106,6 +106,6 @@ void _resolver::resolve(int database_id, const string &in, string &out)
 		dbg("unknown resolve exeption");
 		throw resolve_exception(1,"internal error");
 	}
-	//lnp_cache::instance()->sync(new cache_entry(database_id,in,out,data));
+	lnp_cache::instance()->sync(new cache_entry(database_id,in,out,data));
 }
 
