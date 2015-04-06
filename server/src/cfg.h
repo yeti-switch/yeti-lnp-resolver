@@ -3,11 +3,13 @@
 #include <string>
 using std::string;
 
+#include <list>
+
 struct global_cfg_t {
 	bool daemonize;
 	int pid;
 	char *pid_file;
-	string bind_url;
+	std::list<string> bind_urls;
 
 	struct db_cfg {
 		string host,user,pass,database,schema;

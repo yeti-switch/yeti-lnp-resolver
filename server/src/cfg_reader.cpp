@@ -6,7 +6,7 @@
 #include <cstring>
 
 cfg_opt_t daemon_opts[] = {
-	CFG_STR("listen_uri","tcp://127.0.0.1:4444",CFGF_NONE),
+	CFG_STR_LIST("listen","{tcp://127.0.0.1:4444}",CFGF_NONE),
 	CFG_END()
 };
 
@@ -102,7 +102,7 @@ bool cfg_reader::apply(){
 
 	//daemon section
 	s = cfg_getsec(c,"daemon");
-	cfg.bind_url = cfg_getstr(s,"listen_uri");
-
+	for(int i = 0; i < cfg_size(s, "listen"); i++)
+		cfg.bind_urls.push_back(cfg_getnstr(s, "listen", i));
 	return true;
 }

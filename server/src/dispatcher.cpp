@@ -15,14 +15,31 @@ void _dispatcher::loop()
 	if(s < 0){
 		throw std::string("nn_socket() = %d",s);
 	}
-	int ret = nn_bind(s, cfg.bind_url.c_str());
-	if(ret < 0){
-		err("can't bind to url '%s': %d(%s)",cfg.bind_url.c_str(),
-			 errno,nn_strerror(errno));
-		throw std::string("can't bind to url");
+
+	bool binded = false;
+	if(cfg.bind_urls.empty()){
+		throw std::string("no listen endpoints specified. check your config");
 	}
 
-	info("listen on %s",cfg.bind_url.c_str());
+	for(std::list<string>::const_iterator i = cfg.bind_urls.begin();
+		i != cfg.bind_urls.end(); ++i)
+	{
+		const char *url = i->c_str();
+		int ret = nn_bind(s, url);
+		if(ret < 0){
+			err("can't bind to url '%s': %d (%s)",url,
+				 errno,nn_strerror(errno));
+			continue;
+		}
+		binded = true;
+		info("listen on %s",url);
+	}
+
+	if(!binded){
+		err("there are no listened interfaces after bind. check log and your config");
+		throw std::string("can't bind to any url");
+	}
+
 	while(!_stop){
 		char *msg = NULL;
 		int l = nn_recv(s, &msg, NN_MSG, 0);
