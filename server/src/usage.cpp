@@ -14,7 +14,6 @@ void usage(){
 		opt(h,"this help")
 		opt(f,"run foreground (don't daemonize)")
 		opt_arg_ext(p,"pid_file","use custom pid file","default: "DEFAULT_PID_FILE)
-		opt(v,"verbosity level. (type once for INFO level. repeat twice for DEBUG)")
 	"\n\n"
 	);
 #undef opt_arg_ext

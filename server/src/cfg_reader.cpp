@@ -7,6 +7,7 @@
 
 cfg_opt_t daemon_opts[] = {
 	CFG_STR_LIST("listen","{tcp://127.0.0.1:4444}",CFGF_NONE),
+	CFG_INT("log_level",L_ERR,CFGF_NONE),
 	CFG_END()
 };
 
@@ -104,5 +105,10 @@ bool cfg_reader::apply(){
 	s = cfg_getsec(c,"daemon");
 	for(int i = 0; i < cfg_size(s, "listen"); i++)
 		cfg.bind_urls.push_back(cfg_getnstr(s, "listen", i));
+
+	log_level = cfg_getint(s,"log_level");
+	if(log_level < L_ERR) log_level = L_ERR;
+	if(log_level > L_DBG) log_level = L_DBG;
+
 	return true;
 }

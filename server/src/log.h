@@ -11,7 +11,7 @@ enum log_levels {
 	L_INFO,
 	L_DBG,
 };
-extern int log_level;
+extern volatile int log_level;
 
 #define cerr(fmt,args...) fprintf(stderr,"error: "fmt"\n",##args);
 

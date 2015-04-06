@@ -40,7 +40,6 @@ int main(int argc,char *argv[])
 	freopen("/dev/null", "r", stdin);
 
 	open_log();
-	info("start");
 
 	set_sighandlers();
 
@@ -49,6 +48,7 @@ int main(int argc,char *argv[])
 		if(!c.load(CFG_DIR"/lnp_resolver.cfg")){
 			throw std::string("can't load config");
 		}
+		info("start");
 		if(!resolver::instance()->configure()){
 			throw std::string("can't init resolvers");
 		}

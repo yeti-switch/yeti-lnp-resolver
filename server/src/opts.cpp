@@ -11,11 +11,10 @@
 void parse_opts(int argc, char *argv[])
 {
 	int c;
-	while ((c = getopt(argc, argv, "hfp:v"))!=-1){ switch(c){
+	while ((c = getopt(argc, argv, "hfp:"))!=-1){ switch(c){
 		case 'h': usage(); exit(EXIT_SUCCESS); break;
 		case 'f': cfg.daemonize = false; break;
 		case 'p': cfg.pid_file = optarg; break;
-		case 'v': log_level++; break;
 		case '?':
 			switch(optopt){
 			case NULL:
