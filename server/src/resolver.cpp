@@ -70,10 +70,11 @@ bool _resolver::configure()
 
 			dbg("add database %d:<%s>",database_id,name.c_str());
 
-			databases.insert(std::make_pair<int,database_entry *>(
+			databases.emplace(database_id,new database_entry(name,d));
+			/*databases.insert(std::make_pair<int,database_entry *>(
 						 database_id,
 						 new database_entry(name,d)
-						 ));
+						 ));*/
 		}
 		info("loaded %ld databases:",databases.size());
 		for(databases_t::const_iterator it = databases.begin();
