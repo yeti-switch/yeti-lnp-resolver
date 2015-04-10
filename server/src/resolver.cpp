@@ -80,7 +80,7 @@ bool _resolver::configure()
 			it != databases.end();++it)
 		{
 			const database_entry &e = *it->second;
-			if(!e.driver) {
+			if(!e.driver.get()) {
 				info("id: %d, name %s, no driver",
 					 it->first,e.name.c_str());
 				continue;
