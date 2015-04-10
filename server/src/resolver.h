@@ -16,10 +16,10 @@ class _resolver {
 	struct database_entry {
 		string name;
 		auto_ptr<resolver_driver> driver;
-		database_entry(string name, resolver_driver *d):
-			name(name), driver(d) { }
+		database_entry(string name, resolver_driver *driver):
+			name(name), driver(driver) { }
 	};
-	typedef std::map<int,database_entry *> databases_t;
+	typedef std::map<int,std::unique_ptr<database_entry>> databases_t;
 	databases_t databases;
 
   public:

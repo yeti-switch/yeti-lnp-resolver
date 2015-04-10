@@ -19,19 +19,12 @@ _resolver::_resolver()
 {}
 
 _resolver::~_resolver()
-{
-	for(databases_t::const_iterator i = databases.begin();
-		i!=databases.end();++i) delete i->second;
-	databases.clear();
-}
+{}
 
 void _resolver::stop()
 {
-	for(databases_t::const_iterator i = databases.begin();
-		i!=databases.end();++i)
-	{
-		i->second->driver->on_stop();
-	}
+	for(auto &i: databases)
+		i.second->driver->on_stop();
 }
 
 bool _resolver::configure()
@@ -70,29 +63,27 @@ bool _resolver::configure()
 
 			dbg("add database %d:<%s>",database_id,name.c_str());
 
-			databases.emplace(database_id,new database_entry(name,d));
-			/*databases.insert(std::make_pair<int,database_entry *>(
-						 database_id,
-						 new database_entry(name,d)
-						 ));*/
+			databases.emplace(database_id,
+							  std::unique_ptr<database_entry>(
+								  new database_entry(name,d))
+							  );
 		}
 		info("loaded %ld databases:",databases.size());
-		for(databases_t::const_iterator it = databases.begin();
-			it != databases.end();++it)
-		{
-			const database_entry &e = *it->second;
+
+		for(const auto &it: databases) {
+			const database_entry &e = *it.second;
 			if(!e.driver.get()) {
 				info("id: %d, name %s, no driver",
-					 it->first,e.name.c_str());
+					 it.first,e.name.c_str());
 				continue;
 			}
 			if(e.driver->get_port()){
 				info("id: %d, name: <%s>, driver: %s, addr: <%s:%d>",
-					 it->first,e.name.c_str(),driver_id2name(e.driver->get_id()),
+					 it.first,e.name.c_str(),driver_id2name(e.driver->get_id()),
 					e.driver->get_host().c_str(),e.driver->get_port());
 			} else {
 				info("id: %d, name: <%s>, driver: %s, addr: <%s>",
-					 it->first,e.name.c_str(),driver_id2name(e.driver->get_id()),
+					 it.first,e.name.c_str(),driver_id2name(e.driver->get_id()),
 					e.driver->get_host().c_str());
 			}
 		}
@@ -107,12 +98,12 @@ bool _resolver::configure()
 
 void _resolver::resolve(int database_id, const string &in, string &out)
 {
-	databases_t::iterator i = databases.find(database_id);
+	auto i = databases.find(database_id);
 	if(i==databases.end()){
 		throw resolve_exception(1,"uknown database id");
 	}
-	string data;
 
+	string data;
 	try {
 		i->second->driver->resolve(in,out,data);
 		dbg("resolved: %s -> %s using database %d",

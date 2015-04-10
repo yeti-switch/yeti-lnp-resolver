@@ -21,10 +21,8 @@ void _dispatcher::loop()
 		throw std::string("no listen endpoints specified. check your config");
 	}
 
-	for(std::list<string>::const_iterator i = cfg.bind_urls.begin();
-		i != cfg.bind_urls.end(); ++i)
-	{
-		const char *url = i->c_str();
+	for(const auto &i : cfg.bind_urls) {
+		const char *url = i.c_str();
 		int ret = nn_bind(s, url);
 		if(ret < 0){
 			err("can't bind to url '%s': %d (%s)",url,

@@ -183,7 +183,7 @@ bool _cache::update_cache(cache_entry *e)
 		return true;
 	} catch(const pqxx::pqxx_exception &exc){
 		dbg("cache update SQL exception: %s",exc.base().what());
-		dbg("query: "CACHE_LNP_SQL_FMT,
+		dbg("query: " CACHE_LNP_SQL_FMT,
 			e->database_id,e->dst.c_str(),e->lrn.c_str());
 		c->disconnect();
 	}
