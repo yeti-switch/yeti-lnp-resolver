@@ -5,6 +5,7 @@
 #include "resolver_driver_http_thinq.h"
 
 #include <pqxx/pqxx>
+#include <sys/time.h>
 
 #define LOAD_LNP_STMT "SELECT * FROM load_lnp_databases()"
 
@@ -122,10 +123,19 @@ void _resolver::resolve(int database_id, const string &in, string &out)
 	}
 
 	string data;
+	timeval req_start,req_end, req_diff;
 	try {
+		gettimeofday(&req_start,NULL);
+
 		i->second->driver->resolve(in,out,data);
-		dbg("resolved: %s -> %s using database %d",
-			in.c_str(),out.c_str(),database_id);
+
+		gettimeofday(&req_end,NULL);
+		timersub(&req_end,&req_start,&req_diff);
+
+		dbg("resolved: %s -> %s using database %d, "
+			"took: %ld.%06ld",
+			in.c_str(),out.c_str(),database_id,
+			req_diff.tv_sec,req_diff.tv_usec);
 	} catch(resolve_exception &e){
 		throw e;
 	} catch(...){
