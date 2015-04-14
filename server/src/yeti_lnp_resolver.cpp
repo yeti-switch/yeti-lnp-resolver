@@ -45,7 +45,7 @@ int main(int argc,char *argv[])
 
 	try {
 		cfg_reader c;
-		if(!c.load(CFG_DIR"/lnp_resolver.cfg")){
+		if(!c.load(CFG_DIR "/lnp_resolver.cfg")){
 			throw std::string("can't load config");
 		}
 		info("start");

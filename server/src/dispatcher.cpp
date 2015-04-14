@@ -43,6 +43,7 @@ void _dispatcher::loop()
 		int l = nn_recv(s, &msg, NN_MSG, 0);
 		if(l < 0){
 			if(errno==EINTR) continue;
+			if(errno==EBADF) break;
 			dbg("nn_recv() = %d, errno = %d(%s)",l,errno,nn_strerror(errno));
 			//!TODO: handle timeout, etc
 			continue;

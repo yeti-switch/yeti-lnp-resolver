@@ -35,12 +35,13 @@ struct sip_resolver_ctx {
 
 class resolver_driver_sip: public resolver_driver, public thread {
 	void process_reply(sip_resolver_ctx &ctx,string &out, string &data);
-
+	bool lib_owner;
   public:
-	resolver_driver_sip(string host, unsigned short port);
+	resolver_driver_sip(const resolver_driver::driver_cfg &dcfg);
 	~resolver_driver_sip();
 	void on_stop();
 	void on_response_ready(struct sip_resolver_ctx &ctx, const struct sip_msg *msg);
+	void launch();
 	void run();
 	void resolve(const string &in, string &out, string &data);
 };

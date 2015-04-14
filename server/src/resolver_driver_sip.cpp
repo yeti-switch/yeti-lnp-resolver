@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include "cfg.h"
+#include <thread>
 
 #define RESPONSE_WAIT_TIMEOUT 4000
 
@@ -57,19 +58,20 @@ static void close_handler(int err, const struct sip_msg *msg, void *arg)
 		ctx->self->on_response_ready(*ctx,msg);
 }
 
-resolver_driver_sip::resolver_driver_sip(string host, unsigned short port):
-	resolver_driver(host,port,RESOLVER_DRIVER_SIP)
+resolver_driver_sip::resolver_driver_sip(const resolver_driver::driver_cfg &dcfg):
+	resolver_driver(dcfg), lib_owner(false)
 {
 	int ret;
 	struct sa laddr;
 
-	libre_mutex.lock();
+	guard(libre_mutex);
+
 	if(libre_refs>0){
 		libre_refs++;
 		dbg("libre have %d refs",libre_refs);
-		libre_mutex.unlock();
 		return;
 	}
+	lib_owner = true;
 
 	//library
 	if(ret=libre_init()){
@@ -108,31 +110,34 @@ resolver_driver_sip::resolver_driver_sip(string host, unsigned short port):
 		throw string("can't create transport socket");
 	}
 
-	start(); //start library main loop
-
 	libre_refs++;
 	dbg("libre have %d refs",libre_refs);
-	libre_mutex.unlock();
 }
 
-void resolver_driver_sip::on_stop(){
-	libre_mutex.lock();
-	if(libre_refs--<=0){
-		re_cancel();
-		sip_close(sip_stack, false);
-	}
-	dbg("libre have %d refs",libre_refs);
-	libre_mutex.unlock();
+void resolver_driver_sip::launch(){
+	guard(libre_mutex);
+	if(lib_owner) start(); //start library main loop
 }
+
+void resolver_driver_sip::on_stop(){}
 
 resolver_driver_sip::~resolver_driver_sip(){
-	mem_deref(sip_socket);
-	mem_deref(sip_stack);
-	mem_deref(dns_client);
-	libre_close();
+	guard(libre_mutex);
+	libre_refs--;
+	if(libre_refs<=0){
+		dbg("stopping libre");
+		re_cancel();
+		sip_close(sip_stack, false);
 
-	tmr_debug();
-	mem_debug();
+		mem_deref(sip_socket);
+		mem_deref(sip_stack);
+		mem_deref(dns_client);
+		libre_close();
+
+		tmr_debug();
+		mem_debug();
+	}
+	dbg("libre have %d refs",libre_refs);
 }
 
 void resolver_driver_sip::resolve(const string &in, string &out, string &data)
@@ -146,10 +151,9 @@ void resolver_driver_sip::resolve(const string &in, string &out, string &data)
 	data.clear();
 
 	std::ostringstream to_uri;
-	unsigned int port = get_port();
 
-	to_uri << "sip:" << in << "@" << get_host();
-	if(port) to_uri << ":" << std::dec << port;
+	to_uri << "sip:" << in << "@" << _cfg.host;
+	if(_cfg.port) to_uri << ":" << std::dec << _cfg.port;
 
 	ret = sipsess_connect(&sess, sip_socket,		//sessp, sock
 			to_uri.str().c_str(),					//to_uri

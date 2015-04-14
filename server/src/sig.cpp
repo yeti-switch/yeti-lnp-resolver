@@ -9,12 +9,16 @@
 void sig_handler(int sig){
 	dbg("got sig = %d",sig);
 	if(sig==SIGHUP){
-		//!TODO: reload configuration here
+		resolver::instance()->configure();
 		return;
 	}
 	dispatcher::instance()->stop();
 	resolver::instance()->stop();
 	lnp_cache::instance()->stop();
+
+	dispatcher::dispose();
+	resolver::dispose();
+	lnp_cache::dispose();
 }
 
 void set_sighandlers() {

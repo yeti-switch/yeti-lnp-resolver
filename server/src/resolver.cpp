@@ -1,19 +1,12 @@
 #include "resolver.h"
-#include <pqxx/pqxx>
 #include "cfg.h"
-
 #include "cache.h"
-
 #include "resolver_driver_sip.h"
+#include "resolver_driver_http_thinq.h"
+
+#include <pqxx/pqxx>
 
 #define LOAD_LNP_STMT "SELECT * FROM load_lnp_databases()"
-
-resolver_driver::resolver_driver(string host, unsigned short port, int id):
-	host(host), port(port), id(id)
-{}
-
-resolver_driver::~resolver_driver()
-{}
 
 _resolver::_resolver()
 {}
@@ -21,15 +14,39 @@ _resolver::_resolver()
 _resolver::~_resolver()
 {}
 
+static inline resolver_driver *create_resolver_driver(const resolver_driver::driver_cfg &dcfg)
+{
+	resolver_driver *d;
+	switch(dcfg.driver_id){
+	case RESOLVER_DRIVER_SIP: d = new resolver_driver_sip(dcfg); break;
+	case RESOLVER_DRIVER_HTTP_THINQ: d = new resolver_driver_http_thinq(dcfg); break;
+	default:
+		err("unsupported driver_id: %d",dcfg.driver_id);
+		return NULL;
+	}
+	if(!d) {
+		err("can't load resolve driver %d");
+	}
+	return d;
+}
+
 void _resolver::stop()
 {
 	for(auto &i: databases)
 		i.second->driver->on_stop();
 }
 
-bool _resolver::configure()
+void _resolver::launch()
 {
-	//load from database init resolvers map
+	for(const auto &it: databases) {
+		const database_entry &e = *it.second;
+		e.driver->launch();
+	}
+}
+
+bool _resolver::load_resolve_drivers(databases_t &db)
+{
+	//load from database & init resolvers map
 	bool ret = false;
 
 	try {
@@ -41,52 +58,20 @@ bool _resolver::configure()
 		r = t.exec(LOAD_LNP_STMT);
 		for(pqxx::result::size_type i = 0; i < r.size();++i){
 			const pqxx::result::tuple &row = r[i];
-			int database_id = row["o_id"].as<int>(),
-				driver_id = row["o_driver_id"].as<int>(),
-				port = row["o_port"].as<int>(0);
-			string name = row["o_name"].c_str(),
-					host = row["o_host"].c_str();
+			resolver_driver::driver_cfg dcfg(row);
+			resolver_driver *d =
+				create_resolver_driver(dcfg);
+			if(!d) continue;
 
-			resolver_driver *d = NULL;
-			switch(driver_id){
-			case RESOLVER_DRIVER_SIP:
-				d = new resolver_driver_sip(host,port);
-				if(!d) {
-					err("can't load resolve driver");
-					throw std::string("can't load resolve driver");
-				}
-				break;
-			default: {
-				err("unsupported driver_id: %d",driver_id);
-				continue;
-			}}
-
-			dbg("add database %d:<%s>",database_id,name.c_str());
-
-			databases.emplace(database_id,
+			db.emplace(dcfg.database_id,
 							  std::unique_ptr<database_entry>(
-								  new database_entry(name,d))
+								  new database_entry(dcfg.name,d))
 							  );
 		}
-		info("loaded %ld databases:",databases.size());
+		info("loaded %ld databases",db.size());
+		for(const auto &i : db)
+			i.second->driver->show_info(i.first);
 
-		for(const auto &it: databases) {
-			const database_entry &e = *it.second;
-			if(!e.driver.get()) {
-				info("id: %d, name %s, no driver",
-					 it.first,e.name.c_str());
-				continue;
-			}
-			if(e.driver->get_port()){
-				info("id: %d, name: <%s>, driver: %s, addr: <%s:%d>",
-					 it.first,e.name.c_str(),driver_id2name(e.driver->get_id()),
-					e.driver->get_host().c_str(),e.driver->get_port());
-			} else {
-				info("id: %d, name: <%s>, driver: %s, addr: <%s>",
-					 it.first,e.name.c_str(),driver_id2name(e.driver->get_id()),
-					e.driver->get_host().c_str());
-			}
-		}
 		ret = true;
 	} catch(const pqxx::pqxx_exception &e){
 		err("pqxx_exception: %s ",e.base().what());
@@ -96,8 +81,31 @@ bool _resolver::configure()
 	return ret;
 }
 
+bool _resolver::configure()
+{
+	databases_t tdb;
+	bool ret = load_resolve_drivers(tdb);
+	if(!ret) goto out;
+
+	databases_m.lock();
+
+	databases.swap(tdb);
+	try {
+		launch();
+	} catch(...){ }
+
+	databases_m.unlock();
+out:
+	for(auto &i: tdb)
+		i.second->driver->on_stop();
+	tdb.clear();
+	return ret;
+}
+
 void _resolver::resolve(int database_id, const string &in, string &out)
 {
+	guard(databases_m);
+
 	auto i = databases.find(database_id);
 	if(i==databases.end()){
 		throw resolve_exception(1,"uknown database id");

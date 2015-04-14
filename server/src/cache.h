@@ -42,6 +42,7 @@ class _cache: public thread {
 
   protected:
 	void on_stop();
+	void dispose() {}
 
   public:
 	void run();

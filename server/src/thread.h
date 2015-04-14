@@ -14,6 +14,15 @@ class mutex {
 	void unlock();
 };
 
+class mutex_guard
+{
+	mutex& m;
+public:
+	mutex_guard(mutex& _m) : m(_m) { m.lock(); }
+	~mutex_guard(){ m.unlock(); }
+};
+#define guard(mutex) mutex_guard __ ## mutex ## _guard__(mutex); (void)__ ## mutex ## _guard__;
+
 template<class T>
 class shared_var
 {

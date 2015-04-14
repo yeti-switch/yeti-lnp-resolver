@@ -23,11 +23,13 @@ class _dispatcher {
 	void create_reply(char *&msg, int &len, const char *req, int req_len);
 	void create_error_reply(char *&msg, int &len,int code, std::string description);
 
+  protected:
+	void dispose() {}
   public:
 	_dispatcher();
 
 	void loop();
-	void stop() { _stop = true; }
+	void stop() { _stop = true; nn_close(s); }
 };
 
 typedef singleton<_dispatcher> dispatcher;

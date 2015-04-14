@@ -3,6 +3,7 @@ cmake_minimum_required (VERSION 2.8)
 cmake_policy(VERSION 2.8)
 set(BIN_NAME yeti_lnp_resolver)
 
+find_package(CURL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(PQXX REQUIRED)
 find_package(LIBRE REQUIRED)
@@ -11,16 +12,21 @@ find_package(Confuse REQUIRED)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-write-strings")
 
-include_directories(${PQXX_INCLUDE_DIRECTORIES} ${LIBRE_INCLUDE_DIRECTORIES})
+include_directories(
+	${PQXX_INCLUDE_DIRECTORIES}
+	${LIBRE_INCLUDE_DIRECTORIES}
+	${CURL_INCLUDE_DIRS}
+)
 
-file(GLOB_RECURSE SRCS src/*.cpp)
+file(GLOB_RECURSE SRCS src/*.cpp src/*.c)
 add_executable (${BIN_NAME} ${SRCS})
 target_link_libraries(${BIN_NAME}
 	${CMAKE_THREAD_LIBS_INIT}
 	${PQXX_LIBRARIES}
 	${LIBRE_LIBRARIES}
 	${NanoMsg_LIBRARIES}
-	${Confuse_LIBRARIES})
+	${Confuse_LIBRARIES}
+	${CURL_LIBRARIES})
 
 install(TARGETS ${BIN_NAME} DESTINATION ${RUNTIME_DIR})
 

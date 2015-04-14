@@ -21,12 +21,18 @@ class _resolver {
 	};
 	typedef std::map<int,std::unique_ptr<database_entry>> databases_t;
 	databases_t databases;
+	mutex databases_m;
+
+protected:
+  void dispose() {}
 
   public:
 	_resolver();
 	~_resolver();
+	void launch();
 	void stop();
 
+	bool load_resolve_drivers(databases_t &db);
 	bool configure();
 	void resolve(int database_id, const string &in, string &out);
 };
