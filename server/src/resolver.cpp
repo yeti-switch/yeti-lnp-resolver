@@ -63,10 +63,20 @@ bool _resolver::load_resolve_drivers(databases_t &db)
 				create_resolver_driver(dcfg);
 			if(!d) continue;
 
+//check for associative containers emplace() method support
+#if __GNUC__ >= 4 && __GNUC_MINOR__ >=8 //check for gcc4.8
 			db.emplace(dcfg.database_id,
 							  std::unique_ptr<database_entry>(
 								  new database_entry(dcfg.name,d))
 							  );
+#else
+			db.insert(std::pair<int,std::unique_ptr<database_entry> >(
+						  dcfg.database_id,
+						  std::unique_ptr<database_entry>(
+							  new database_entry(dcfg.name,d))
+						  )
+					  );
+#endif
 		}
 		info("loaded %ld databases",db.size());
 		for(const auto &i : db)
