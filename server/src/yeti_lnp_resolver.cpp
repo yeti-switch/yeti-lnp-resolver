@@ -42,10 +42,8 @@ int main(int argc,char *argv[])
 	open_log();
 
 	set_sighandlers();
-
 	try {
-		cfg_reader c;
-		if(!c.load(CFG_DIR "/lnp_resolver.cfg")){
+		if(!load_cfg(CFG_DIR "/lnp_resolver.cfg")){
 			throw std::string("can't load config");
 		}
 		info("start");
