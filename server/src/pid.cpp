@@ -19,7 +19,7 @@ void create_pid_file(){
 	if(f) {
 		if(fscanf(f,"%d",&file_pid)==1){
 			if(file_pid!=cfg.pid){
-				if(ESRCH==kill(file_pid,0)){
+				if(getpgid(file_pid) < 0) {
 					cerr("there is staled staled pid file '%s' with pid %d. overwrite it",
 						 cfg.pid_file,file_pid);
 				} else {
