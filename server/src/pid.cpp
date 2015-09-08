@@ -20,7 +20,7 @@ void create_pid_file(){
 		if(fscanf(f,"%d",&file_pid)==1){
 			if(file_pid!=cfg.pid){
 				if(ESRCH==kill(file_pid,0)){
-					info("there is staled staled pid file '%s' with pid %d",
+					cerr("there is staled staled pid file '%s' with pid %d. overwrite it",
 						 cfg.pid_file,file_pid);
 				} else {
 					cerr("there is another instance with pid: %d",
