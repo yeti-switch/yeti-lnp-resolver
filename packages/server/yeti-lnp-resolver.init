@@ -17,6 +17,7 @@ NAME=yeti_lnp_resolver
 DAEMON=/usr/bin/$NAME
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
+COREDIR=/var/cores
 
 RUN="no"
 
@@ -35,6 +36,14 @@ DAEMON_ARGS="-p $PIDFILE"
 # Depend on lsb-base (>= 3.2-14) to ensure that this file is present
 # and status_of_proc is working.
 . /lib/lsb/init-functions
+
+setup_core_dump()
+{
+	[ -d $COREDIR ] || mkdir -p $COREDIR	
+	chmod 777 $COREDIR
+	echo "$COREDIR/core.%e.sig%s.%p" > /proc/sys/kernel/core_pattern
+	ulimit -c unlimited
+}
 
 #
 # Function that starts the daemon/service
@@ -99,6 +108,7 @@ case "$1" in
 	if [ "x$RUN" = "xno" ] ; then
 		exit 0
 	fi
+	setup_core_dump
 	log_daemon_msg "Starting $DESC" "$NAME"
 	do_start
 	case "$?" in
