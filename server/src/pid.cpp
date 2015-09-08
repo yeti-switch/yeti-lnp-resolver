@@ -4,6 +4,7 @@
 #include <cstdlib>
 
 #include <unistd.h>
+#include <csignal>
 
 #include "log.h"
 #include "cfg.h"
@@ -18,10 +19,18 @@ void create_pid_file(){
 	if(f) {
 		if(fscanf(f,"%d",&file_pid)==1){
 			if(file_pid!=cfg.pid){
-				cerr("there is another instance with pid: %d or staled pid file '%s'",
-					 file_pid,cfg.pid_file);
-				exit(EXIT_FAILURE);
+				if(ESRCH==kill(file_pid,0)){
+					info("there is staled staled pid file '%s' with pid %d",
+						 cfg.pid_file,file_pid);
+				} else {
+					cerr("there is another instance with pid: %d",
+						  file_pid);
+					exit(EXIT_FAILURE);
+				}
 			}
+		} else {
+			cerr("garbage in pid file '%s'",cfg.pid_file);
+			exit(EXIT_FAILURE);
 		}
 		fclose(f);
 	}
