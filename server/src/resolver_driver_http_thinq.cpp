@@ -86,7 +86,7 @@ void resolver_driver_http_thinq::resolve(const string &in, string &out, string &
 	}
 
 	//set timeout
-	if ((curl_easy_setopt(h, CURLOPT_TIMEOUT, CURL_TIMEOUT) != CURLE_OK)
+	if ((curl_easy_setopt(h, CURLOPT_TIMEOUT, _cfg.timeout) != CURLE_OK)
 			|| (curl_easy_setopt(h, CURLOPT_NOSIGNAL, 1L) != CURLE_OK)) {
 		curl_easy_cleanup(h);
 		throw resolve_exception(RESOLVE_EXCEPTION_DRIVER,"can't set timeout for request");

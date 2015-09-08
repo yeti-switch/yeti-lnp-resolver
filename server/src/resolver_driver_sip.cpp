@@ -5,8 +5,6 @@
 #include "cfg.h"
 #include <thread>
 
-#define RESPONSE_WAIT_TIMEOUT 4000
-
 #include <vector>
 using std::vector;
 
@@ -174,7 +172,7 @@ void resolver_driver_sip::resolve(const string &in, string &out, string &data)
 	}
 
 	//wait for response
-	ret = ctx.request_processed.wait_for_to(RESPONSE_WAIT_TIMEOUT);
+	ret = ctx.request_processed.wait_for_to(_cfg.timeout);
 
 	//terminate session
 	mem_deref(sess);

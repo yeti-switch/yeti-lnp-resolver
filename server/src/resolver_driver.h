@@ -35,6 +35,7 @@ class resolver_driver {
   public:
 	struct driver_cfg {
 		int database_id,driver_id,port;
+		unsigned int timeout;
 		string name,host;
 		string thinq_token,thinq_username;
 		driver_cfg(const pqxx::result::tuple &r);
