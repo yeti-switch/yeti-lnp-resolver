@@ -9,5 +9,5 @@ class resolver_driver_http_thinq: public resolver_driver {
 	resolver_driver_http_thinq(const resolver_driver::driver_cfg &dcfg);
 	~resolver_driver_http_thinq();
 	void on_stop();
-	void resolve(const string &in, string &out, string &data);
+    void resolve(const string &in, resolver_driver::result &out);
 };

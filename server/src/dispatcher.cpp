@@ -94,7 +94,7 @@ void _dispatcher::create_error_reply(char *&msg, int &len,
 
 void _dispatcher::create_reply(char *&msg, int &len, const char *req, int req_len)
 {
-	std::string lnr;
+    resolver_driver::result r;
 
 	if(req_len < PDU_HDR_SIZE){
 		throw resolve_exception(1,"request too small");
@@ -112,7 +112,7 @@ void _dispatcher::create_reply(char *&msg, int &len, const char *req, int req_le
 	dbg("process request: database: %d, lnp: %s",
 		database_id,lnp.c_str());
 
-	resolver::instance()->resolve(database_id,lnp,lnr);
+    resolver::instance()->resolve(database_id,lnp,r);
 
-	str2reply(msg,len,0,lnr);
+    str2reply(msg,len,0,r.lrn);
 }

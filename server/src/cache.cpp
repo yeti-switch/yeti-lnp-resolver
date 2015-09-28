@@ -6,10 +6,10 @@
 #define RECONNECT_DELAY 5
 
 #define CACHE_LNP_SQL \
-	"SELECT * FROM cache_lnp_data($1,$2,$3,$4)"
+    "SELECT * FROM cache_lnp_data($1,$2,$3,$4,$5)"
 
 #define CACHE_LNP_SQL_FMT \
-	"SELECT * FROM cache_lnp_data(%d,'%s','%s',NULL)"
+    "SELECT * FROM cache_lnp_data(%d,'%s','%s','%s','%s')"
 
 #define CACHE_LNP_STMT "cache_lnp"
 
@@ -18,6 +18,7 @@ const char *cache_lnp_args[] = {
 	"varchar",
 	"varchar",
 	"varchar",
+    "varchar",
 	NULL
 };
 
@@ -176,6 +177,7 @@ bool _cache::update_cache(cache_entry *e)
 		invoc(e->database_id);
 		invoc(e->dst);
 		invoc(e->lrn);
+        invoc(e->tag);
 		invoc(e->data);
 
 		invoc.exec();
@@ -184,7 +186,8 @@ bool _cache::update_cache(cache_entry *e)
 	} catch(const pqxx::pqxx_exception &exc){
 		dbg("cache update SQL exception: %s",exc.base().what());
 		dbg("query: " CACHE_LNP_SQL_FMT,
-			e->database_id,e->dst.c_str(),e->lrn.c_str());
+            e->database_id,e->dst.c_str(),e->lrn.c_str(),
+            e->tag.c_str(),e->data.c_str());
 		c->disconnect();
 	}
 	return false;

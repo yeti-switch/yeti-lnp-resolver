@@ -138,15 +138,15 @@ resolver_driver_sip::~resolver_driver_sip(){
 	dbg("libre have %d refs",libre_refs);
 }
 
-void resolver_driver_sip::resolve(const string &in, string &out, string &data)
+void resolver_driver_sip::resolve(const string &in, resolver_driver::result &out)
 {
 	int ret;
 	struct sipsess *sess;
-	(void)data;
 	sip_resolver_ctx ctx(this);
 
-	out.clear();
-	data.clear();
+    out.lrn.clear();
+    out.tag.clear();
+    out.raw_data.clear();
 
 	std::ostringstream to_uri;
 
@@ -178,10 +178,10 @@ void resolver_driver_sip::resolve(const string &in, string &out, string &data)
 	mem_deref(sess);
 
 	if(ret){
-		process_reply(ctx,out,data);
-		if(out.empty()){
-			dbg("lnr is empty. number not ported. set out to in");
-			out = in;
+        process_reply(ctx,out.lrn,out.raw_data);
+        if(out.lrn.empty()){
+            dbg("lrn is empty. number not ported. set out to in");
+            out.lrn = in;
 		}
 	} else {
 		dbg("reply processing timeout");

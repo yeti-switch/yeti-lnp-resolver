@@ -23,8 +23,8 @@ class _resolver {
 	databases_t databases;
 	mutex databases_m;
 
-protected:
-  void dispose() {}
+  protected:
+    void dispose() {}
 
   public:
 	_resolver();
@@ -34,7 +34,7 @@ protected:
 
 	bool load_resolve_drivers(databases_t &db);
 	bool configure();
-	void resolve(int database_id, const string &in, string &out);
+    void resolve(int database_id, const string &in, resolver_driver::result &out);
 };
 
 typedef singleton<_resolver> resolver;

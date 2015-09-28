@@ -1,7 +1,6 @@
 #pragma once
 
 #include "thread.h"
-
 #include "singleton.h"
 
 #include <string>
@@ -10,18 +9,21 @@
 
 #include <pqxx/pqxx>
 
+#include "resolver.h"
+
 using std::string;
 //using std::list;
 using std::pair;
 
 struct cache_entry {
 	int database_id;
-	string dst,lrn, data;
-	cache_entry(int _database_id, string _dst, string _lrn, string _data):
+    string dst,lrn, data, tag;
+    cache_entry(int _database_id, const string &_dst, const resolver_driver::result &r):
 		database_id(_database_id),
 		dst(_dst),
-		lrn(_lrn),
-		data(_data) {}
+        lrn(r.lrn),
+        data(r.raw_data),
+        tag(r.tag) {}
 };
 
 class _cache: public thread {

@@ -43,5 +43,5 @@ class resolver_driver_sip: public resolver_driver, public thread {
 	void on_response_ready(struct sip_resolver_ctx &ctx, const struct sip_msg *msg);
 	void launch();
 	void run();
-	void resolve(const string &in, string &out, string &data);
+    void resolve(const string &in, resolver_driver::result &out);
 };

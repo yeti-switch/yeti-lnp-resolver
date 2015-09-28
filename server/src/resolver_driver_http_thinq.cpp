@@ -53,7 +53,7 @@ size_t static write_func(void  *ptr,  size_t  size,  size_t nmemb,  void  *arg) 
 	return size*nmemb;
 }
 
-void resolver_driver_http_thinq::resolve(const string &in, string &out, string &data)
+void resolver_driver_http_thinq::resolve(const string &in, resolver_driver::result &out)
 {
 	CURL *h = curl_easy_init();
 	if(!h){
@@ -150,12 +150,12 @@ void resolver_driver_http_thinq::resolve(const string &in, string &out, string &
 	}
 
 	char *lrn = cJSON_Print(jlrn);
-	out = lrn;
+    out.lrn = lrn;
 	free(lrn);
 	//remove quotes
-	if(out.compare(0,1,"\"")==0) out.erase(out.begin());
-	if(out.compare(out.size()-1,1,"\"")==0) out.erase(out.end()-1);
+    if(out.lrn.compare(0,1,"\"")==0) out.lrn.erase(out.lrn.begin());
+    if(out.lrn.compare(out.lrn.size()-1,1,"\"")==0) out.lrn.erase(out.lrn.end()-1);
 
-	data = r;
+    out.raw_data = r;
 	cJSON_Delete(j);
 }
