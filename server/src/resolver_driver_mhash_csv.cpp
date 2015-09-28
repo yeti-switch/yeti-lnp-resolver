@@ -60,7 +60,7 @@ void resolver_driver_mhash_csv::resolve(const string &in, resolver_driver::resul
     out.raw_data.clear();
     entries_hash::const_iterator i = hash.find(in);
     if(i == hash.end()){
-        dbg("number '%s' not found in hash. set out to in. empty data",in.c_str());
+        dbg("number '%s' not found in hash. set out to in. empty tag",in.c_str());
         out.lrn = in;
         out.tag.clear();
         return;

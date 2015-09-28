@@ -130,8 +130,7 @@ void _resolver::resolve(int database_id, const string &in, resolver_driver::resu
 		throw resolve_exception(1,"uknown database id");
 	}
 
-	string data;
-	timeval req_start,req_end, req_diff;
+    timeval req_start, req_end, req_diff;
 	try {
 		gettimeofday(&req_start,NULL);
 

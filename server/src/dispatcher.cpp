@@ -3,6 +3,7 @@
 #include "cfg.h"
 
 #define PDU_HDR_SIZE 2
+#define NEW_PDU_HDR_SIZE 3
 
 _dispatcher::_dispatcher():
 	_stop(false)
@@ -86,6 +87,22 @@ void _dispatcher::str2reply(char *&msg,int &len,int code,const std::string &s)
 	memcpy(msg+PDU_HDR_SIZE,s.c_str(),l);
 }
 
+void _dispatcher::make_reply(char *&msg,int &len,const resolver_driver::result &r)
+{
+    int lrn_len = r.lrn.size();
+    int tag_len = r.tag.size();
+    int data_len = lrn_len + tag_len;
+
+    len = data_len+NEW_PDU_HDR_SIZE;
+    msg = new char[len];
+    msg[0] = 0;         //code
+    msg[1] = data_len;  //global_len
+    msg[2] = lrn_len;   //lrn_len
+
+    memcpy(msg+NEW_PDU_HDR_SIZE,r.lrn.c_str(),lrn_len);
+    memcpy(msg+NEW_PDU_HDR_SIZE+lrn_len,r.tag.c_str(),tag_len);
+}
+
 void _dispatcher::create_error_reply(char *&msg, int &len,
 									 int code, std::string description)
 {
@@ -94,25 +111,40 @@ void _dispatcher::create_error_reply(char *&msg, int &len,
 
 void _dispatcher::create_reply(char *&msg, int &len, const char *req, int req_len)
 {
+    if(req_len < PDU_HDR_SIZE){
+        throw resolve_exception(1,"request too small");
+    }
+
     resolver_driver::result r;
+    int data_len = req[1];
+    int database_id = req[0];
+    int version = 0;
+    int lnp_offset = PDU_HDR_SIZE;
+    bool old_format = data_len!=0;
 
-	if(req_len < PDU_HDR_SIZE){
-		throw resolve_exception(1,"request too small");
-	}
+    if(!old_format){
+        if(req_len < NEW_PDU_HDR_SIZE){
+            throw resolve_exception(1,"request too small");
+        }
+        version = data_len;
+        data_len = req[2];
+        lnp_offset++;
+    }
 
-	int data_len = req[1];
+    if((lnp_offset+data_len) > req_len){
+        err("malformed request: too big data_len");
+        throw resolve_exception(1,"malformed request");
+    }
 
-	if(data_len > req_len - PDU_HDR_SIZE){
-		throw resolve_exception(1,"invalid data length");
-	}
-	int database_id = req[0];
-
-	std::string lnp(req+2,data_len);
-
-	dbg("process request: database: %d, lnp: %s",
-		database_id,lnp.c_str());
+    std::string lnp(req+lnp_offset,data_len);
+    dbg("process request: database: %d, lnp: %s, old_format: %d",
+        database_id,lnp.c_str(),old_format);
 
     resolver::instance()->resolve(database_id,lnp,r);
 
-    str2reply(msg,len,0,r.lrn);
+    if(old_format){
+        str2reply(msg,len,0,r.lrn);
+    } else {
+        make_reply(msg,len,r);
+    }
 }
