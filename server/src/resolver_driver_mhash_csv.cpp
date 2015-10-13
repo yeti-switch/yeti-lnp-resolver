@@ -25,7 +25,12 @@ void resolver_driver_mhash_csv::load_csv()
     string l;
     while(std::getline(f,l)&&++i){
         string number,tag,lrn;
+
         //dbg("line%ld: '%s'",i,l.c_str());
+
+        if(l.empty()) //skip empty lines
+            continue;
+
         std::stringstream ls(l);
 
         if(!std::getline(ls,number,',')){
@@ -36,16 +41,31 @@ void resolver_driver_mhash_csv::load_csv()
             err("can't read tag at line %ld",i);
             throw string("unexpected format");
         }
-        if(!std::getline(ls,lrn,',')){
-            err("can't read lrn at line %ld",i);
-            throw string("unexpected format");
-        }
+        std::getline(ls,lrn,',');
 
         /*dbg("%ld: number: '%s', tag: '%s', lrn: '%s'",
             i,number.c_str(),tag.c_str(),lrn.c_str());*/
 
-        hash.emplace(number,lrn_entry(lrn,tag));
+        if(tag.empty()&&lrn.empty()){
+            err("line %ld: you must specify at least lrn or tag",i);
+            throw string("unexpected format");
+        }
+
+        entries_hash::const_iterator it = hash.find(number);
+        if(it != hash.end()) {
+            warn("duplicate entry at line %ld. first occurence at line %ld. "
+                 "leave first occurence data",
+                 i,it->second.csv_line);
+        } else
+            hash.emplace(number,lrn_entry(lrn,tag,i));
     }
+
+    /*dbg("parsed csv entries:");
+    for(const auto &it: hash){
+        const lrn_entry &e = it.second;
+        dbg("%ld: number: '%s', tag: '%s', lrn: '%s'",
+            e.csv_line,it.first.c_str(),e.tag.c_str(),e.lrn.c_str());
+    }*/
 }
 
 void resolver_driver_mhash_csv::show_info(int map_id)

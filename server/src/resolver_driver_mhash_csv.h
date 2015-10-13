@@ -8,7 +8,12 @@ using std::unordered_map;
 class resolver_driver_mhash_csv: public resolver_driver {
     struct lrn_entry {
         string lrn, tag;
-        lrn_entry(string lrn, string tag): lrn(lrn), tag(tag) {}
+        size_t csv_line;
+        lrn_entry(string lrn, string tag, size_t line):
+            lrn(lrn),
+            tag(tag),
+            csv_line(line)
+        {}
     };
 
     typedef unordered_map<string,lrn_entry> entries_hash;
