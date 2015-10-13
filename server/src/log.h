@@ -7,9 +7,10 @@
 #include <sys/syscall.h>
 
 enum log_levels {
-	L_ERR = 1,
+	L_ERR = 0,
+	L_WARN,
 	L_INFO,
-	L_DBG,
+	L_DBG
 };
 extern volatile int log_level;
 
@@ -23,7 +24,8 @@ extern volatile int log_level;
 #endif
 
 #define err(fmt,args...) _LOG(LOG_ERR,"error: ",fmt,##args);
-#define info(fmt,args...) if(log_level > L_ERR) _LOG(LOG_INFO,"info: ",fmt,##args);
+#define warn(fmt,args...) if(log_level > L_ERR) _LOG(LOG_ERR,"warning: ",fmt,##args);
+#define info(fmt,args...) if(log_level > L_WARN) _LOG(LOG_INFO,"info: ",fmt,##args);
 #define dbg(fmt,args...) if(log_level > L_INFO) _LOG(LOG_DEBUG,"dbg: ",fmt,##args);
 
 void open_log();
