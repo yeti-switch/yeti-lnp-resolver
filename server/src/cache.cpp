@@ -34,14 +34,7 @@ _cache::~_cache() {}
 void _cache::prepare_queries(pqxx::connection *conn)
 {
 	conn->set_variable("search_path",cfg.db.schema+", public");
-
-	pqxx::prepare::declaration d = conn->prepare(CACHE_LNP_STMT, CACHE_LNP_SQL);
-
-	const char **tp = cache_lnp_args;
-	while(*tp){
-		d(*tp,pqxx::prepare::treat_direct);
-		tp++;
-	}
+	conn->prepare(CACHE_LNP_STMT, CACHE_LNP_SQL);
 	conn->prepare_now(CACHE_LNP_STMT);
 }
 
