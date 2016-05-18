@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -e
+
+service=yeti-lnp-resolver.service
+
+case "$1" in
+  configure)
+    ;;
+
+  abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+  *)
+    echo "postinst called with unknown argument \`$1'" >&2
+    exit 1
+    ;;
+esac
+
+deb-systemd-helper unmask ${service} >/dev/null || true
+
+if deb-systemd-helper --quiet was-enabled ${service}; then
+	deb-systemd-helper enable ${service} >/dev/null || true
+else
+	deb-systemd-helper update-state ${service} >/dev/null || true
+fi
+
+exit 0
