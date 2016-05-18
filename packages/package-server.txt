@@ -1,9 +1,14 @@
 project(yeti_lnp_resolver)
 cmake_minimum_required(VERSION 2.8)
 
-set(INIT_FILES
-	yeti-lnp-resolver.init
+#set(INIT_FILES
+#	yeti-lnp-resolver.init
+#)
+
+set(SERVICE_FILES
+	yeti-lnp-resolver.service
 )
+
 
 set(DEF_FILES
 	yeti_lnp_resolver

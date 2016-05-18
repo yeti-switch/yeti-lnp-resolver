@@ -66,6 +66,14 @@ FOREACH(init_path ${INIT_FILES})
 	install(PROGRAMS ${init_path} DESTINATION "@INIT_DIR@" RENAME ${init_name})
 ENDFOREACH(init_path)
 
+#process systemd unit files
+FOREACH(service_path ${SERVICE_FILES})
+	get_filename_component(service ${service_path} ABSOLUTE)
+        list(APPEND CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA ${service})
+        list(REMOVE_DUPLICATES CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA)
+ENDFOREACH(service_path)
+
+
 #process init.d default files
 FOREACH(def_path ${DEF_FILES})
 	get_filename_component(def_name ${def_path} NAME)

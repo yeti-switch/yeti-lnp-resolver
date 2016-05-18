@@ -1,0 +1,16 @@
+[Unit]
+Description=YETI Local Number Portability remote database driver
+Documentation=https://yeti-switch.org/docs/
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+User=root
+LimitNOFILE=65536
+LimitCORE=infinity
+
+ExecStart=/usr/bin/yeti_lnp_resolver -p /var/run/yeti_lnp_resolver.pid
+PIDFile=/var/run/yeti_lnp_resolver.pid
+Type=forking
+Restart=on-abnormal
