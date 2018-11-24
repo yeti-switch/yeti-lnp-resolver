@@ -3,7 +3,7 @@
 #include "resolver_driver.h"
 
 #include <stdint.h>
-#include <re/re.h>
+#include <re.h>
 #include "thread.h"
 
 #define PL_FMT "%.*s"

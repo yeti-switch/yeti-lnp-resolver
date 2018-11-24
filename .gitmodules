@@ -1,0 +1,3 @@
+[submodule "third/re"]
+	path = third/re
+	url = https://github.com/creytiv/re.git

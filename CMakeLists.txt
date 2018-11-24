@@ -7,6 +7,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 list(APPEND CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS} -g")
 
+include(cmake/libre_bundled.cmake)
+
 set(RUNTIME_DIR /usr/bin)
 set(LIB_DIR /usr/lib)
 set(HDRS_DIR /usr/include/yeti)

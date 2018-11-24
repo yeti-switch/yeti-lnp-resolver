@@ -1,0 +1,13 @@
+diff --git a/src/sipsess/connect.c b/src/sipsess/connect.c
+index 5f6317e..9a33bbc 100644
+--- a/src/sipsess/connect.c
++++ b/src/sipsess/connect.c
+@@ -81,6 +81,8 @@ static void invite_resp_handler(int err, const struct sip_msg *msg, void *arg)
+ 	}
+ 	else if (msg->scode < 400) {
+ 
++                goto out; //disable internal redirect
++
+ 		/* Redirect to first Contact */
+ 
+ 		if (sess->terminated)

@@ -5,7 +5,6 @@ set(BIN_NAME yeti_lnp_resolver)
 find_package(CURL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(PQXX REQUIRED)
-find_package(LIBRE REQUIRED)
 find_package(NanoMsg REQUIRED)
 find_package(Confuse REQUIRED)
 find_package(YetiCC REQUIRED)
@@ -14,7 +13,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-write-strings")
 
 include_directories(
 	${PQXX_INCLUDE_DIRECTORIES}
-	${LIBRE_INCLUDE_DIRECTORIES}
+	${LIBRE_BUNDLED_INCLUDE_DIRS}
 	${CURL_INCLUDE_DIRS}
 	${YETICC_INCLUDE_DIRS}
 )
@@ -24,7 +23,7 @@ add_executable (${BIN_NAME} ${SRCS})
 target_link_libraries(${BIN_NAME}
 	${CMAKE_THREAD_LIBS_INIT}
 	${PQXX_LIBRARIES}
-	${LIBRE_LIBRARIES}
+	${LIBRE_BUNDLED_LIBRARIES}
 	${NanoMsg_LIBRARIES}
 	${Confuse_LIBRARIES}
 	${CURL_LIBRARIES}
