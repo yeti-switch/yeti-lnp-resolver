@@ -13,7 +13,8 @@
 #   NanoMsg_VERSION        - Version of found libnanomsg.
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(NanoMsg libnanomsg)
+#~ pkg_check_modules(NanoMsg libnanomsg)
+pkg_check_modules(NanoMsg nanomsg)
 
 # handle the QUIETLY and REQUIRED arguments and set NanoMsg_FOUND to TRUE if
 # all listed variables are TRUE
