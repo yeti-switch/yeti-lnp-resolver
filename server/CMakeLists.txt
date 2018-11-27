@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.8)
-cmake_policy(VERSION 2.8)
+cmake_policy(SET CMP0026 OLD)
 set(BIN_NAME yeti_lnp_resolver)
 
 find_package(CURL REQUIRED)
