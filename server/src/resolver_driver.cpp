@@ -14,6 +14,8 @@ resolver_driver::driver_cfg::driver_cfg(const pqxx::result::tuple &r)
 	thinq_username = r["o_thinq_username"].c_str();
     data_path = r["o_csv_file"].c_str();
 	timeout = r["o_timeout"].as<unsigned int>(DEFAULT_REPLY_TIMEOUT);
+    alkazar_key = r["o_alkazar_key"].c_str();
+    alkazar_key = r["o_thinq_token"].c_str();
 }
 
 resolver_driver::resolver_driver(const resolver_driver::driver_cfg &dcfg):

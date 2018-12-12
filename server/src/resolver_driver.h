@@ -18,18 +18,21 @@ struct resolve_exception {
 enum drivers_t {
 	RESOLVER_DRIVER_SIP = 1,
     RESOLVER_DRIVER_HTTP_THINQ,
-    RESOLVER_DRIVER_MHASH_CSV
+    RESOLVER_DRIVER_MHASH_CSV,
+    RESOLVER_DRIVER_HTTP_ALCAZAR,
 };
 static const char *driver_id2name(int id)
 {
 	static const char *sip = "SIP/301-302";
 	static const char *http_thinq = "REST/ThinQ";
     static const char *mhash_csv = "MHASH/CSV";
+    static const char *http_alcazar = "Alcazar Networks";
 	static const char *unknown = "unknown";
 	switch(id){
 		case RESOLVER_DRIVER_SIP: return sip; break;
 		case RESOLVER_DRIVER_HTTP_THINQ: return http_thinq; break;
         case RESOLVER_DRIVER_MHASH_CSV: return mhash_csv; break;
+        case RESOLVER_DRIVER_HTTP_ALCAZAR: return http_alcazar; break;
 		default: return unknown;
 	}
 }
@@ -42,6 +45,7 @@ class resolver_driver {
 		string name,host;
 		string thinq_token,thinq_username;
         string data_path;
+        string alkazar_key;
 		driver_cfg(const pqxx::result::tuple &r);
 	};
     struct result {
