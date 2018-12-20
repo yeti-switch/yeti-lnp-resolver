@@ -1,8 +1,5 @@
 cmake_minimum_required (VERSION 2.8)
 
-cmake_policy(VERSION 2.8)
-#cmake_policy(SET CMP0026 OLD)
-
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 list(APPEND CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS} -g")
@@ -27,6 +24,9 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/.git)
                 OUTPUT_VARIABLE TAG_VERSION
                 OUTPUT_STRIP_TRAILING_WHITESPACE
         )
+        if("${TAG_VERSION}" STREQUAL "")
+            set(TAG_VERSION "0.0.0")
+        endif("${TAG_VERSION}" STREQUAL "")
         MESSAGE(STATUS "got version from git tags: " ${TAG_VERSION})
         STRING(REGEX REPLACE "[-\\.]" ";" TAG_VERSION_LIST ${TAG_VERSION})
 else(EXISTS ${CMAKE_SOURCE_DIR}/.git)

@@ -4,6 +4,7 @@
 #include "resolver_driver_sip.h"
 #include "resolver_driver_http_thinq.h"
 #include "resolver_driver_mhash_csv.h"
+#include "resolver_driver_http_alcazar.h"
 
 #include <pqxx/pqxx>
 #include <sys/time.h>
@@ -24,6 +25,7 @@ static inline resolver_driver *create_resolver_driver(const resolver_driver::dri
         case RESOLVER_DRIVER_SIP: d = new resolver_driver_sip(dcfg); break;
         case RESOLVER_DRIVER_HTTP_THINQ: d = new resolver_driver_http_thinq(dcfg); break;
         case RESOLVER_DRIVER_MHASH_CSV: d = new resolver_driver_mhash_csv(dcfg); break;
+        case RESOLVER_DRIVER_HTTP_ALCAZAR: d = new resolver_driver_http_alcazar(dcfg); break;
         default:
             err("unsupported driver_id: %d",dcfg.driver_id);
             return NULL;

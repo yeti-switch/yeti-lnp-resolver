@@ -13,8 +13,10 @@
 #   NanoMsg_VERSION        - Version of found libnanomsg.
 
 find_package(PkgConfig REQUIRED)
-#~ pkg_check_modules(NanoMsg libnanomsg)
-pkg_check_modules(NanoMsg nanomsg)
+# Supported for debian Stretch/9
+pkg_check_modules(NanoMsg libnanomsg)
+# Supported for debian Buster/10
+#pkg_check_modules(NanoMsg nanomsg)
 
 # handle the QUIETLY and REQUIRED arguments and set NanoMsg_FOUND to TRUE if
 # all listed variables are TRUE
