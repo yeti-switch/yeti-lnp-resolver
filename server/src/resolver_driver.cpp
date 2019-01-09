@@ -14,7 +14,12 @@ resolver_driver::driver_cfg::driver_cfg(const pqxx::result::tuple &r)
 	thinq_username = r["o_thinq_username"].c_str();
     data_path = r["o_csv_file"].c_str();
 	timeout = r["o_timeout"].as<unsigned int>(DEFAULT_REPLY_TIMEOUT);
-    alkazar_key = r["o_alkazar_key"].c_str();
+    try {
+        alkazar_key = r["o_alkazar_key"].c_str();
+    } catch(...) {
+        dbg("no field o_alkazar_key in DB response for driver: %d %s. leave alkazar_key empty",
+             database_id,driver_id2name(driver_id));
+    }
 }
 
 resolver_driver::resolver_driver(const resolver_driver::driver_cfg &dcfg):
