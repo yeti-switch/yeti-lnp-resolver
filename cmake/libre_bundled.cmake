@@ -13,7 +13,7 @@ file(MAKE_DIRECTORY ${LIBRE_BIN_DIR})
 add_custom_command(OUTPUT ${LIBRE_BUNDLED_LIB}
     PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${LIBRE_SRC_DIR} ${LIBRE_BIN_DIR}
-    COMMAND git apply ${LIBRE_PATCH_FILE}
+    COMMAND git --git-dir=${PROJECT_SOURCE_DIR}/.git/modules/${LIBRE_DIR} --work-tree=${LIBRE_BIN_DIR} apply ${LIBRE_PATCH_FILE}
     COMMAND $(MAKE)
     WORKING_DIRECTORY ${LIBRE_BIN_DIR})
 
