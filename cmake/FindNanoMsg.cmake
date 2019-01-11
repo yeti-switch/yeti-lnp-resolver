@@ -15,13 +15,16 @@
 find_package(PkgConfig REQUIRED)
 # Supported for debian Stretch/9
 pkg_check_modules(NanoMsg libnanomsg)
-# Supported for debian Buster/10
-#pkg_check_modules(NanoMsg nanomsg)
+if(NOT NanoMsg_FOUND)
+    # Supported for debian Buster/10
+    pkg_check_modules(NanoMsg nanomsg)
+endif(NOT NanoMsg_FOUND)
 
 # handle the QUIETLY and REQUIRED arguments and set NanoMsg_FOUND to TRUE if
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(NanoMsg
-                                  REQUIRED_VARS NanoMsg_LIBRARIES
-				  VERSION_VAR NanoMsg_VERSION)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(
+    NanoMsg
+    REQUIRED_VARS NanoMsg_LIBRARIES
+    VERSION_VAR NanoMsg_VERSION)
 
