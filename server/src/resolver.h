@@ -6,7 +6,7 @@
 using std::string;
 
 #include <memory>
-using std::auto_ptr;
+using std::unique_ptr;
 
 #include <map>
 
@@ -15,7 +15,7 @@ using std::auto_ptr;
 class _resolver {
 	struct database_entry {
 		string name;
-		auto_ptr<resolver_driver> driver;
+		unique_ptr<resolver_driver> driver;
 		database_entry(string name, resolver_driver *driver):
 			name(name), driver(driver) { }
 	};
