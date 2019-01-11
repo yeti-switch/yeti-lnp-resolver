@@ -16,14 +16,14 @@
 #include "singleton.h"
 
 class _dispatcher {
-	bool _stop;
 	int s;
+	int stop_event_fd;
 
 	int process_peer(char *msg, int len);
 	void str2reply(char *&msg,int &len,int code,const std::string &s);
-    void make_reply(char *&msg,int &len,const resolver_driver::result &r);
+	void make_reply(char *&msg,int &len,const resolver_driver::result &r);
 	void create_reply(char *&msg, int &len, const char *req, int req_len);
-    void create_error_reply(char *&msg, int &len,int code, std::string description);
+	void create_error_reply(char *&msg, int &len,int code, std::string description);
 
   protected:
 	void dispose() {}
@@ -31,7 +31,7 @@ class _dispatcher {
 	_dispatcher();
 
 	void loop();
-	void stop() { _stop = true; nn_close(s); }
+	void stop();
 };
 
 typedef singleton<_dispatcher> dispatcher;

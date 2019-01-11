@@ -2,20 +2,51 @@
 #include "resolver.h"
 #include "cfg.h"
 
+#include <sys/epoll.h>
+#include <sys/eventfd.h>
+
 #define PDU_HDR_SIZE 2
 #define NEW_PDU_HDR_SIZE 3
 
-_dispatcher::_dispatcher():
-	_stop(false)
-{
-}
+#define EPOLL_MAX_EVENTS 2048
+
+_dispatcher::_dispatcher()
+{ }
 
 void _dispatcher::loop()
 {
-	s = nn_socket(AF_SP,NN_REP);
+	int ret;
+	int epoll_fd;
+	int nn_poll_fd;
+
+	struct epoll_event ev;
+	struct epoll_event events[EPOLL_MAX_EVENTS];
+
+	if(-1 == (stop_event_fd = eventfd(0, EFD_NONBLOCK)))
+		throw std::string("eventfd call failed");
+
+	if((epoll_fd = epoll_create(EPOLL_MAX_EVENTS)) == -1)
+		throw std::string("epoll_create call failed");
+
+	ev.events = EPOLLIN;
+
+	ev.data.fd = stop_event_fd;
+	if(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, stop_event_fd, &ev) == -1)
+		throw std::string("epoll_ctl call for stop_event_fd failed");
+
+	int s = nn_socket(AF_SP,NN_REP);
 	if(s < 0){
-		throw std::string("nn_socket() = %d",s);
+		throw std::string("nn_socket()");
 	}
+
+	size_t vallen;
+	if(0!=nn_getsockopt(s, NN_SOL_SOCKET, NN_RCVFD, &nn_poll_fd, &vallen)) {
+		throw std::string("nn_setsockopt(NN_LINGER)");
+	}
+
+	ev.data.fd = nn_poll_fd;
+	if(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, nn_poll_fd, &ev) == -1)
+		throw std::string("epoll_ctl call for nn_poll_fd failed");
 
 	bool binded = false;
 	if(cfg.bind_urls.empty()){
@@ -24,7 +55,7 @@ void _dispatcher::loop()
 
 	for(const auto &i : cfg.bind_urls) {
 		const char *url = i.c_str();
-		int ret = nn_bind(s, url);
+		ret = nn_bind(s, url);
 		if(ret < 0){
 			err("can't bind to url '%s': %d (%s)",url,
 				 errno,nn_strerror(errno));
@@ -39,19 +70,51 @@ void _dispatcher::loop()
 		throw std::string("can't bind to any url");
 	}
 
-	while(!_stop){
-		char *msg = NULL;
-		int l = nn_recv(s, &msg, NN_MSG, 0);
-		if(l < 0){
-			if(errno==EINTR) continue;
-			if(errno==EBADF) break;
-			dbg("nn_recv() = %d, errno = %d(%s)",l,errno,nn_strerror(errno));
-			//!TODO: handle timeout, etc
-			continue;
+	pthread_setname_np(pthread_self(), "dispatcher");
+
+	bool _stop = false;
+	while(!_stop) {
+		ret = epoll_wait(epoll_fd,events,EPOLL_MAX_EVENTS,-1);
+		if(ret == -1 && errno != EINTR){
+			err("dispatcher: epoll_wait: %s",strerror(errno));
 		}
-		process_peer(msg,l);
-		nn_freemsg(msg);
+		if(ret < 1)
+			continue;
+
+		for (int n = 0; n < ret; ++n) {
+			struct epoll_event &e = events[n];
+			if(!(e.events & EPOLLIN)){
+				continue;
+			}
+			if(e.data.fd == stop_event_fd) {
+				dbg("got stop event. terminate");
+				_stop = true;
+				break;
+			}
+
+			char *msg = nullptr;
+			int l = nn_recv(s, &msg, NN_MSG, 0);
+			if(l < 0) {
+				if(errno==EINTR) continue;
+				if(errno==EBADF) {
+					err("nn_recv returned EBADF. terminate");
+					_stop = true;
+					break;
+				}
+				dbg("nn_recv() = %d, errno = %d(%s)",l,errno,nn_strerror(errno));
+				//!TODO: handle timeout, etc
+				continue;
+			}
+			process_peer(msg,l);
+			nn_freemsg(msg);
+		}
 	}
+	nn_close(s);
+}
+
+void _dispatcher::stop()
+{
+	eventfd_write(stop_event_fd, 1);
 }
 
 int _dispatcher::process_peer(char *msg, int len)

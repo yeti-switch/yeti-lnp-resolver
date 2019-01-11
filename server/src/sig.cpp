@@ -15,10 +15,6 @@ void sig_handler(int sig){
 	dispatcher::instance()->stop();
 	resolver::instance()->stop();
 	lnp_cache::instance()->stop();
-
-	dispatcher::dispose();
-	resolver::dispose();
-	lnp_cache::dispose();
 }
 
 void set_sighandlers() {
