@@ -1,9 +1,9 @@
-#include "dispatcher.h"
-#include "resolver.h"
-#include "cfg.h"
-
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
+
+#include "cfg.h"
+#include "dispatcher.h"
+#include "Resolver.h"
 
 #define PDU_HDR_SIZE 2
 #define NEW_PDU_HDR_SIZE 3
@@ -126,10 +126,10 @@ int _dispatcher::process_peer(char *msg, int len)
 		create_reply(reply,reply_len,msg,len);
 	} catch(std::string &e){
 		err("got string exception: %s",e.c_str());
-		create_error_reply(reply,reply_len,255,std::string("Internal Error"));
-	} catch(resolve_exception &e){
-		err("got resolve exception: %d <%s>",e.code,e.reason.c_str());
-		create_error_reply(reply,reply_len,e.code,e.reason);
+		create_error_reply(reply,reply_len,std::string("Internal Error"),255);
+	} catch(CResolver::error & e){
+		err("got resolve exception: %s",e.what());
+		create_error_reply(reply,reply_len,e.what());
 	}
 
 	int l = nn_send(s, reply, reply_len, 0);
@@ -140,8 +140,9 @@ int _dispatcher::process_peer(char *msg, int len)
 	return 0;
 }
 
-void _dispatcher::str2reply(char *&msg,int &len,int code,const std::string &s)
+void _dispatcher::str2reply(char *&msg,int &len,const std::string &s,int code)
 {
+  //TODO: handle error code in a proper way after using the data format clarification
 	int l = s.size();
 	len = l+PDU_HDR_SIZE;
 	msg = new char[len];
@@ -150,9 +151,9 @@ void _dispatcher::str2reply(char *&msg,int &len,int code,const std::string &s)
 	memcpy(msg+PDU_HDR_SIZE,s.c_str(),l);
 }
 
-void _dispatcher::make_reply(char *&msg,int &len,const resolver_driver::result &r)
+void _dispatcher::make_reply(char *&msg,int &len,const CDriver::SResult_t &r)
 {
-    int lrn_len = r.lrn.size();
+    int lrn_len = r.localNumberPortability.size();
     int tag_len = r.tag.size();
     int data_len = lrn_len + tag_len;
 
@@ -162,23 +163,23 @@ void _dispatcher::make_reply(char *&msg,int &len,const resolver_driver::result &
     msg[1] = data_len;  //global_len
     msg[2] = lrn_len;   //lrn_len
 
-    memcpy(msg+NEW_PDU_HDR_SIZE,r.lrn.c_str(),lrn_len);
+    memcpy(msg+NEW_PDU_HDR_SIZE,r.localNumberPortability.c_str(),lrn_len);
     memcpy(msg+NEW_PDU_HDR_SIZE+lrn_len,r.tag.c_str(),tag_len);
 }
 
-void _dispatcher::create_error_reply(char *&msg, int &len,
-									 int code, std::string description)
+void _dispatcher::create_error_reply(char *&msg, int &len, std::string description, int code)
+
 {
-	str2reply(msg,len,code,description);
+	str2reply(msg,len,description, code);
 }
 
 void _dispatcher::create_reply(char *&msg, int &len, const char *req, int req_len)
 {
     if(req_len < PDU_HDR_SIZE){
-        throw resolve_exception(1,"request too small");
+        throw CResolver::error("request too small");
     }
 
-    resolver_driver::result r;
+    CDriver::SResult_t r;
     int data_len = req[1];
     int database_id = req[0];
     int version = 0;
@@ -187,16 +188,19 @@ void _dispatcher::create_reply(char *&msg, int &len, const char *req, int req_le
 
     if(!old_format){
         if(req_len < NEW_PDU_HDR_SIZE){
-            throw resolve_exception(1,"request too small");
+            throw CResolver::error("request too small");
         }
         version = data_len;
         data_len = req[2];
         lnp_offset++;
     }
 
+    //TODO: required to check how this is used
+    (void) version; // compiling error suppression
+
     if((lnp_offset+data_len) > req_len){
         err("malformed request: too big data_len");
-        throw resolve_exception(1,"malformed request");
+        throw CResolver::error("malformed request");
     }
 
     std::string lnp(req+lnp_offset,data_len);
@@ -206,7 +210,7 @@ void _dispatcher::create_reply(char *&msg, int &len, const char *req, int req_le
     resolver::instance()->resolve(database_id,lnp,r);
 
     if(old_format){
-        str2reply(msg,len,0,r.lrn);
+        str2reply(msg,len,r.localNumberPortability,0);
     } else {
         make_reply(msg,len,r);
     }

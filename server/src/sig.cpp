@@ -4,7 +4,7 @@
 
 #include "dispatcher.h"
 #include "cache.h"
-#include "resolver.h"
+#include "Resolver.h"
 
 void sig_handler(int sig){
 	dbg("got sig = %d",sig);
@@ -13,7 +13,8 @@ void sig_handler(int sig){
 		return;
 	}
 	dispatcher::instance()->stop();
-	resolver::instance()->stop();
+	//FIXME: check this point after resolver class implementation
+//	resolver::instance()->stop();
 	lnp_cache::instance()->stop();
 }
 

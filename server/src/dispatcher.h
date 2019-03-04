@@ -1,8 +1,6 @@
 #pragma once
 
 #include "log.h"
-#include "resolver.h"
-
 #include <nanomsg/nn.h>
 #include <nanomsg/reqrep.h>
 
@@ -13,6 +11,7 @@
 
 #include <confuse.h>
 
+#include "Resolver.h"
 #include "singleton.h"
 
 class _dispatcher {
@@ -20,10 +19,10 @@ class _dispatcher {
 	int stop_event_fd;
 
 	int process_peer(char *msg, int len);
-	void str2reply(char *&msg,int &len,int code,const std::string &s);
-	void make_reply(char *&msg,int &len,const resolver_driver::result &r);
+	void str2reply(char *&msg,int &len,const std::string &s,int code);
+	void make_reply(char *&msg,int &len,const CDriver::SResult_t &r);
 	void create_reply(char *&msg, int &len, const char *req, int req_len);
-	void create_error_reply(char *&msg, int &len,int code, std::string description);
+	void create_error_reply(char *&msg, int &len,std::string description,int code=1);
 
   protected:
 	void dispose() {}

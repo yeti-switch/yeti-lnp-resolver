@@ -18,7 +18,7 @@ extern volatile int log_level;
 
 #ifdef VERBOSE_LOGGING
 //#define _LOG(level,level_str,fmt,args...) syslog(level,"[%u] " level_str "%s:%d:%s " fmt ,syscall(__NR_gettid), __FILENAME__,__LINE__,__PRETTY_FUNCTION__,##args);
-#define _LOG(level,level_str,fmt,args...) syslog(level,"[%u] " level_str "%s:%d: " fmt ,syscall(__NR_gettid), __FILENAME__,__LINE__,##args);
+#define _LOG(level,level_str,fmt,args...) syslog(level,"[%ld] " level_str "%s:%d: " fmt ,syscall(__NR_gettid), __FILENAME__,__LINE__,##args);
 #else
 #define _LOG(level,level_str,fmt,args...) syslog(level,fmt,##args);
 #endif

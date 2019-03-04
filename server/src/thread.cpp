@@ -20,9 +20,9 @@ void * thread::_start(void * _t)
 	thread* _this = (thread*)_t;
 	_this->_pid = (unsigned long) _this->_td;
 	_this->thread_pid = syscall(SYS_gettid);
-	dbg("starting %lu",(unsigned long)_this->thread_pid);
+	dbg("starting %lu",_this->thread_pid);
 	_this->run();
-	dbg("ended %lu",(unsigned long)_this->thread_pid);
+	dbg("ended %lu",_this->thread_pid);
 	_this->_stopped.set(true);
 	return NULL;
 }
@@ -64,7 +64,7 @@ void thread::stop()
 	}
 
 	// gives the thread a chance to clean up
-	dbg("stop thread %lu", (unsigned long int)thread_pid);
+	dbg("stop thread %lu", thread_pid);
 
 	try { on_stop(); } catch(...) {}
 
@@ -79,7 +79,7 @@ void thread::stop()
 		}
 	}
 
-	dbg("thread %lu detached", (unsigned long int)thread_pid);
+	dbg("thread %lu detached", thread_pid);
 
 	_m_td.unlock();
 }

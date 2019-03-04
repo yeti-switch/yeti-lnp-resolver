@@ -9,20 +9,20 @@
 
 #include <pqxx/pqxx>
 
-#include "resolver.h"
+#include "Resolver.h"
 
 using std::string;
 //using std::list;
 using std::pair;
 
 struct cache_entry {
-	int database_id;
+    CDriverCfg::CfgUniqId_t database_id;
     string dst,lrn, data, tag;
-    cache_entry(int _database_id, const string &_dst, const resolver_driver::result &r):
+    cache_entry(CDriverCfg::CfgUniqId_t _database_id, const string &_dst, const CDriver::SResult_t & r):
 		database_id(_database_id),
 		dst(_dst),
-        lrn(r.lrn),
-        data(r.raw_data),
+        lrn(r.localNumberPortability),
+        data(r.rawData),
         tag(r.tag) {}
 };
 

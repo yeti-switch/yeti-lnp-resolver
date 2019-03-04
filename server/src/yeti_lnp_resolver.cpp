@@ -8,10 +8,10 @@
 #include "opts.h"
 #include "usage.h"
 #include "dispatcher.h"
-#include "resolver.h"
 #include "cache.h"
 
 #include "cfg_reader.h"
+#include "Resolver.h"
 
 int main(int argc,char *argv[])
 {

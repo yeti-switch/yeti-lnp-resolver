@@ -1,0 +1,17 @@
+!!! Warning: this file should be removed !!!
+
+* Variable/user defined types naming:
+	g - global variable
+	s - static variable
+	m - member variable
+	t - custom defined type (typedef) (as _suffix, because used cstdint)
+
+	S - structure type
+	E - enumeration type
+	C - class
+	I - interface class
+	T - template
+	N - namespace
+
+* Variable naming does not have affect on file naming
+	

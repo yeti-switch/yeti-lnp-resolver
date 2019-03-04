@@ -23,8 +23,8 @@ const char *cache_lnp_args[] = {
 };
 
 _cache::_cache():
-	c(NULL),
-	gotostop(false)
+    gotostop(false),
+    c(NULL)
 {}
 
 _cache::~_cache() {}

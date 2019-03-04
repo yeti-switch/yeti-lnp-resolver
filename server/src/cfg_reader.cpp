@@ -43,6 +43,8 @@ class cfg_value {
 	}
 
 	cfg_value& operator=(const cfg_value& v){
+	  if(this == &v)
+	    return *this;
 		type = v.type;
 		switch(type){
 		case Int: v_int = v.v_int; break;
@@ -50,6 +52,7 @@ class cfg_value {
 		case Undef: break;
 		default: throw std::string("cfg_value: uknown rhs type");
 		}
+		return *this;
 	}
 
 	cfg_value(const int &v): type(Int), v_int(v) {}
@@ -191,11 +194,10 @@ bool load_cfg(const char *path)
 	case CFG_SUCCESS:
 		break;
 	case CFG_FILE_ERROR:
-		err("configuration file: '%s' could not be read: %s",
-			path, strerror(errno));
+		err("configuration file: '%s' could not be read: %s", path, strerror(errno));
 		goto out;
 	case CFG_PARSE_ERROR:
-		err("configuration file '%s' parse error: %s", path);
+		err("configuration file '%s' parse error: %s", path, strerror(errno));
 		goto out;
 	default:
 		err("unexpected error on configuration file '%s' processing", path);
@@ -204,7 +206,7 @@ bool load_cfg(const char *path)
 	r.set_cfg_part(LNP_CFG_PART);
 	r.set_node_id(cfg_getint(c,"node_id"));
 	r.set_timeout(cfg_getint(c,"cfg_timeout"));
-	for(int i = 0; i < cfg_size(c, "cfg_urls"); i++){
+	for(unsigned int i = 0; i < cfg_size(c, "cfg_urls"); i++){
 		r.add_url(cfg_getnstr(c, "cfg_urls", i));
 	}
 
