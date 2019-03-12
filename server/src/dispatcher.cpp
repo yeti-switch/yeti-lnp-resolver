@@ -34,7 +34,7 @@ void _dispatcher::loop()
 	if(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, stop_event_fd, &ev) == -1)
 		throw std::string("epoll_ctl call for stop_event_fd failed");
 
-	int s = nn_socket(AF_SP,NN_REP);
+	s = nn_socket(AF_SP,NN_REP);
 	if(s < 0){
 		throw std::string("nn_socket()");
 	}
@@ -135,7 +135,7 @@ int _dispatcher::process_peer(char *msg, int len)
 	int l = nn_send(s, reply, reply_len, 0);
 	delete[] reply;
 	if(l!=reply_len){
-		err("nn_send(): %d, while msg to send size was %d",l,reply_len);
+		err("nn_send(): %d, while msg to send size was %d. errno = %d(%s)",l,reply_len, errno,nn_strerror(errno));
 	}
 	return 0;
 }
