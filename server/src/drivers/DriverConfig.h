@@ -7,6 +7,9 @@ using std::uint8_t;
 #include <stdexcept>
 using std::logic_error;
 
+#include <string>
+using std::string;
+
 #include <pqxx/pqxx>
 
 #include "cJSON.h"
@@ -26,25 +29,26 @@ class CDriverCfg
     class error : public logic_error
     {
       private:
-        const char * mIdent;
+        string mIdent;
        public:
-           explicit error(const char * ident, const std::string & what)
-               : logic_error(what)
+           explicit error(const char * ident, const string & what)
+             : logic_error(what), mIdent(ident)
            { mIdent = (nullptr != ident) ? ident : "Unknown"; }
-           const char * getIdent() const { return mIdent; }
+
+           const char * getIdent() const { return mIdent.c_str(); }
     };
 
     // Configuration data types
     using CfgUniqId_t   = int32_t;
-    using CfgLabel_t    = char;
+    using CfgLabel_t    = string;
     using CfgTimeout_t  = uint32_t;
     using CfgPort_t     = uint16_t;
     using CfgProtocol_t = char;
-    using CfgHost_t     = char;
-    using CfgUserName_t = char;
-    using CfgToken_t    = char;
-    using CfgKey_t      = char;
-    using CfgFilePath_t = char;
+    using CfgHost_t     = string;
+    using CfgUserName_t = string;
+    using CfgToken_t    = string;
+    using CfgKey_t      = string;
+    using CfgFilePath_t = string;
 
     // Raw driver configuration
     using RawConfig_t = pqxx::result::tuple;
@@ -55,7 +59,7 @@ class CDriverCfg
     CfgUniqId_t mUniqId;       // Driver unique identifier depend on
                                // database primary key. Common for all drivers
 
-    const CfgLabel_t * mLabel; // User defined label for driver
+    CfgLabel_t mLabel;         // User defined label for driver
 
   protected:
     // Supported driver configuration formats
@@ -74,7 +78,7 @@ class CDriverCfg
 
     // General getters for raw configuration processing
     static const CfgUniqId_t getRawUniqId(const RawConfig_t & data);
-    static const CfgLabel_t * getRawLabel(const RawConfig_t & data);
+    static const CfgLabel_t getRawLabel(const RawConfig_t & data);
 
     static const CfgTimeout_t getRawTimeout(const RawConfig_t & data);
     static const CfgTimeout_t getRawTimeout(JSONConfig_t * data);
@@ -82,11 +86,11 @@ class CDriverCfg
     static const CfgPort_t getRawPort(const RawConfig_t & data);
     static const CfgPort_t getRawPort(JSONConfig_t * data);
 
-    static const CfgHost_t * getRawHost(const RawConfig_t & data);
-    static const CfgHost_t * getRawHost(JSONConfig_t * data);
+    static const CfgHost_t getRawHost(const RawConfig_t & data);
+    static const CfgHost_t getRawHost(JSONConfig_t * data);
 
-    static const CfgUserName_t * getRawUserName(const RawConfig_t & data);
-    static const CfgUserName_t * getRawUserName(JSONConfig_t * data);
+    static const CfgUserName_t getRawUserName(const RawConfig_t & data);
+    static const CfgUserName_t getRawUserName(JSONConfig_t * data);
 
   public:
     CDriverCfg(const RawConfig_t & data);
@@ -97,7 +101,7 @@ class CDriverCfg
     static const char *       getFormatStrType();
 
     const CfgUniqId_t  getUniqId() const { return mUniqId; }
-    const CfgLabel_t * getLabel() const  { return mLabel; }
+    const char * getLabel() const  { return mLabel.c_str(); }
 };
 
 #endif /* SERVER_SRC_DRIVERS_DRIVERCONFIG_H_ */

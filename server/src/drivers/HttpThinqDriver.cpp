@@ -31,14 +31,14 @@ size_t static write_func(void * ptr, size_t size, size_t nmemb, void * userdata)
  * @param[in] data    The database output with driver configuration
  * @return token value
  */
-const CDriverCfg::CfgToken_t * CHttpThinqDriverCfg::getRawToken(const RawConfig_t & data)
+const CDriverCfg::CfgToken_t CHttpThinqDriverCfg::getRawToken(const RawConfig_t & data)
 {
-  const CfgToken_t * token = nullptr;
+  CfgToken_t token;
 
   if ((ECONFIG_DATA_AS_SEPARATE_COLUMN_V1 == sConfigType) ||
       (ECONFIG_DATA_AS_SEPARATE_COLUMN_V2 == sConfigType))
   {
-    token = static_cast<const CfgToken_t *> (data["o_thinq_token"].c_str());
+    token = data["o_thinq_token"].as<CfgToken_t>();
   }
 
   return token;
@@ -50,9 +50,9 @@ const CDriverCfg::CfgToken_t * CHttpThinqDriverCfg::getRawToken(const RawConfig_
  * @param[in] data  The database output with driver configuration
  * @return token value
  */
-const CDriverCfg::CfgToken_t * CHttpThinqDriverCfg::getRawToken(JSONConfig_t * data)
+const CDriverCfg::CfgToken_t CHttpThinqDriverCfg::getRawToken(JSONConfig_t * data)
 {
-  CfgToken_t * token = nullptr;
+  CfgToken_t token;
 
   if ((nullptr != data) &&
       (ECONFIG_DATA_AS_JSON_STRING == sConfigType))
@@ -63,8 +63,8 @@ const CDriverCfg::CfgToken_t * CHttpThinqDriverCfg::getRawToken(JSONConfig_t * d
       token = cJSON_Print(jToken);
 
       //TODO: improve this code chunk to remove quotes
-      token += 1;
-      token[std::strlen(token) - 1] = '\0';
+      token.erase(token.begin());
+      token.erase(token.end() - 1);
     }
   }
 
@@ -94,21 +94,21 @@ CHttpThinqDriverCfg::CHttpThinqDriverCfg(const CDriverCfg::RawConfig_t & data)
       }
 
       mHost = getRawHost(jData);
-      if (nullptr == mHost)
+      if (0 == mHost.length())
       {
         errMsg = "host value is invalid!";
         break;
       }
 
       mUserName = getRawUserName(jData);
-      if ((nullptr == mUserName) || (0 == std::strlen(mUserName)))
+      if (0 == mUserName.length())
       {
         errMsg = "user name value is invalid!";
         break;
       }
 
       mToken = getRawToken(jData);
-      if (nullptr == mToken)
+      if (0 == mToken.length())
       {
         errMsg = "token value is invalid!";
         break;
@@ -131,19 +131,19 @@ CHttpThinqDriverCfg::CHttpThinqDriverCfg(const CDriverCfg::RawConfig_t & data)
   else
   {
     mHost = getRawHost(data);
-    if (nullptr == mHost)
+    if (0 == mHost.length())
     {
       throw error(getLabel(), "host value is invalid!");
     }
 
     mUserName = getRawUserName(data);
-    if ((nullptr == mUserName) || (0 == std::strlen(mUserName)))
+    if (0 == mUserName.length())
     {
       throw error(getLabel(), "user name value is invalid!");
     }
 
     mToken = getRawToken(data);
-    if (nullptr == mToken)
+    if (0 == mToken.length())
     {
       throw error(getLabel(), "token value is invalid!");
     }

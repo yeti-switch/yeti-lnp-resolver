@@ -24,7 +24,7 @@ class CHttpClient
     class error: public logic_error
     {
       public:
-        explicit error(const std::string & what) :
+        explicit error(const string & what) :
             logic_error("{HttpClient} " + what) { }
     };
 

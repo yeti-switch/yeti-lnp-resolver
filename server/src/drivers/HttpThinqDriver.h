@@ -10,25 +10,25 @@ class CHttpThinqDriverCfg: public CDriverCfg
 {
   private:
     const CfgProtocol_t * mProtocol = "http";   //FIXME: replase to "https://"
-    const CfgHost_t *     mHost;
+    CfgHost_t             mHost;
     CfgPort_t             mPort;
-    const CfgUserName_t * mUserName;
-    const CfgToken_t *    mToken;
+    CfgUserName_t         mUserName;
+    CfgToken_t            mToken;
     CfgTimeout_t          mTimeout;
 
     // Driver specific getters for raw configuration processing
-    static const CfgToken_t * getRawToken(const RawConfig_t & data);
-    static const CfgToken_t * getRawToken(JSONConfig_t * data);
+    static const CfgToken_t getRawToken(const RawConfig_t & data);
+    static const CfgToken_t getRawToken(JSONConfig_t * data);
 
   public:
     CHttpThinqDriverCfg(const CDriverCfg::RawConfig_t & data);
 
-    const CfgProtocol_t * getProtocol() const { return mProtocol; }
-    const CfgHost_t *     getHost() const     { return mHost; }
-    const CfgPort_t       getPort() const     { return mPort; }
-    const CfgUserName_t * getUserName() const { return mUserName; }
-    const CfgToken_t *    geToken() const     { return mToken; }
-    const CfgTimeout_t    getTimeout() const  { return mTimeout; }
+    const char *        getProtocol() const { return mProtocol; }
+    const char *        getHost() const     { return mHost.c_str(); }
+    const CfgPort_t     getPort() const     { return mPort; }
+    const char *        getUserName() const { return mUserName.c_str(); }
+    const char *        geToken() const     { return mToken.c_str(); }
+    const CfgTimeout_t  getTimeout() const  { return mTimeout; }
 };
 
 /*

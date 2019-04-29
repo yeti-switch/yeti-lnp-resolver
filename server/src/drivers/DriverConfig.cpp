@@ -176,18 +176,18 @@ const CDriverCfg::CfgUniqId_t CDriverCfg::getRawUniqId(const RawConfig_t & data)
  * @param[in] data  The database output with driver data
  * @return driver label
  */
-const CDriverCfg::CfgLabel_t * CDriverCfg::getRawLabel(const RawConfig_t & data)
+const CDriverCfg::CfgLabel_t CDriverCfg::getRawLabel(const RawConfig_t & data)
 {
-  const CfgLabel_t * label = nullptr;
+  CfgLabel_t label;
 
   if ((ECONFIG_DATA_AS_SEPARATE_COLUMN_V1 == sConfigType) ||
            (ECONFIG_DATA_AS_SEPARATE_COLUMN_V2 == sConfigType))
   {
-    label = data["o_name"].c_str();
+    label = data["o_name"].as<CfgLabel_t>();
   }
   else if (ECONFIG_DATA_AS_JSON_STRING == sConfigType)
   {
-    label = data["name"].c_str();
+    label = data["name"].as<CfgLabel_t>();
   }
 
   return label;
@@ -299,14 +299,14 @@ const CDriverCfg::CfgPort_t CDriverCfg::getRawPort(JSONConfig_t * data)
  * @param[in] data  The database output with driver configuration
  * @return host value
  */
-const CDriverCfg::CfgHost_t * CDriverCfg::getRawHost(const RawConfig_t & data)
+const CDriverCfg::CfgHost_t CDriverCfg::getRawHost(const RawConfig_t & data)
 {
-  const CfgHost_t * host = nullptr;
+  CfgHost_t host;
 
   if ((ECONFIG_DATA_AS_SEPARATE_COLUMN_V1 == sConfigType) ||
       (ECONFIG_DATA_AS_SEPARATE_COLUMN_V2 == sConfigType))
   {
-    host = static_cast<const CfgHost_t *> (data["o_host"].c_str());
+    host = data["o_host"].as<CfgHost_t>();
   }
 
   return host;
@@ -318,9 +318,9 @@ const CDriverCfg::CfgHost_t * CDriverCfg::getRawHost(const RawConfig_t & data)
  * @param[in] data  The database output with driver configuration
  * @return host value
  */
-const CDriverCfg::CfgHost_t * CDriverCfg::getRawHost(JSONConfig_t * data)
+const CDriverCfg::CfgHost_t CDriverCfg::getRawHost(JSONConfig_t * data)
 {
-  CfgHost_t * host = nullptr;
+  CfgHost_t host;
 
   if (nullptr != data)
   {
@@ -330,9 +330,10 @@ const CDriverCfg::CfgHost_t * CDriverCfg::getRawHost(JSONConfig_t * data)
       if (jHost)
       {
         host = cJSON_Print(jHost);
+
         //TODO: improve this code chunk to remove quotes
-        host += 1;
-        host[std::strlen(host) - 1] = '\0';
+        host.erase(host.begin());
+        host.erase(host.end() - 1);
       }
     }
   }
@@ -346,14 +347,14 @@ const CDriverCfg::CfgHost_t * CDriverCfg::getRawHost(JSONConfig_t * data)
  * @param[in] data  The database output with driver configuration
  * @return user name value
  */
-const CDriverCfg::CfgUserName_t * CDriverCfg::getRawUserName(const RawConfig_t & data)
+const CDriverCfg::CfgUserName_t CDriverCfg::getRawUserName(const RawConfig_t & data)
 {
-  const CfgUserName_t * userName = nullptr;
+  CfgUserName_t userName;
 
   if ((ECONFIG_DATA_AS_SEPARATE_COLUMN_V1 == sConfigType) ||
       (ECONFIG_DATA_AS_SEPARATE_COLUMN_V2 == sConfigType))
   {
-    userName = static_cast<const CfgUserName_t *> (data["o_thinq_username"].c_str());
+    userName = data["o_thinq_username"].as<CfgUserName_t>();
   }
 
   return userName;
@@ -365,9 +366,9 @@ const CDriverCfg::CfgUserName_t * CDriverCfg::getRawUserName(const RawConfig_t &
  * @param[in] data  The database output with driver configuration
  * @return user name value
  */
-const CDriverCfg::CfgUserName_t * CDriverCfg::getRawUserName(JSONConfig_t * data)
+const CDriverCfg::CfgUserName_t CDriverCfg::getRawUserName(JSONConfig_t * data)
 {
-  CfgUserName_t * userName = nullptr;
+  CfgUserName_t userName;
 
   if (nullptr != data)
   {
@@ -377,9 +378,10 @@ const CDriverCfg::CfgUserName_t * CDriverCfg::getRawUserName(JSONConfig_t * data
       if (jUserName)
       {
         userName = cJSON_Print(jUserName);
+
         //TODO: improve this code chunk to remove quotes
-        userName += 1;
-        userName[std::strlen(userName) - 1] = '\0';
+        userName.erase(userName.begin());
+        userName.erase(userName.end() - 1);
       }
     }
   }
@@ -399,8 +401,7 @@ CDriverCfg::CDriverCfg(const RawConfig_t & data)
   }
 
   mLabel = getRawLabel(data);
-  if ((nullptr == mLabel) ||
-      (0 == std::strlen(static_cast<const char *> (mLabel))))
+  if (0 == mLabel.length())
   {
     throw error(nullptr, "not found user defined name for driver!");
   }

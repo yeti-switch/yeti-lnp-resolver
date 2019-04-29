@@ -31,13 +31,13 @@ size_t static write_func(void * ptr, size_t size, size_t nmemb, void * userdata)
  * @param[in] data    The database output with driver configuration
  * @return key value
  */
-const CDriverCfg::CfgKey_t * CHttpAlcazarDriverCfg::getRawKey(const RawConfig_t & data)
+const CDriverCfg::CfgKey_t CHttpAlcazarDriverCfg::getRawKey(const RawConfig_t & data)
 {
-  const CfgKey_t * key = nullptr;
+  CfgKey_t key;
 
   if (ECONFIG_DATA_AS_SEPARATE_COLUMN_V2 == sConfigType)
   {
-    key = static_cast<const CfgKey_t *> (data["o_alkazar_key"].c_str());
+    key = data["o_alkazar_key"].as<CfgKey_t>();
   }
 
   return key;
@@ -49,9 +49,9 @@ const CDriverCfg::CfgKey_t * CHttpAlcazarDriverCfg::getRawKey(const RawConfig_t 
  * @param[in] data  The database output with driver configuration
  * @return key value
  */
-const CDriverCfg::CfgKey_t * CHttpAlcazarDriverCfg::getRawKey(JSONConfig_t * data)
+const CDriverCfg::CfgKey_t CHttpAlcazarDriverCfg::getRawKey(JSONConfig_t * data)
 {
-  CfgKey_t * key = nullptr;
+  CfgKey_t key;
 
   if ((nullptr != data) &&
       (ECONFIG_DATA_AS_JSON_STRING == sConfigType))
@@ -62,8 +62,8 @@ const CDriverCfg::CfgKey_t * CHttpAlcazarDriverCfg::getRawKey(JSONConfig_t * dat
       key = cJSON_Print(jKey);
 
       //TODO: improve this code chunk to remove quotes
-      key += 1;
-      key[std::strlen(key) - 1] = '\0';
+      key.erase(key.begin());
+      key.erase(key.end() - 1);
     }
   }
 
@@ -93,14 +93,14 @@ CHttpAlcazarDriverCfg::CHttpAlcazarDriverCfg(const CDriverCfg::RawConfig_t & dat
       }
 
       mHost = getRawHost(jData);
-      if (nullptr == mHost)
+      if (0 == mHost.length())
       {
         errMsg = "host value is invalid!";
         break;
       }
 
       mKey = getRawKey(jData);
-      if (nullptr == mKey)
+      if (0 == mKey.length())
       {
         errMsg = "key value is invalid!";
         break;
@@ -123,13 +123,13 @@ CHttpAlcazarDriverCfg::CHttpAlcazarDriverCfg(const CDriverCfg::RawConfig_t & dat
   else
   {
     mHost = getRawHost(data);
-    if (nullptr == mHost)
+    if (0 == mHost.length())
     {
       throw error(getLabel(), "host value is invalid!");
     }
 
     mKey = getRawKey(data);
-    if (nullptr == mKey)
+    if (0 == mKey.length())
     {
       throw error(getLabel(), "key value is invalid!");
     }
