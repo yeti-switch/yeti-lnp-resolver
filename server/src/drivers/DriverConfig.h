@@ -7,6 +7,8 @@ using std::uint8_t;
 #include <stdexcept>
 using std::logic_error;
 
+#include <pqxx/pqxx>
+
 #include "cJSON.h"
 
 /*
@@ -37,6 +39,7 @@ class CDriverCfg
     using CfgLabel_t    = char;
     using CfgTimeout_t  = uint32_t;
     using CfgPort_t     = uint16_t;
+    using CfgProtocol_t = char;
     using CfgHost_t     = char;
     using CfgUserName_t = char;
     using CfgToken_t    = char;
@@ -69,30 +72,21 @@ class CDriverCfg
     // Protected members
     static ECfgFormat_t sConfigType;
 
-    // Getters for raw configuration processing
-    const CfgUniqId_t getRawUniqId(const RawConfig_t & data);
+    // General getters for raw configuration processing
+    static const CfgUniqId_t getRawUniqId(const RawConfig_t & data);
+    static const CfgLabel_t * getRawLabel(const RawConfig_t & data);
 
-    const CfgLabel_t * getRawLabel(const RawConfig_t & data);
+    static const CfgTimeout_t getRawTimeout(const RawConfig_t & data);
+    static const CfgTimeout_t getRawTimeout(JSONConfig_t * data);
 
-    const CfgTimeout_t getRawTimeout(const RawConfig_t & data);
-    const CfgTimeout_t getRawTimeout(JSONConfig_t * data);
+    static const CfgPort_t getRawPort(const RawConfig_t & data);
+    static const CfgPort_t getRawPort(JSONConfig_t * data);
 
-    const CfgPort_t getRawPort(const RawConfig_t & data);
-    const CfgPort_t getRawPort(JSONConfig_t * data);
+    static const CfgHost_t * getRawHost(const RawConfig_t & data);
+    static const CfgHost_t * getRawHost(JSONConfig_t * data);
 
-    const CfgHost_t * getRawHost(const RawConfig_t & data);
-    const CfgHost_t * getRawHost(JSONConfig_t * data);
-
-    const CfgUserName_t * getRawUserName(const RawConfig_t & data);
-    const CfgUserName_t * getRawUserName(JSONConfig_t * data);
-
-    const CfgKey_t * getRawKey(const RawConfig_t & data,
-                               const ECDriverId drvId);
-    const CfgKey_t * getRawKey(JSONConfig_t * data,
-                               const ECDriverId drvId);
-
-    const CfgFilePath_t * getRawFilePath(const RawConfig_t & data);
-    const CfgFilePath_t * getRawFilePath(JSONConfig_t * data);
+    static const CfgUserName_t * getRawUserName(const RawConfig_t & data);
+    static const CfgUserName_t * getRawUserName(JSONConfig_t * data);
 
   public:
     CDriverCfg(const RawConfig_t & data);

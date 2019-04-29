@@ -7,11 +7,8 @@ using std::string;
 #include <memory>
 using std::unique_ptr;
 
-#include <pqxx/pqxx>
-
 #include "DriverDefines.h"
 #include "DriverConfig.h"
-
 
 /*
  * Resolver driver class
@@ -24,13 +21,13 @@ class CDriver
     {
        public:
            explicit error(const std::string & what)
-               : logic_error(what) { };
+               : logic_error(what) { }
     };
 
     // Resolving output data
     struct SResult_t
     {
-        string localNumberPortability;
+        string localRoutingNumber;
         string tag;                //TODO: is this usable ?
         string rawData;
     };
@@ -38,9 +35,6 @@ class CDriver
   private:
      ECDriverId mId;      // Driver identifier
      const char * mName;  // Driver string name
-
-  protected:
-    const ECDriverId  getId() const   { return mId; }
 
   public:
     CDriver(const ECDriverId id, const char * name);

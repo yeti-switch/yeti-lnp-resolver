@@ -153,7 +153,7 @@ void _dispatcher::str2reply(char *&msg,int &len,const std::string &s,int code)
 
 void _dispatcher::make_reply(char *&msg,int &len,const CDriver::SResult_t &r)
 {
-    int lrn_len = r.localNumberPortability.size();
+    int lrn_len = r.localRoutingNumber.size();
     int tag_len = r.tag.size();
     int data_len = lrn_len + tag_len;
 
@@ -163,7 +163,7 @@ void _dispatcher::make_reply(char *&msg,int &len,const CDriver::SResult_t &r)
     msg[1] = data_len;  //global_len
     msg[2] = lrn_len;   //lrn_len
 
-    memcpy(msg+NEW_PDU_HDR_SIZE,r.localNumberPortability.c_str(),lrn_len);
+    memcpy(msg+NEW_PDU_HDR_SIZE,r.localRoutingNumber.c_str(),lrn_len);
     memcpy(msg+NEW_PDU_HDR_SIZE+lrn_len,r.tag.c_str(),tag_len);
 }
 
@@ -210,7 +210,7 @@ void _dispatcher::create_reply(char *&msg, int &len, const char *req, int req_le
     resolver::instance()->resolve(database_id,lnp,r);
 
     if(old_format){
-        str2reply(msg,len,r.localNumberPortability,0);
+        str2reply(msg,len,r.localRoutingNumber,0);
     } else {
         make_reply(msg,len,r);
     }

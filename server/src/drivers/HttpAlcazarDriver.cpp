@@ -1,4 +1,5 @@
 #include <sstream>
+#include <cstring>
 
 #include "log.h"
 #include "drivers/modules/HttpClient.h"
@@ -15,7 +16,7 @@ size_t static write_func(void * ptr, size_t size, size_t nmemb, void * userdata)
     if (userdata)
     {
       std::string & s = *(reinterpret_cast<std::string *>(userdata));
-      s.append((char *)ptr, (size * nmemb));
+      s.append(static_cast<char *> (ptr), (size * nmemb));
     }
 
     return (size * nmemb);
@@ -25,14 +26,57 @@ size_t static write_func(void * ptr, size_t size, size_t nmemb, void * userdata)
  * Configuration implementation
 ***************************************************************/
 /*
+ * Method for retrieving key value from configuration data (Basic format).
+ *
+ * @param[in] data    The database output with driver configuration
+ * @return key value
+ */
+const CDriverCfg::CfgKey_t * CHttpAlcazarDriverCfg::getRawKey(const RawConfig_t & data)
+{
+  const CfgKey_t * key = nullptr;
+
+  if (ECONFIG_DATA_AS_SEPARATE_COLUMN_V2 == sConfigType)
+  {
+    key = static_cast<const CfgKey_t *> (data["o_alkazar_key"].c_str());
+  }
+
+  return key;
+}
+
+/*
+ * Method for retrieving key value from configuration data (JSON format).
+ *
+ * @param[in] data  The database output with driver configuration
+ * @return key value
+ */
+const CDriverCfg::CfgKey_t * CHttpAlcazarDriverCfg::getRawKey(JSONConfig_t * data)
+{
+  CfgKey_t * key = nullptr;
+
+  if ((nullptr != data) &&
+      (ECONFIG_DATA_AS_JSON_STRING == sConfigType))
+  {
+    cJSON * jKey = cJSON_GetObjectItem(data, "key");
+    if (jKey)
+    {
+      key = cJSON_Print(jKey);
+
+      //TODO: improve this code chunk to remove quotes
+      key += 1;
+      key[std::strlen(key) - 1] = '\0';
+    }
+  }
+
+  return key;
+}
+
+/*
  * Driver configuration constructor
  *
  * @param[in] data    The raw configuration data
- * @param[in] drvId   The driver identifier
  * @param[in] drvName The string driver name
  */
-CHttpAlcazarDriverCfg::CHttpAlcazarDriverCfg(const CDriverCfg::RawConfig_t & data,
-                                             const ECDriverId drvId)
+CHttpAlcazarDriverCfg::CHttpAlcazarDriverCfg(const CDriverCfg::RawConfig_t & data)
   : CDriverCfg(data)
 {
   if (CDriverCfg::ECONFIG_DATA_AS_JSON_STRING == CDriverCfg::getFormatType())
@@ -55,7 +99,7 @@ CHttpAlcazarDriverCfg::CHttpAlcazarDriverCfg(const CDriverCfg::RawConfig_t & dat
         break;
       }
 
-      mKey = getRawKey(jData, drvId);
+      mKey = getRawKey(jData);
       if (nullptr == mKey)
       {
         errMsg = "key value is invalid!";
@@ -84,7 +128,7 @@ CHttpAlcazarDriverCfg::CHttpAlcazarDriverCfg(const CDriverCfg::RawConfig_t & dat
       throw error(getLabel(), "host value is invalid!");
     }
 
-    mKey = getRawKey(data, drvId);
+    mKey = getRawKey(data);
     if (nullptr == mKey)
     {
       throw error(getLabel(), "key value is invalid!");
@@ -106,12 +150,12 @@ CHttpAlcazarDriverCfg::CHttpAlcazarDriverCfg(const CDriverCfg::RawConfig_t & dat
 CHttpAlcazarDriver::CHttpAlcazarDriver(const CDriverCfg::RawConfig_t & data)
   : CDriver(ECDriverId::ERESOLVER_DRIVER_HTTP_ALCAZAR, "Alcazar Networks")
 {
-  mCfg.reset(new CHttpAlcazarDriverCfg(data, getId()));
+  mCfg.reset(new CHttpAlcazarDriverCfg(data));
 
   std::ostringstream url;
   CDriverCfg::CfgPort_t port = mCfg->getPort();
 
-  url << "http://" << mCfg->getHost();
+  url << mCfg->getProtocol() << "://" << mCfg->getHost();
 
   if (port)
   {
@@ -132,9 +176,10 @@ CHttpAlcazarDriver::CHttpAlcazarDriver(const CDriverCfg::RawConfig_t & data)
  */
 void CHttpAlcazarDriver::showInfo() const
 {
-  info("[%u/%s] '%s' driver => address <%s:%u> [timeout - %u seconds]",
+  info("[%u/%s] '%s' driver => address <%s://%s:%u> [timeout - %u seconds]",
       mCfg->getUniqId(),
       mCfg->getLabel(), getName(),
+      mCfg->getProtocol(),
       mCfg->getHost(), mCfg->getPort(),
       mCfg->getTimeout());
 }
@@ -212,13 +257,13 @@ void CHttpAlcazarDriver::resolve(const string & inData, SResult_t & outResult) c
   }
 
   char * lrn = cJSON_Print(jlrn);
-  outResult.localNumberPortability = lrn;
+  outResult.localRoutingNumber = lrn;
   free(lrn);
 
   outResult.rawData = replyBuf;
 
   // remove quotes from result LNP
-  string & lnp = outResult.localNumberPortability;
+  string & lnp = outResult.localRoutingNumber;
   if (0 == lnp.compare(0, 1, "\""))
   {
     lnp.erase(lnp.begin());
@@ -230,6 +275,3 @@ void CHttpAlcazarDriver::resolve(const string & inData, SResult_t & outResult) c
 
   cJSON_Delete(j);
 }
-
-
-

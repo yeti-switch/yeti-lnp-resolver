@@ -9,20 +9,25 @@
 class CHttpThinqDriverCfg: public CDriverCfg
 {
   private:
+    const CfgProtocol_t * mProtocol = "http";   //FIXME: replase to "https://"
     const CfgHost_t *     mHost;
     CfgPort_t             mPort;
     const CfgUserName_t * mUserName;
-    const CfgKey_t *      mToken;
+    const CfgToken_t *    mToken;
     CfgTimeout_t          mTimeout;
 
-  public:
-    CHttpThinqDriverCfg(const CDriverCfg::RawConfig_t & data,
-                        const ECDriverId drvId);
+    // Driver specific getters for raw configuration processing
+    static const CfgToken_t * getRawToken(const RawConfig_t & data);
+    static const CfgToken_t * getRawToken(JSONConfig_t * data);
 
+  public:
+    CHttpThinqDriverCfg(const CDriverCfg::RawConfig_t & data);
+
+    const CfgProtocol_t * getProtocol() const { return mProtocol; }
     const CfgHost_t *     getHost() const     { return mHost; }
     const CfgPort_t       getPort() const     { return mPort; }
     const CfgUserName_t * getUserName() const { return mUserName; }
-    const CfgKey_t *      geToken() const     { return mToken; }
+    const CfgToken_t *    geToken() const     { return mToken; }
     const CfgTimeout_t    getTimeout() const  { return mTimeout; }
 };
 
@@ -38,13 +43,13 @@ class CHttpThinqDriver: public CDriver
 
   public:
     CHttpThinqDriver(const CDriverCfg::RawConfig_t & data);
-    ~CHttpThinqDriver() = default;
+    ~CHttpThinqDriver() override = default;
 
     void showInfo() const override;
     void resolve(const string & inData, SResult_t & outResult) const override;
 
-    const CDriverCfg::CfgUniqId_t getUniqueId() const
-                              { return mCfg->getUniqId(); }
+    const CDriverCfg::CfgUniqId_t getUniqueId() const override
+                                                { return mCfg->getUniqId(); }
 };
 
 

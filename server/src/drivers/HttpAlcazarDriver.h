@@ -9,19 +9,24 @@
 class CHttpAlcazarDriverCfg: public CDriverCfg
 {
   private:
-    const CfgHost_t * mHost;
-    CfgPort_t         mPort;
-    const CfgKey_t *  mKey;
-    CfgTimeout_t      mTimeout;
+    const CfgProtocol_t * mProtocol = "http";
+    const CfgHost_t *     mHost;
+    CfgPort_t             mPort;
+    const CfgKey_t *      mKey;
+    CfgTimeout_t          mTimeout;
+
+    // Driver specific getters for raw configuration processing
+    static const CfgKey_t * getRawKey(const RawConfig_t & data);
+    static const CfgKey_t * getRawKey(JSONConfig_t * data);
 
   public:
-    CHttpAlcazarDriverCfg(const CDriverCfg::RawConfig_t & data,
-                          const ECDriverId drvId);
+    CHttpAlcazarDriverCfg(const CDriverCfg::RawConfig_t & data);
 
-    const CfgHost_t *  getHost() const    { return mHost; }
-    const CfgPort_t    getPort() const    { return mPort; }
-    const CfgKey_t *   geKey() const      { return mKey; }
-    const CfgTimeout_t getTimeout() const { return mTimeout; }
+    const CfgProtocol_t * getProtocol() const { return mProtocol; }
+    const CfgHost_t *     getHost() const    { return mHost; }
+    const CfgPort_t       getPort() const    { return mPort; }
+    const CfgKey_t *      geKey() const      { return mKey; }
+    const CfgTimeout_t    getTimeout() const { return mTimeout; }
 };
 
 /*
@@ -35,13 +40,13 @@ class CHttpAlcazarDriver: public CDriver
 
   public:
     CHttpAlcazarDriver(const CDriverCfg::RawConfig_t & data);
-    ~CHttpAlcazarDriver() = default;
+    ~CHttpAlcazarDriver() override = default;
 
     void showInfo() const override;
     void resolve(const string & inData, SResult_t & outResult) const override;
 
-    const CDriverCfg::CfgUniqId_t getUniqueId() const
-                              { return mCfg->getUniqId(); }
+    const CDriverCfg::CfgUniqId_t getUniqueId() const override
+                                                { return mCfg->getUniqId(); }
 };
 
 #endif /* SERVER_SRC_DRIVERS_HTTPALCAZARDRIVER_H_ */

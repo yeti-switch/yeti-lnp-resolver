@@ -151,7 +151,7 @@ void CResolver::resolve(const CDriverCfg::CfgUniqId_t dbId,
 	    dbg("Resolved (by '%s/%d'): %s -> %s (tag: '%s') [in %ld.%06ld ms]",
 	        drv->getName(), drv->getUniqueId(),
 	        inData.c_str(),
-	        outResult.localNumberPortability.c_str(),
+          outResult.localRoutingNumber.c_str(),
 	        outResult.tag.c_str(),
 	        req_diff.tv_sec, req_diff.tv_usec);
 

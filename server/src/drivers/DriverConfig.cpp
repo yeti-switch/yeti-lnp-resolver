@@ -37,7 +37,7 @@ const ECDriverId CDriverCfg::getID(const RawConfig_t & data)
           sConfigType = ECONFIG_DATA_AS_JSON_STRING;
           break;
         }
-      } catch (const pqxx::pqxx_exception &e) { }
+      } catch (const pqxx::pqxx_exception & e) { }
 
       try
       {
@@ -46,7 +46,7 @@ const ECDriverId CDriverCfg::getID(const RawConfig_t & data)
           sConfigType = ECONFIG_DATA_AS_SEPARATE_COLUMN_V2;
           break;
         }
-      } catch (const pqxx::pqxx_exception &e) { }
+      } catch (const pqxx::pqxx_exception & e) { }
 
       try
       {
@@ -55,7 +55,7 @@ const ECDriverId CDriverCfg::getID(const RawConfig_t & data)
           sConfigType = ECONFIG_DATA_AS_SEPARATE_COLUMN_V1;
           break;
         }
-      } catch (const pqxx::pqxx_exception &e) { }
+      } catch (const pqxx::pqxx_exception & e) { }
 
     } while(0);
   }
@@ -145,25 +145,6 @@ const char *CDriverCfg::getFormatStrType()
   }
 
   return rv;
-}
-
-/*
- * Constructor method for basic class
- */
-CDriverCfg::CDriverCfg(const RawConfig_t & data)
-{
-  mUniqId = getRawUniqId(data);
-  if (-1 == mUniqId)
-  {
-    throw error(nullptr, "not found driver unique identifier!");
-  }
-
-  mLabel = getRawLabel(data);
-  if ((nullptr == mLabel) ||
-      (0 == std::strlen(static_cast<const char *> (mLabel))))
-  {
-    throw error(nullptr, "not found user defined name for driver!");
-  }
 }
 
 /*
@@ -407,126 +388,20 @@ const CDriverCfg::CfgUserName_t * CDriverCfg::getRawUserName(JSONConfig_t * data
 }
 
 /*
- * Method for retrieving key value from configuration data (Basic format).
- * This can be hash/token/password, etc.
- *
- * @param[in] data    The database output with driver configuration
- * @param[in] drvId   The driver identifier
- * @return key value
+ * Constructor method for basic class
  */
-const CDriverCfg::CfgKey_t * CDriverCfg::getRawKey(const RawConfig_t & data,
-                                                   const ECDriverId drvId)
+CDriverCfg::CDriverCfg(const RawConfig_t & data)
 {
-  const CfgKey_t * key = nullptr;
-
-  if ((ECONFIG_DATA_AS_SEPARATE_COLUMN_V1 == sConfigType) ||
-      (ECONFIG_DATA_AS_SEPARATE_COLUMN_V2 == sConfigType))
+  mUniqId = getRawUniqId(data);
+  if (-1 == mUniqId)
   {
-    switch(drvId)
-    {
-      case ECDriverId::ERESOLVER_DRIVER_HTTP_THINQ:
-        key = static_cast<const CfgKey_t *> (data["o_thinq_token"].c_str());
-        break;
-      case ECDriverId::ERESOLVER_DRIVER_HTTP_ALCAZAR:
-        key = static_cast<const CfgKey_t *> (data["o_alkazar_key"].c_str());
-        break;
-      default:
-        key = nullptr;
-        break;
-    }
+    throw error(nullptr, "not found driver unique identifier!");
   }
 
-  return key;
-}
-
-/*
- * Method for retrieving key value from configuration data (JSON format).
- * This can be hash/token/password, etc.
- *
- * @param[in] data  The database output with driver configuration
- * @param[in] drvId   The driver identifier
- * @return key value
- */
-const CDriverCfg::CfgKey_t * CDriverCfg::getRawKey(JSONConfig_t * data,
-                                                   const ECDriverId drvId)
-{
-  CfgKey_t * key = nullptr;
-
-  if (nullptr != data)
+  mLabel = getRawLabel(data);
+  if ((nullptr == mLabel) ||
+      (0 == std::strlen(static_cast<const char *> (mLabel))))
   {
-    if (ECONFIG_DATA_AS_JSON_STRING == sConfigType)
-    {
-      if (ECDriverId::ERESOLVER_DRIVER_HTTP_THINQ == drvId)
-      {
-        cJSON * jKey = cJSON_GetObjectItem(data, "token");
-        if (jKey)
-        {
-          key = cJSON_Print(jKey);
-        }
-      }
-      else if (ECDriverId::ERESOLVER_DRIVER_HTTP_ALCAZAR == drvId)
-      {
-        cJSON * jKey = cJSON_GetObjectItem(data, "key");
-        if (jKey)
-        {
-          key = cJSON_Print(jKey);
-        }
-      }
-      if (nullptr != key)
-      {
-        //TODO: improve this code chunk to remove quotes
-        key += 1;
-        key[std::strlen(key) - 1] = '\0';
-      }
-    }
+    throw error(nullptr, "not found user defined name for driver!");
   }
-
-  return key;
-}
-
-/*
- * Method for retrieving file path from configuration data (Basic format)
- *
- * @param[in] data  The database output with driver configuration
- * @return file path value
- */
-const CDriverCfg::CfgFilePath_t * CDriverCfg::getRawFilePath(const RawConfig_t & data)
-{
-  const CfgFilePath_t * filePath = nullptr;
-
-  if ((ECONFIG_DATA_AS_SEPARATE_COLUMN_V1 == sConfigType) ||
-      (ECONFIG_DATA_AS_SEPARATE_COLUMN_V2 == sConfigType))
-  {
-    filePath = static_cast<const CfgFilePath_t *> (data["o_csv_file"].c_str());
-  }
-
-  return filePath;
-}
-
-/*
- * Method for retrieving file path from configuration data (JSON format)
- *
- * @param[in] data  The database output with driver configuration
- * @return file path value
- */
-const CDriverCfg::CfgFilePath_t * CDriverCfg::getRawFilePath(JSONConfig_t * data)
-{
-  CfgFilePath_t * filePath = nullptr;
-
-  if (nullptr != data)
-  {
-    if (ECONFIG_DATA_AS_JSON_STRING == sConfigType)
-    {
-      cJSON * jFilePath = cJSON_GetObjectItem(data, "csv_file_path");
-      if (jFilePath)
-      {
-        filePath = cJSON_Print(jFilePath);
-        //TODO: improve this code chunk to remove quotes
-        filePath += 1;
-        filePath[std::strlen(filePath) - 1] = '\0';
-      }
-    }
-  }
-
-  return filePath;
 }

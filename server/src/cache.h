@@ -21,7 +21,7 @@ struct cache_entry {
     cache_entry(CDriverCfg::CfgUniqId_t _database_id, const string &_dst, const CDriver::SResult_t & r):
 		database_id(_database_id),
 		dst(_dst),
-        lrn(r.localNumberPortability),
+        lrn(r.localRoutingNumber),
         data(r.rawData),
         tag(r.tag) {}
 };

@@ -16,7 +16,7 @@ size_t static write_func(void * ptr, size_t size, size_t nmemb, void * userdata)
     if (userdata)
     {
       std::string & s = *(reinterpret_cast<std::string *>(userdata));
-      s.append((char *)ptr, (size * nmemb));
+      s.append(static_cast<char *> (ptr), (size * nmemb));
     }
 
     return (size * nmemb);
@@ -26,14 +26,58 @@ size_t static write_func(void * ptr, size_t size, size_t nmemb, void * userdata)
  * Configuration implementation
 ***************************************************************/
 /*
+ * Method for retrieving token value from configuration data (Basic format).
+ *
+ * @param[in] data    The database output with driver configuration
+ * @return token value
+ */
+const CDriverCfg::CfgToken_t * CHttpThinqDriverCfg::getRawToken(const RawConfig_t & data)
+{
+  const CfgToken_t * token = nullptr;
+
+  if ((ECONFIG_DATA_AS_SEPARATE_COLUMN_V1 == sConfigType) ||
+      (ECONFIG_DATA_AS_SEPARATE_COLUMN_V2 == sConfigType))
+  {
+    token = static_cast<const CfgToken_t *> (data["o_thinq_token"].c_str());
+  }
+
+  return token;
+}
+
+/*
+ * Method for retrieving token value from configuration data (JSON format).
+ *
+ * @param[in] data  The database output with driver configuration
+ * @return token value
+ */
+const CDriverCfg::CfgToken_t * CHttpThinqDriverCfg::getRawToken(JSONConfig_t * data)
+{
+  CfgToken_t * token = nullptr;
+
+  if ((nullptr != data) &&
+      (ECONFIG_DATA_AS_JSON_STRING == sConfigType))
+  {
+    cJSON * jToken = cJSON_GetObjectItem(data, "token");
+    if (jToken)
+    {
+      token = cJSON_Print(jToken);
+
+      //TODO: improve this code chunk to remove quotes
+      token += 1;
+      token[std::strlen(token) - 1] = '\0';
+    }
+  }
+
+  return token;
+}
+
+/*
  * Driver configuration constructor
  *
  * @param[in] data    The raw configuration data
- * @param[in] drvId   The driver identifier
  * @param[in] drvName The string driver name
  */
-CHttpThinqDriverCfg::CHttpThinqDriverCfg(const CDriverCfg::RawConfig_t & data,
-                                         const ECDriverId drvId)
+CHttpThinqDriverCfg::CHttpThinqDriverCfg(const CDriverCfg::RawConfig_t & data)
   : CDriverCfg(data)
 {
   if (CDriverCfg::ECONFIG_DATA_AS_JSON_STRING == CDriverCfg::getFormatType())
@@ -63,7 +107,7 @@ CHttpThinqDriverCfg::CHttpThinqDriverCfg(const CDriverCfg::RawConfig_t & data,
         break;
       }
 
-      mToken = getRawKey(jData, drvId);
+      mToken = getRawToken(jData);
       if (nullptr == mToken)
       {
         errMsg = "token value is invalid!";
@@ -98,7 +142,7 @@ CHttpThinqDriverCfg::CHttpThinqDriverCfg(const CDriverCfg::RawConfig_t & data,
       throw error(getLabel(), "user name value is invalid!");
     }
 
-    mToken = getRawKey(data, drvId);
+    mToken = getRawToken(data);
     if (nullptr == mToken)
     {
       throw error(getLabel(), "token value is invalid!");
@@ -120,12 +164,12 @@ CHttpThinqDriverCfg::CHttpThinqDriverCfg(const CDriverCfg::RawConfig_t & data,
 CHttpThinqDriver::CHttpThinqDriver(const CDriverCfg::RawConfig_t & data)
 : CDriver(ECDriverId::ERESOLVER_DRIVER_HTTP_THINQ, "REST/ThinQ")
 {
-  mCfg.reset(new CHttpThinqDriverCfg(data, getId()));
+  mCfg.reset(new CHttpThinqDriverCfg(data));
 
   std::ostringstream url;
   CDriverCfg::CfgPort_t port = mCfg->getPort();
 
-  url << "https://" << mCfg->getHost();
+  url << mCfg->getProtocol() << "://" << mCfg->getHost();
 
   if (port)
   {
@@ -145,13 +189,14 @@ CHttpThinqDriver::CHttpThinqDriver(const CDriverCfg::RawConfig_t & data)
  */
 void CHttpThinqDriver::showInfo() const
 {
-  info("[%u/%s] '%s' driver => address <%s:%u> "
-      "[username - %s, timeout - %u seconds]",
-      mCfg->getUniqId(),
-      mCfg->getLabel(), getName(),
-      mCfg->getHost(), mCfg->getPort(),
-      mCfg->getUserName(),
-      mCfg->getTimeout());
+  info("[%u/%s] '%s' driver => address <%s://%s:%u> "
+       "[username - %s, timeout - %u seconds]",
+       mCfg->getUniqId(),
+       mCfg->getLabel(), getName(),
+       mCfg->getProtocol(),
+       mCfg->getHost(), mCfg->getPort(),
+       mCfg->getUserName(),
+       mCfg->getTimeout());
 }
 
 /*
@@ -231,13 +276,13 @@ void CHttpThinqDriver::resolve(const string & inData, SResult_t & outResult) con
   }
 
   char * lrn = cJSON_Print(jlrn);
-  outResult.localNumberPortability = lrn;
+  outResult.localRoutingNumber = lrn;
   free(lrn);
 
   outResult.rawData = replyBuf;
 
   // remove quotes from result LNP
-  string & lnp = outResult.localNumberPortability;
+  string & lnp = outResult.localRoutingNumber;
   if (0 == lnp.compare(0, 1, "\""))
   {
     lnp.erase(lnp.begin());

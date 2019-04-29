@@ -25,7 +25,7 @@ class CHttpClient
     {
       public:
         explicit error(const std::string & what) :
-            logic_error("{HttpClient} " + what) { };
+            logic_error("{HttpClient} " + what) { }
     };
 
     // Authorization enumerations
