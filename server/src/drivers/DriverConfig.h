@@ -12,7 +12,7 @@ using std::string;
 
 #include <pqxx/pqxx>
 
-#include "cJSON.h"
+#include "libs/jsonxx.h"
 
 /*
  * Enum typedef forward declaration
@@ -53,7 +53,7 @@ class CDriverCfg
     // Raw driver configuration
     using RawConfig_t = pqxx::result::tuple;
     // JSON driver configuration
-    using JSONConfig_t = cJSON;
+    using JSONConfig_t = jsonxx;
 
   private:
     CfgUniqId_t mUniqId;       // Driver unique identifier depend on
@@ -81,16 +81,16 @@ class CDriverCfg
     static const CfgLabel_t getRawLabel(const RawConfig_t & data);
 
     static const CfgTimeout_t getRawTimeout(const RawConfig_t & data);
-    static const CfgTimeout_t getRawTimeout(JSONConfig_t * data);
+    static const CfgTimeout_t getRawTimeout(JSONConfig_t & data);
 
     static const CfgPort_t getRawPort(const RawConfig_t & data);
-    static const CfgPort_t getRawPort(JSONConfig_t * data);
+    static const CfgPort_t getRawPort(JSONConfig_t & data);
 
     static const CfgHost_t getRawHost(const RawConfig_t & data);
-    static const CfgHost_t getRawHost(JSONConfig_t * data);
+    static const CfgHost_t getRawHost(JSONConfig_t & data);
 
     static const CfgUserName_t getRawUserName(const RawConfig_t & data);
-    static const CfgUserName_t getRawUserName(JSONConfig_t * data);
+    static const CfgUserName_t getRawUserName(JSONConfig_t & data);
 
   public:
     CDriverCfg(const RawConfig_t & data);

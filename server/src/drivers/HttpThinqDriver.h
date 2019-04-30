@@ -18,7 +18,7 @@ class CHttpThinqDriverCfg: public CDriverCfg
 
     // Driver specific getters for raw configuration processing
     static const CfgToken_t getRawToken(const RawConfig_t & data);
-    static const CfgToken_t getRawToken(JSONConfig_t * data);
+    static const CfgToken_t getRawToken(JSONConfig_t & data);
 
   public:
     CHttpThinqDriverCfg(const CDriverCfg::RawConfig_t & data);

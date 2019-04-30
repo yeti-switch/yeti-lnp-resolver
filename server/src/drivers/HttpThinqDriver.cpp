@@ -50,22 +50,13 @@ const CDriverCfg::CfgToken_t CHttpThinqDriverCfg::getRawToken(const RawConfig_t 
  * @param[in] data  The database output with driver configuration
  * @return token value
  */
-const CDriverCfg::CfgToken_t CHttpThinqDriverCfg::getRawToken(JSONConfig_t * data)
+const CDriverCfg::CfgToken_t CHttpThinqDriverCfg::getRawToken(JSONConfig_t & data)
 {
   CfgToken_t token;
 
-  if ((nullptr != data) &&
-      (ECONFIG_DATA_AS_JSON_STRING == sConfigType))
+  if (ECONFIG_DATA_AS_JSON_STRING == sConfigType)
   {
-    cJSON * jToken = cJSON_GetObjectItem(data, "token");
-    if (jToken)
-    {
-      token = cJSON_Print(jToken);
-
-      //TODO: improve this code chunk to remove quotes
-      token.erase(token.begin());
-      token.erase(token.end() - 1);
-    }
+    token = static_cast<CfgKey_t> (data["token"]);
   }
 
   return token;
@@ -82,50 +73,34 @@ CHttpThinqDriverCfg::CHttpThinqDriverCfg(const CDriverCfg::RawConfig_t & data)
 {
   if (CDriverCfg::ECONFIG_DATA_AS_JSON_STRING == CDriverCfg::getFormatType())
   {
-    const char * errMsg = nullptr;
-    cJSON *      jData  = cJSON_Parse(data["parameters"].c_str());
-
-    do
+    try
     {
-      if (nullptr == jData)
-      {
-        errMsg = "driver JSON config parsing error";
-        break;
-      }
+      jsonxx jData(data["parameters"].c_str());
 
       mHost = getRawHost(jData);
       if (0 == mHost.length())
       {
-        errMsg = "host value is invalid!";
-        break;
+        throw error(getLabel(), "host value is invalid!");
       }
 
       mUserName = getRawUserName(jData);
       if (0 == mUserName.length())
       {
-        errMsg = "user name value is invalid!";
-        break;
+        throw error(getLabel(), "user name value is invalid!");
       }
 
       mToken = getRawToken(jData);
       if (0 == mToken.length())
       {
-        errMsg = "token value is invalid!";
-        break;
+        throw error(getLabel(), "token value is invalid!");
       }
 
       mPort    = getRawPort(jData);
       mTimeout = getRawTimeout(jData);
-
-    } while(0);
-
-    if (nullptr != jData)
-    {
-      cJSON_Delete(jData);
     }
-    if (nullptr != errMsg)
+    catch (std::exception & e)
     {
-      throw error(getLabel(), errMsg);
+      throw error(getLabel(), e.what());
     }
   }
   else
@@ -260,39 +235,17 @@ void CHttpThinqDriver::resolve(const string & inData, SResult_t & outResult) con
 
   dbg("HTTP reply: %s", replyBuf.c_str());
 
-  cJSON * j = cJSON_Parse(replyBuf.c_str());
-  if (!j)
+  try {
+    outResult.localRoutingNumber =
+        static_cast<decltype(outResult.localRoutingNumber)> (jsonxx(replyBuf)["lrn"]);
+  }
+  catch (std::exception & e)
   {
     warn("couldn't parse reply as JSON format: '%s'", replyBuf.c_str());
-    throw error("HTTP reply parsing error");
+    throw error(e.what());
   }
-
-  cJSON * jlrn = cJSON_GetObjectItem(j, "lrn");
-  if (!jlrn)
-  {
-    dbg("no 'lrn' field in returned JSON object: %s", replyBuf.c_str());
-    cJSON_Delete(j);
-    throw error("unexpected response");
-  }
-
-  char * lrn = cJSON_Print(jlrn);
-  outResult.localRoutingNumber = lrn;
-  free(lrn);
 
   outResult.rawData = replyBuf;
-
-  // remove quotes from result LNP
-  string & lnp = outResult.localRoutingNumber;
-  if (0 == lnp.compare(0, 1, "\""))
-  {
-    lnp.erase(lnp.begin());
-  }
-  if (0 == lnp.compare(lnp.size()-1, 1, "\""))
-  {
-    lnp.erase(lnp.end() - 1);
-  }
-
-  cJSON_Delete(j);
 }
 
 

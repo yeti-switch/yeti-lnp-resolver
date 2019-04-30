@@ -17,7 +17,7 @@ class CHttpAlcazarDriverCfg: public CDriverCfg
 
     // Driver specific getters for raw configuration processing
     static const CfgKey_t getRawKey(const RawConfig_t & data);
-    static const CfgKey_t getRawKey(JSONConfig_t * data);
+    static const CfgKey_t getRawKey(JSONConfig_t & data);
 
   public:
     CHttpAlcazarDriverCfg(const CDriverCfg::RawConfig_t & data);

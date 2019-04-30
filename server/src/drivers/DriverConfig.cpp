@@ -218,26 +218,13 @@ const CDriverCfg::CfgTimeout_t CDriverCfg::getRawTimeout(const RawConfig_t & dat
  * @param[in] data  The database output with driver configuration
  * @return timeout value
  */
-const CDriverCfg::CfgTimeout_t CDriverCfg::getRawTimeout(JSONConfig_t * data)
+const CDriverCfg::CfgTimeout_t CDriverCfg::getRawTimeout(JSONConfig_t & data)
 {
   CfgTimeout_t timeout = defaultTimeout;
 
-  if (nullptr != data)
+  if (ECONFIG_DATA_AS_JSON_STRING == sConfigType)
   {
-    if (ECONFIG_DATA_AS_JSON_STRING == sConfigType)
-    {
-      cJSON * jPort = cJSON_GetObjectItem(data, "timeout");
-      if (jPort)
-      {
-        char * strTimeout = cJSON_Print(jPort);
-        if (nullptr != strTimeout)
-        {
-          timeout = static_cast<CfgPort_t> (
-                            std::atoi(static_cast<const char *> (strTimeout)));
-          free(strTimeout);
-        }
-      }
-    }
+    timeout = static_cast<CfgTimeout_t> (data["timeout"]);
   }
 
   return timeout;
@@ -268,26 +255,13 @@ const CDriverCfg::CfgPort_t CDriverCfg::getRawPort(const RawConfig_t & data)
  * @param[in] data  The database output with driver configuration
  * @return port value
  */
-const CDriverCfg::CfgPort_t CDriverCfg::getRawPort(JSONConfig_t * data)
+const CDriverCfg::CfgPort_t CDriverCfg::getRawPort(JSONConfig_t & data)
 {
   CfgPort_t port = 0;
 
-  if (nullptr != data)
+  if (ECONFIG_DATA_AS_JSON_STRING == sConfigType)
   {
-    if (ECONFIG_DATA_AS_JSON_STRING == sConfigType)
-    {
-      cJSON * jPort = cJSON_GetObjectItem(data, "port");
-      if (jPort)
-      {
-        char * strPort = cJSON_Print(jPort);
-        if (nullptr != strPort)
-        {
-          port = static_cast<CfgPort_t> (
-                        std::atoi(static_cast<const char *> (strPort)));
-          free(strPort);
-        }
-      }
-    }
+    port = static_cast<CfgPort_t> (data["port"]);
   }
 
   return port;
@@ -318,24 +292,13 @@ const CDriverCfg::CfgHost_t CDriverCfg::getRawHost(const RawConfig_t & data)
  * @param[in] data  The database output with driver configuration
  * @return host value
  */
-const CDriverCfg::CfgHost_t CDriverCfg::getRawHost(JSONConfig_t * data)
+const CDriverCfg::CfgHost_t CDriverCfg::getRawHost(JSONConfig_t & data)
 {
   CfgHost_t host;
 
-  if (nullptr != data)
+  if (ECONFIG_DATA_AS_JSON_STRING == sConfigType)
   {
-    if (ECONFIG_DATA_AS_JSON_STRING == sConfigType)
-    {
-      cJSON * jHost = cJSON_GetObjectItem(data, "host");
-      if (jHost)
-      {
-        host = cJSON_Print(jHost);
-
-        //TODO: improve this code chunk to remove quotes
-        host.erase(host.begin());
-        host.erase(host.end() - 1);
-      }
-    }
+    host = static_cast<CfgHost_t> (data["host"]);
   }
 
   return host;
@@ -366,24 +329,13 @@ const CDriverCfg::CfgUserName_t CDriverCfg::getRawUserName(const RawConfig_t & d
  * @param[in] data  The database output with driver configuration
  * @return user name value
  */
-const CDriverCfg::CfgUserName_t CDriverCfg::getRawUserName(JSONConfig_t * data)
+const CDriverCfg::CfgUserName_t CDriverCfg::getRawUserName(JSONConfig_t & data)
 {
   CfgUserName_t userName;
 
-  if (nullptr != data)
+  if (ECONFIG_DATA_AS_JSON_STRING == sConfigType)
   {
-    if (ECONFIG_DATA_AS_JSON_STRING == sConfigType)
-    {
-      cJSON * jUserName = cJSON_GetObjectItem(data, "username");
-      if (jUserName)
-      {
-        userName = cJSON_Print(jUserName);
-
-        //TODO: improve this code chunk to remove quotes
-        userName.erase(userName.begin());
-        userName.erase(userName.end() - 1);
-      }
-    }
+    userName = static_cast<CfgUserName_t> (data["username"]);
   }
 
   return userName;

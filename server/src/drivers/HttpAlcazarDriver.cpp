@@ -49,22 +49,13 @@ const CDriverCfg::CfgKey_t CHttpAlcazarDriverCfg::getRawKey(const RawConfig_t & 
  * @param[in] data  The database output with driver configuration
  * @return key value
  */
-const CDriverCfg::CfgKey_t CHttpAlcazarDriverCfg::getRawKey(JSONConfig_t * data)
+const CDriverCfg::CfgKey_t CHttpAlcazarDriverCfg::getRawKey(JSONConfig_t & data)
 {
   CfgKey_t key;
 
-  if ((nullptr != data) &&
-      (ECONFIG_DATA_AS_JSON_STRING == sConfigType))
+  if (ECONFIG_DATA_AS_JSON_STRING == sConfigType)
   {
-    cJSON * jKey = cJSON_GetObjectItem(data, "key");
-    if (jKey)
-    {
-      key = cJSON_Print(jKey);
-
-      //TODO: improve this code chunk to remove quotes
-      key.erase(key.begin());
-      key.erase(key.end() - 1);
-    }
+    key = static_cast<CfgKey_t> (data["key"]);
   }
 
   return key;
@@ -81,43 +72,28 @@ CHttpAlcazarDriverCfg::CHttpAlcazarDriverCfg(const CDriverCfg::RawConfig_t & dat
 {
   if (CDriverCfg::ECONFIG_DATA_AS_JSON_STRING == CDriverCfg::getFormatType())
   {
-    const char * errMsg = nullptr;
-    cJSON *      jData  = cJSON_Parse(data["parameters"].c_str());
-
-    do
+    try
     {
-      if (nullptr == jData)
-      {
-        errMsg = "driver JSON config parsing error";
-        break;
-      }
+      jsonxx jData(data["parameters"].c_str());
 
       mHost = getRawHost(jData);
       if (0 == mHost.length())
       {
-        errMsg = "host value is invalid!";
-        break;
+        throw error(getLabel(), "host value is invalid!");
       }
 
       mKey = getRawKey(jData);
       if (0 == mKey.length())
       {
-        errMsg = "key value is invalid!";
-        break;
+        throw error(getLabel(), "key value is invalid!");
       }
 
       mPort    = getRawPort(jData);
       mTimeout = getRawTimeout(jData);
-
-    } while(0);
-
-    if (nullptr != jData)
-    {
-      cJSON_Delete(jData);
     }
-    if (nullptr != errMsg)
+    catch (std::exception & e)
     {
-      throw error(getLabel(), errMsg);
+      throw error(getLabel(), e.what());
     }
   }
   else
@@ -241,37 +217,15 @@ void CHttpAlcazarDriver::resolve(const string & inData, SResult_t & outResult) c
 
   dbg("HTTP reply: %s", replyBuf.c_str());
 
-  cJSON * j = cJSON_Parse(replyBuf.c_str());
-  if (!j)
+  try {
+    outResult.localRoutingNumber =
+        static_cast<decltype(outResult.localRoutingNumber)> (jsonxx(replyBuf)["LRN"]);
+  }
+  catch (std::exception & e)
   {
     warn("couldn't parse reply as JSON format: '%s'", replyBuf.c_str());
-    throw CDriver::error("HTTP reply parsing error");
+    throw error(e.what());
   }
-
-  cJSON * jlrn = cJSON_GetObjectItem(j, "LRN");
-  if (!jlrn)
-  {
-    dbg("no 'LRN' field in returned JSON object: %s", replyBuf.c_str());
-    cJSON_Delete(j);
-    throw CDriver::error("unexpected response");
-  }
-
-  char * lrn = cJSON_Print(jlrn);
-  outResult.localRoutingNumber = lrn;
-  free(lrn);
 
   outResult.rawData = replyBuf;
-
-  // remove quotes from result LNP
-  string & lnp = outResult.localRoutingNumber;
-  if (0 == lnp.compare(0, 1, "\""))
-  {
-    lnp.erase(lnp.begin());
-  }
-  if (0 == lnp.compare(lnp.size()-1, 1, "\""))
-  {
-    lnp.erase(lnp.end() - 1);
-  }
-
-  cJSON_Delete(j);
 }
