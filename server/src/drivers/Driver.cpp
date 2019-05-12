@@ -31,6 +31,7 @@ unique_ptr<CDriver> CDriver::instantiate(const CDriverCfg::RawConfig_t & data)
   switch (driverId)
   {
     case ECDriverId::ERESOLVER_DRIVER_SIP:
+      rv.reset((new CSipDriver(data)));
       break;
 
     case ECDriverId::ERESOLVER_DRIVER_HTTP_THINQ:
