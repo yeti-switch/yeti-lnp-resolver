@@ -8,6 +8,9 @@ using std::string;
 
 #include "cJSON.h"
 
+/**
+ * @brief The JSON wrapper class
+ */
 class jsonxx
 {
   public:
@@ -54,12 +57,12 @@ class jsonxx
     explicit jsonxx(const string & data);
     ~jsonxx();
 
-    const item & operator[](const char * value);
+    item & operator[](const char * value);
 };
 
-/*
- * JSON item class cast operator for integral values
- * (char, int/uint, long/ulong, int8_t/uint8_t, etc.)
+/**
+ * @brief JSON item class cast operator for integral values
+ *        (char, int/uint, long/ulong, int8_t/uint8_t, etc.)
  */
 template<class T,
 typename std::enable_if<std::is_integral<T>::value>::type*>
@@ -73,9 +76,9 @@ inline jsonxx::item::operator T() const
   return rv;
 }
 
-/*
- * JSON item class cast operator for floating values
- * (float, double, long double)
+/**
+ * @brief JSON item class cast operator for floating values
+ *        (float, double, long double)
  */
 template<class T,
 typename std::enable_if<std::is_floating_point<T>::value>::type*>
@@ -89,8 +92,8 @@ inline jsonxx::item::operator T() const
   return rv;
 }
 
-/*
- * JSON item class cast operator for boolean values
+/**
+ * @brief JSON item class cast operator for boolean values
  */
 template <>
 inline jsonxx::item::operator bool() const
@@ -103,8 +106,8 @@ inline jsonxx::item::operator bool() const
   return rv;
 }
 
-/*
- * JSON item class cast operator for basic string values
+/**
+ * @brief JSON item class cast operator for basic string values
  *
  * @note also remove first and last quotes if required
  */

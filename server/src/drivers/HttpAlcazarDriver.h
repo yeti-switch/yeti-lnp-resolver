@@ -3,8 +3,8 @@
 
 #include "Driver.h"
 
-/*
- * Driver configuration class
+/**
+ * @brief Driver configuration class
  */
 class CHttpAlcazarDriverCfg: public CDriverCfg
 {
@@ -29,8 +29,8 @@ class CHttpAlcazarDriverCfg: public CDriverCfg
     const CfgTimeout_t getTimeout() const  { return mTimeout; }
 };
 
-/*
- * Driver class
+/**
+ * @brief Driver class
  */
 class CHttpAlcazarDriver: public CDriver
 {

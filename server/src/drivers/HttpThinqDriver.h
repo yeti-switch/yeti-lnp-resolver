@@ -3,13 +3,13 @@
 
 #include "Driver.h"
 
-/*
- * Driver configuration class
+/**
+ * @brief Driver configuration class
  */
 class CHttpThinqDriverCfg: public CDriverCfg
 {
   private:
-    const CfgProtocol_t * mProtocol = "http";   //FIXME: replase to "https://"
+    const CfgProtocol_t * mProtocol = "https";
     CfgHost_t             mHost;
     CfgPort_t             mPort;
     CfgUserName_t         mUserName;
@@ -31,8 +31,8 @@ class CHttpThinqDriverCfg: public CDriverCfg
     const CfgTimeout_t  getTimeout() const  { return mTimeout; }
 };
 
-/*
- * Driver class
+/**
+ * @brief Driver class
  */
 class CHttpThinqDriver: public CDriver
 {
@@ -51,7 +51,5 @@ class CHttpThinqDriver: public CDriver
     const CDriverCfg::CfgUniqId_t getUniqueId() const override
                                                 { return mCfg->getUniqId(); }
 };
-
-
 
 #endif /* SERVER_SRC_DRIVERS_HTTPTHINQDRIVER_H_ */

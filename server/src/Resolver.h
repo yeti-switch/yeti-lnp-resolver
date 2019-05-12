@@ -35,19 +35,14 @@ class CResolver
     // Databases type defines
     using Database_t = std::map<CDriverCfg::CfgUniqId_t, unique_ptr<CDriver> >;
 
-    Database_t mDatabaseMap;
-    mutex      mDatabaseMutex;
+    Database_t mDriversMap;
+    mutex      mDriversMutex;
 
     bool loadResolveDrivers(Database_t & db);
 
   public:
     CResolver() = default;
     ~CResolver() = default;
-
-#if 0
-    void launch();
-    void stop();
-#endif
 
     bool configure();
     void resolve(const CDriverCfg::CfgUniqId_t dbId,

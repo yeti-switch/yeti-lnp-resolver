@@ -4,8 +4,8 @@
 #include "HttpAlcazarDriver.h"
 #include "Driver.h"
 
-/*
- * Class constructor
+/**
+ * @brief Class constructor
  */
 CDriver::CDriver(const ECDriverId id, const char * name)
     : mId(ECDriverId::ERESOLVER_DRIVER_NULL), mName("NULL")
@@ -17,10 +17,11 @@ CDriver::CDriver(const ECDriverId id, const char * name)
   }
 }
 
-/*
- * Static method to create driver required object.
+/**
+ * @brief Static method to create driver required object.
  *
  * @param[in] data  The input data to make detection
+ *
  * @return The pointer to driver object otherwise null pointer.
  */
 unique_ptr<CDriver> CDriver::instantiate(const CDriverCfg::RawConfig_t & data)

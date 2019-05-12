@@ -9,26 +9,11 @@
 
 static const char * sLoadLNPConfigSTMT = "SELECT * FROM load_lnp_databases()";
 
-#if 0
-void _resolver::stop()
-{
-	for(auto &i: databases)
-		i.second->driver->on_stop();
-}
-
-void _resolver::launch()
-{
-	for(const auto &it: databases) {
-		const database_entry &e = *it.second;
-		e.driver->launch();
-	}
-}
-#endif
-
-/*
- * Load resolver drivers configuration from database table
+/**
+ * @brief Load resolver drivers configuration from database table
  *
  * @param[in,out] dbMap   The map of the successfully loaded drivers
+ *
  * @return boolean value as a loading procedure status
  */
 bool CResolver::loadResolveDrivers(Database_t & dbMap)
@@ -87,46 +72,41 @@ bool CResolver::loadResolveDrivers(Database_t & dbMap)
   return rv;
 }
 
-//FIXME: description
-//TODO: make refactoring after driver implementation
+/**
+ * @brief Root method to load driver configuration
+ *
+ * @return boolean status about loading result
+ */
 bool CResolver::configure()
 {
-	Database_t dbMap;
-	bool rv = loadResolveDrivers(dbMap);
-	if (rv)
-	{
-	  //Mutex required to proper processing SIGHUP signal
-	  guard(mDatabaseMutex);
-	  mDatabaseMap.swap(dbMap);
-	  //
-//	  try {
-//	    launch();
-//	  } catch(...) { };
+  Database_t dbMap;
+  bool rv = loadResolveDrivers(dbMap);
+  if (rv)
+  {
+    //Mutex required to proper processing SIGHUP signal
+    guard(mDriversMutex);
+    mDriversMap.swap(dbMap);
+  }
 
-	}
-
-	//FIXME: check on_stop method for necessity of use
-
-	return rv;
+  return rv;
 }
 
-/*
- * Method to make incoming string resolving by selected driver id
+/**
+ * @brief Method to make incoming string resolving by selected driver id
  *
  * @param[in]  dbId       The unique identity of the driver for resolving
  * @param[in]  inData     The input string with number for lookup
  * @param[out] outResult  The structure used to save a resolving result
- * @return none
  */
 void CResolver::resolve(const CDriverCfg::CfgUniqId_t dbId,
                         const string & inData,
                         CDriver::SResult_t & outResult)
 {
   //Mutex required to proper processing SIGHUP signal
-	guard(mDatabaseMutex);
+  guard(mDriversMutex);
 
-  auto mapItem = mDatabaseMap.find(dbId);
-  if (mapItem == mDatabaseMap.end())
+  auto mapItem = mDriversMap.find(dbId);
+  if (mapItem == mDriversMap.end())
   {
     throw CDriver::error("unknown database id");
   }
@@ -138,35 +118,35 @@ void CResolver::resolve(const CDriverCfg::CfgUniqId_t dbId,
 
   CDriver * drv = mapItem->second.get();
 
-	try
-	{
-	    gettimeofday(&req_start, NULL);
+  try
+  {
+    gettimeofday(&req_start, nullptr);
 
-	    // Make resolving action
-	    drv->resolve(inData, outResult);
+    // Make resolving action
+    drv->resolve(inData, outResult);
 
-	    gettimeofday(&req_end, NULL);
-	    timersub(&req_end, &req_start, &req_diff);
+    gettimeofday(&req_end, nullptr);
+    timersub(&req_end, &req_start, &req_diff);
 
-	    dbg("Resolved (by '%s/%d'): %s -> %s (tag: '%s') [in %ld.%06ld ms]",
-	        drv->getName(), drv->getUniqueId(),
-	        inData.c_str(),
-          outResult.localRoutingNumber.c_str(),
-	        outResult.tag.c_str(),
-	        req_diff.tv_sec, req_diff.tv_usec);
+    dbg("Resolved (by '%s/%d'): %s -> %s (tag: '%s') [in %ld.%06ld ms]",
+        drv->getName(), drv->getUniqueId(),
+        inData.c_str(),
+        outResult.localRoutingNumber.c_str(),
+        outResult.tag.c_str(),
+        req_diff.tv_sec, req_diff.tv_usec);
 
-	}
-	catch(CDriver::error & e)
-	{
-		throw e;
-	}
-	catch(...)
-	{
-		dbg("unknown resolve exception");
-		throw CDriver::error("internal error");
-	}
+  }
+  catch(CDriver::error & e)
+  {
+    throw e;
+  }
+  catch(...)
+  {
+    dbg("unknown resolve exception");
+    throw CDriver::error("internal error");
+  }
 
-	lnp_cache::instance()->sync(
-	          new cache_entry(drv->getUniqueId(), inData, outResult)
-	);
+  lnp_cache::instance()->sync(
+        new cache_entry(drv->getUniqueId(), inData, outResult)
+  );
 }

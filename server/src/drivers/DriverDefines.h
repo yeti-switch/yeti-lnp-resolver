@@ -3,8 +3,8 @@
 
 #include <array>
 
-/*
- * Internal driver unique identity
+/**
+ * @brief Internal driver unique identity
  */
 enum class ECDriverId : uint8_t
 {
@@ -17,8 +17,8 @@ enum class ECDriverId : uint8_t
   ,ERESOLVER_DRIVER_MAX_ID
 };
 
-/*
- * An array with driver types, that depend on configuration format
+/**
+ * @brief An array with driver types, that depend on configuration format
  * @note numberId   The type used with yeti-web v1.7
  * @note stringId   The type used with yeti-web v1.8
  */

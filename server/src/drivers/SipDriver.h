@@ -4,8 +4,8 @@
 #include "Driver.h"
 #include "drivers/modules/SipClient.h"
 
-/*
- * Driver configuration class
+/**
+ * @brief Driver configuration class
  */
 class CSipDriverCfg: public CDriverCfg
 {
@@ -44,8 +44,8 @@ class CSipDriverCfg: public CDriverCfg
     static const char * getContact()  { return sContact.c_str(); }
 };
 
-/*
- * Driver class
+/**
+ * @brief Driver class
  */
 class CSipDriver: public CDriver
 {

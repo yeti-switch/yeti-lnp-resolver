@@ -11,11 +11,6 @@ using std::vector;
 ***************************************************************/
 /**
  * @brief Split string by delimiter and save results to vector
- *
- * @param inStr     The specified string for splitting
- * @param delimiter The delimiter character
- *
- * @return string container with a splitting result
  */
 vector<string> split(const string & inStr, const char delimiter)
 {

@@ -8,8 +8,8 @@
 /**************************************************************
  * Implementation helpers
 ***************************************************************/
-/*
- * Callback function for processing HTTP response
+/**
+ * @brief Callback function for processing HTTP response
  */
 size_t static write_func(void * ptr, size_t size, size_t nmemb, void * userdata)
 {
@@ -25,10 +25,11 @@ size_t static write_func(void * ptr, size_t size, size_t nmemb, void * userdata)
 /**************************************************************
  * Configuration implementation
 ***************************************************************/
-/*
- * Method for retrieving key value from configuration data (Basic format).
+/**
+ * @brief Method for retrieving key value from configuration data (Basic format)
  *
  * @param[in] data    The database output with driver configuration
+ *
  * @return key value
  */
 const CDriverCfg::CfgKey_t CHttpAlcazarDriverCfg::getRawKey(const RawConfig_t & data)
@@ -43,10 +44,11 @@ const CDriverCfg::CfgKey_t CHttpAlcazarDriverCfg::getRawKey(const RawConfig_t & 
   return key;
 }
 
-/*
- * Method for retrieving key value from configuration data (JSON format).
+/**
+ * @brief Method for retrieving key value from configuration data (JSON format)
  *
  * @param[in] data  The database output with driver configuration
+ *
  * @return key value
  */
 const CDriverCfg::CfgKey_t CHttpAlcazarDriverCfg::getRawKey(JSONConfig_t & data)
@@ -61,11 +63,10 @@ const CDriverCfg::CfgKey_t CHttpAlcazarDriverCfg::getRawKey(JSONConfig_t & data)
   return key;
 }
 
-/*
- * Driver configuration constructor
+/**
+ * @brief Driver configuration constructor
  *
  * @param[in] data    The raw configuration data
- * @param[in] drvName The string driver name
  */
 CHttpAlcazarDriverCfg::CHttpAlcazarDriverCfg(const CDriverCfg::RawConfig_t & data)
   : CDriverCfg(data)
@@ -118,8 +119,8 @@ CHttpAlcazarDriverCfg::CHttpAlcazarDriverCfg(const CDriverCfg::RawConfig_t & dat
 /**************************************************************
  * Driver implementation
 ***************************************************************/
-/*
- * Driver constructor
+/**
+ * @brief Driver constructor
  *
  * @param[in] data  The raw configuration data
  */
@@ -145,10 +146,8 @@ CHttpAlcazarDriver::CHttpAlcazarDriver(const CDriverCfg::RawConfig_t & data)
   mURLPrefix = url.str();
 }
 
-/*
- * Show drive information
- *
- * @return none
+/**
+ * @brief Show drive information
  */
 void CHttpAlcazarDriver::showInfo() const
 {
@@ -160,12 +159,11 @@ void CHttpAlcazarDriver::showInfo() const
       mCfg->getTimeout());
 }
 
-/*
- * Executing resolving procedure
+/**
+ * @brief Executing resolving procedure
  *
  * @param[in] inData      The source data for making resolving
  * @param[out] outResult  The structure for saving resolving result
- * @return none
  */
 void CHttpAlcazarDriver::resolve(const string & inData, SResult_t & outResult) const
 {
@@ -189,7 +187,7 @@ void CHttpAlcazarDriver::resolve(const string & inData, SResult_t & outResult) c
     http.setWriteCallback(write_func, &replyBuf);
     http.setHeader("Content-Type: application/json");
 
-    if (http.perform(dstURL) != CHttpClient::ECReqCode::OK)
+    if (CHttpClient::ECReqCode::OK != http.perform(dstURL))
     {
       dbg("error on perform request: %s", http.getErrorStr());
       throw CDriver::error(http.getErrorStr());

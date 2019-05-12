@@ -8,8 +8,8 @@
 /**************************************************************
  * Implementation helpers
 ***************************************************************/
-/*
- * Callback function for processing HTTP response
+/**
+ * @brief Callback function for processing HTTP response
  */
 size_t static write_func(void * ptr, size_t size, size_t nmemb, void * userdata)
 {
@@ -25,10 +25,11 @@ size_t static write_func(void * ptr, size_t size, size_t nmemb, void * userdata)
 /**************************************************************
  * Configuration implementation
 ***************************************************************/
-/*
- * Method for retrieving token value from configuration data (Basic format).
+/**
+ * @brief Method for retrieving token value from configuration data (Basic format)
  *
  * @param[in] data    The database output with driver configuration
+ *
  * @return token value
  */
 const CDriverCfg::CfgToken_t CHttpThinqDriverCfg::getRawToken(const RawConfig_t & data)
@@ -44,10 +45,11 @@ const CDriverCfg::CfgToken_t CHttpThinqDriverCfg::getRawToken(const RawConfig_t 
   return token;
 }
 
-/*
- * Method for retrieving token value from configuration data (JSON format).
+/**
+ * @brief Method for retrieving token value from configuration data (JSON format)
  *
  * @param[in] data  The database output with driver configuration
+ *
  * @return token value
  */
 const CDriverCfg::CfgToken_t CHttpThinqDriverCfg::getRawToken(JSONConfig_t & data)
@@ -62,11 +64,10 @@ const CDriverCfg::CfgToken_t CHttpThinqDriverCfg::getRawToken(JSONConfig_t & dat
   return token;
 }
 
-/*
- * Driver configuration constructor
+/**
+ * @brief Driver configuration constructor
  *
  * @param[in] data    The raw configuration data
- * @param[in] drvName The string driver name
  */
 CHttpThinqDriverCfg::CHttpThinqDriverCfg(const CDriverCfg::RawConfig_t & data)
   : CDriverCfg(data)
@@ -131,8 +132,8 @@ CHttpThinqDriverCfg::CHttpThinqDriverCfg(const CDriverCfg::RawConfig_t & data)
 /**************************************************************
  * Driver implementation
 ***************************************************************/
-/*
- * Driver constructor
+/**
+ * @brief Driver constructor
  *
  * @param[in] data  The raw configuration data
  */
@@ -157,10 +158,8 @@ CHttpThinqDriver::CHttpThinqDriver(const CDriverCfg::RawConfig_t & data)
   mURLSuffix = "?format=json";
 }
 
-/*
- * Show drive information
- *
- * @return none
+/**
+ * @brief Show drive information
  */
 void CHttpThinqDriver::showInfo() const
 {
@@ -174,12 +173,11 @@ void CHttpThinqDriver::showInfo() const
        mCfg->getTimeout());
 }
 
-/*
- * Executing resolving procedure
+/**
+ * @brief Executing resolving procedure
  *
  * @param[in] inData      The source data for making resolving
  * @param[out] outResult  The structure for saving resolving result
- * @return none
  *
  * @docs - https://api.thinq.com/docs/
  */
@@ -205,7 +203,7 @@ void CHttpThinqDriver::resolve(const string & inData, SResult_t & outResult) con
     http.setWriteCallback(write_func, &replyBuf);
     http.setHeader("Content-Type: application/json");
 
-    if (http.perform(dstURL) != CHttpClient::ECReqCode::OK)
+    if (CHttpClient::ECReqCode::OK != http.perform(dstURL))
     {
       dbg("error on perform request: %s", http.getErrorStr());
       throw error(http.getErrorStr());
@@ -247,5 +245,3 @@ void CHttpThinqDriver::resolve(const string & inData, SResult_t & outResult) con
 
   outResult.rawData = replyBuf;
 }
-
-

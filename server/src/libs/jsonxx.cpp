@@ -1,8 +1,8 @@
 #include <stdexcept>
 #include "jsonxx.h"
 
-/*
- * JSON item constructor
+/**
+ * @brief JSON item constructor
  */
 jsonxx::item::item(cJSON * root, const char * value)
 {
@@ -19,8 +19,8 @@ jsonxx::item::item(cJSON * root, const char * value)
   mObjItem = cJSON_GetObjectItem(root, value);
 }
 
-/*
- * JSON basic class constructor
+/**
+ * @brief JSON basic class constructor
  */
 jsonxx::jsonxx(const char * data)
   : mItem(nullptr)
@@ -37,8 +37,8 @@ jsonxx::jsonxx(const char * data)
   }
 }
 
-/*
- * JSON basic class constructor
+/**
+ * @brief JSON basic class constructor
  */
 jsonxx::jsonxx(const string & data)
   : mItem(nullptr)
@@ -50,8 +50,8 @@ jsonxx::jsonxx(const string & data)
   }
 }
 
-/*
- * JSON basic class destructor
+/**
+ * @brief JSON basic class destructor
  */
 jsonxx::~jsonxx()
 {
@@ -61,14 +61,14 @@ jsonxx::~jsonxx()
   }
 }
 
-/*
- * JSON basic class operator to set up item
- * for data retrieving and future casting
+/**
+ * @brief JSON basic class operator to set up item
+ *        for data retrieving and future casting
  *
  * @note item release actions do not required
  *       before using with different values
  */
-const jsonxx::item & jsonxx::operator[] (const char * value)
+jsonxx::item & jsonxx::operator[] (const char * value)
 {
   if (!value)
   {

@@ -13,8 +13,8 @@ using std::string;
 
 #include "thread.h"
 
-/*
- * Forward declarations
+/**
+ * @brief Forward declarations
  */
 class CSipClient;
 class CSipClientDestructor;

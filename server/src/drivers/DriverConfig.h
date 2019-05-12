@@ -14,13 +14,13 @@ using std::string;
 
 #include "libs/jsonxx.h"
 
-/*
- * Enum typedef forward declaration
+/**
+ * @brief Enum typedef forward declaration
  */
 enum class ECDriverId : uint8_t;
 
-/*
- * Driver configuration interface
+/**
+ * @brief Driver configuration interface
  */
 class CDriverCfg
 {

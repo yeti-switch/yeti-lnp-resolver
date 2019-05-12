@@ -3,8 +3,8 @@
 // Static member as flag about internal library initialization
 bool CHttpClient::sInitialize = false;
 
-/*
- * Class constructor
+/**
+ * @brief Class constructor
  */
 CHttpClient::CHttpClient()
   : mCtx(nullptr), mHdrList(NULL)
@@ -26,8 +26,8 @@ CHttpClient::CHttpClient()
     throw error("context creation error");
 }
 
-/*
- * Class destructor
+/**
+ * @brief Class destructor
  */
 CHttpClient::~CHttpClient()
 {
@@ -42,11 +42,10 @@ CHttpClient::~CHttpClient()
     }
 }
 
-/*
- * Set up SSL verification
+/**
+ * @brief Set up SSL verification
  *
  * @param[in] onoff   The disable/enable flag
- * @return none
  *
  * @note Enabled by default
  */
@@ -59,11 +58,10 @@ void CHttpClient::setSSLVerification(bool onoff)
         throw error("SSL verification option error");
 }
 
-/*
- * Set up authorization method type
+/**
+ * @brief Set up authorization method type
  *
  * @param[in] type  The authorization method type
- * @return none
  *
  * @note By default is ECAuth::BASIC
  */
@@ -73,12 +71,11 @@ void CHttpClient::setAuthType(ECAuth type)
         throw error("authorization type handling error");
 }
 
-/*
- * Set up authorization data for requests
+/**
+ * @brief Set up authorization data for requests
  *
  * @param[in] login   The authorization login/user name data
  * @param[in] pass    The authorization password data
- * @return none
  */
 void CHttpClient::setAuthData(const char * login, const char * pass)
 {
@@ -87,8 +84,8 @@ void CHttpClient::setAuthData(const char * login, const char * pass)
         throw error("authorization data error");
 }
 
-/*
- * Overloaded method for authorization data updating
+/**
+ * @brief Overloaded method for authorization data updating
  *
  * @see CHttpClient::setAuthData
  */
@@ -97,8 +94,8 @@ void CHttpClient::setAuthData(const string & login, const string & pass)
     return setAuthData(login.c_str(), pass.c_str());
 }
 
-/*
- * Set up request timeout
+/**
+ * @brief Set up request timeout
  *
  * @param[in] timeout   The timeout value
  */
@@ -109,11 +106,10 @@ void CHttpClient::setTimeout(const uint32_t timeout)
         throw error("set up timeout value error");
 }
 
-/*
- * Add custom headers to the request
+/**
+ * @brief Add custom headers to the request
  *
  * @param[in] header  The header string value
- * @return none
  */
 void CHttpClient::setHeader(const char * header)
 {
@@ -124,8 +120,8 @@ void CHttpClient::setHeader(const char * header)
     mHdrList = hdrList;
 }
 
-/*
- * Overloaded method for custom headers
+/**
+ * @brief Overloaded method for custom headers
  *
  * @see CHttpClient::setHeader
  */
@@ -134,12 +130,11 @@ void CHttpClient::setHeader(const string & header)
     return setHeader(header.c_str());
 }
 
-/*
- * Set up callback for writing received data in reply
+/**
+ * @brief Set up callback for writing received data in reply
  *
  * @param[in]  fn    The callback function for processing reply
  * @param[out] ptr   The pointer to buffer for saving reply data
- * @return none
  */
 void CHttpClient::setWriteCallback(WriteFunc_t fn, void * ptr)
 {
@@ -148,8 +143,8 @@ void CHttpClient::setWriteCallback(WriteFunc_t fn, void * ptr)
         throw error("initializing write callback data error");
 }
 
-/*
- * Retrieve error string if occurred
+/**
+ * @brief Retrieve error string if occurred
  *
  * @return string value with error data
  */
@@ -158,10 +153,11 @@ const char * CHttpClient::getErrorStr() const
     return mErrBuffer;
 }
 
-/*
- * Method for executing HTTP request
+/**
+ * @brief Method for executing HTTP request
  *
  * @param[in] url   The URL string for processing request
+ *
  * @return request code value
  */
 CHttpClient::ECReqCode CHttpClient::perform(const char * url)
@@ -183,8 +179,8 @@ CHttpClient::ECReqCode CHttpClient::perform(const char * url)
     return (CURLE_OK == rc) ? ECReqCode::OK : ECReqCode::FAIL;
 }
 
-/*
- * Overloaded method for executing HTTP request
+/**
+ * @brief Overloaded method for executing HTTP request
  *
  * @see CHttpClient::perform
  */

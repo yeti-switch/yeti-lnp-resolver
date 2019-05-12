@@ -10,8 +10,8 @@ using std::unique_ptr;
 #include "DriverDefines.h"
 #include "DriverConfig.h"
 
-/*
- * Resolver driver class
+/**
+ * @brief Resolver driver class
  */
 class CDriver
 {
@@ -44,9 +44,6 @@ class CDriver
     virtual const CDriverCfg::CfgUniqId_t getUniqueId() const = 0;
     virtual void showInfo() const = 0;
     virtual void resolve(const string & in, SResult_t & out) const = 0;
-
-//    virtual void on_stop() {};  //FIXME: make analysis to remove this method
-//    virtual void launch() {};   //FIXME: make analysis to remove this method
 
     static unique_ptr<CDriver> instantiate(const CDriverCfg::RawConfig_t & data);
 };

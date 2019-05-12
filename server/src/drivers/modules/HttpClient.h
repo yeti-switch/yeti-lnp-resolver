@@ -14,8 +14,8 @@ using std::string;
 
 #include <curl/curl.h>
 
-/*
- * HTTP client class
+/**
+ * @brief HTTP client class
  */
 class CHttpClient
 {

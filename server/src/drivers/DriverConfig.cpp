@@ -12,11 +12,12 @@ using std::uint8_t;
 CDriverCfg::ECfgFormat_t CDriverCfg::sConfigType   = CDriverCfg::ECONFIG_DATA_INVALID;
 const CDriverCfg::CfgTimeout_t defaultTimeout      = 4000;
 
-/*
- * Method to retrieve driver identify from dabatase raw
- * with detection driver configuration format type
+/**
+ * @brief Method to retrieve driver identify from dabatase raw
+ *        with detection driver configuration format type
  *
  * @param[in] data  The database output with driver configuration
+ *
  * @return driver identifier
  *
  * @see EDriverId_t
@@ -105,8 +106,8 @@ const ECDriverId CDriverCfg::getID(const RawConfig_t & data)
   return driverId;
 }
 
-/*
- * Getter for configuration format type
+/**
+ * @brief Getter for configuration format type
  *
  * @return format type
  *
@@ -117,8 +118,8 @@ const CDriverCfg::ECfgFormat_t CDriverCfg::getFormatType()
   return sConfigType;
 }
 
-/*
- * Getter for configuration format type string value
+/**
+ * @brief Getter for configuration format type string value
  *
  * @return string representation of the format type
  */
@@ -147,10 +148,11 @@ const char *CDriverCfg::getFormatStrType()
   return rv;
 }
 
-/*
- * Method to retrieve raw data for driver unique identifier
+/**
+ * @brief Method to retrieve raw data for driver unique identifier
  *
  * @param[in] data  The database output with driver configuration
+ *
  * @return configuration identifier
  */
 const CDriverCfg::CfgUniqId_t CDriverCfg::getRawUniqId(const RawConfig_t & data)
@@ -170,10 +172,11 @@ const CDriverCfg::CfgUniqId_t CDriverCfg::getRawUniqId(const RawConfig_t & data)
   return uniqID;
 }
 
-/*
- * Method to retrieve driver user defined label
+/**
+ * @brief Method to retrieve driver user defined label
  *
  * @param[in] data  The database output with driver data
+ *
  * @return driver label
  */
 const CDriverCfg::CfgLabel_t CDriverCfg::getRawLabel(const RawConfig_t & data)
@@ -193,10 +196,11 @@ const CDriverCfg::CfgLabel_t CDriverCfg::getRawLabel(const RawConfig_t & data)
   return label;
 }
 
-/*
- * Method for retrieving timeout value from configuration data (Basic format)
+/**
+ * @brief Method for retrieving timeout value from configuration data (Basic format)
  *
  * @param[in] data  The database output with driver configuration
+ *
  * @return timeout value
  */
 const CDriverCfg::CfgTimeout_t CDriverCfg::getRawTimeout(const RawConfig_t & data)
@@ -212,10 +216,11 @@ const CDriverCfg::CfgTimeout_t CDriverCfg::getRawTimeout(const RawConfig_t & dat
   return timeout;
 }
 
-/*
- * Method for retrieving timeout value from configuration data (JSON format)
+/**
+ * @brief Method for retrieving timeout value from configuration data (JSON format)
  *
  * @param[in] data  The database output with driver configuration
+ *
  * @return timeout value
  */
 const CDriverCfg::CfgTimeout_t CDriverCfg::getRawTimeout(JSONConfig_t & data)
@@ -230,10 +235,11 @@ const CDriverCfg::CfgTimeout_t CDriverCfg::getRawTimeout(JSONConfig_t & data)
   return timeout;
 }
 
-/*
- * Method for retrieving port value from configuration data (Basic format)
+/**
+ * @brief Method for retrieving port value from configuration data (Basic format)
  *
  * @param[in] data  The database output with driver configuration
+ *
  * @return port value
  */
 const CDriverCfg::CfgPort_t CDriverCfg::getRawPort(const RawConfig_t & data)
@@ -249,10 +255,11 @@ const CDriverCfg::CfgPort_t CDriverCfg::getRawPort(const RawConfig_t & data)
   return port;
 }
 
-/*
- * Method for retrieving port value from configuration data (JSON format)
+/**
+ * @brief Method for retrieving port value from configuration data (JSON format)
  *
  * @param[in] data  The database output with driver configuration
+ *
  * @return port value
  */
 const CDriverCfg::CfgPort_t CDriverCfg::getRawPort(JSONConfig_t & data)
@@ -267,10 +274,11 @@ const CDriverCfg::CfgPort_t CDriverCfg::getRawPort(JSONConfig_t & data)
   return port;
 }
 
-/*
- * Method for retrieving host value from configuration data (Basic format)
+/**
+ * @brief Method for retrieving host value from configuration data (Basic format)
  *
  * @param[in] data  The database output with driver configuration
+ *
  * @return host value
  */
 const CDriverCfg::CfgHost_t CDriverCfg::getRawHost(const RawConfig_t & data)
@@ -286,10 +294,11 @@ const CDriverCfg::CfgHost_t CDriverCfg::getRawHost(const RawConfig_t & data)
   return host;
 }
 
-/*
- * Method for retrieving host value from configuration data (JSON format)
+/**
+ * @brief Method for retrieving host value from configuration data (JSON format)
  *
  * @param[in] data  The database output with driver configuration
+ *
  * @return host value
  */
 const CDriverCfg::CfgHost_t CDriverCfg::getRawHost(JSONConfig_t & data)
@@ -304,10 +313,11 @@ const CDriverCfg::CfgHost_t CDriverCfg::getRawHost(JSONConfig_t & data)
   return host;
 }
 
-/*
- * Method for retrieving user name value from configuration data (Basic format)
+/**
+ * @brief Method for retrieving user name value from configuration data (Basic format)
  *
  * @param[in] data  The database output with driver configuration
+ *
  * @return user name value
  */
 const CDriverCfg::CfgUserName_t CDriverCfg::getRawUserName(const RawConfig_t & data)
@@ -323,10 +333,11 @@ const CDriverCfg::CfgUserName_t CDriverCfg::getRawUserName(const RawConfig_t & d
   return userName;
 }
 
-/*
- * Method for retrieving user name value from configuration data (JSON format)
+/**
+ * @brief Method for retrieving user name value from configuration data (JSON format)
  *
  * @param[in] data  The database output with driver configuration
+ *
  * @return user name value
  */
 const CDriverCfg::CfgUserName_t CDriverCfg::getRawUserName(JSONConfig_t & data)
@@ -341,8 +352,8 @@ const CDriverCfg::CfgUserName_t CDriverCfg::getRawUserName(JSONConfig_t & data)
   return userName;
 }
 
-/*
- * Constructor method for basic class
+/**
+ * @brief Constructor method for basic class
  */
 CDriverCfg::CDriverCfg(const RawConfig_t & data)
 {
