@@ -23,7 +23,7 @@ struct cache_entry {
 		dst(_dst),
         lrn(r.localRoutingNumber),
         data(r.rawData),
-        tag(r.tag) {}
+        tag(r.localRoutingTag) {}
 };
 
 class _cache: public thread {

@@ -142,7 +142,7 @@ int _dispatcher::process_peer(char *msg, int len)
 
 void _dispatcher::str2reply(char *&msg,int &len,const std::string &s,int code)
 {
-  //TODO: handle error code in a proper way after using the data format clarification
+  //FIXME: handle error code in a proper way after using the data format clarification
 	int l = s.size();
 	len = l+PDU_HDR_SIZE;
 	msg = new char[len];
@@ -154,7 +154,7 @@ void _dispatcher::str2reply(char *&msg,int &len,const std::string &s,int code)
 void _dispatcher::make_reply(char *&msg,int &len,const CDriver::SResult_t &r)
 {
     int lrn_len = r.localRoutingNumber.size();
-    int tag_len = r.tag.size();
+    int tag_len = r.localRoutingTag.size();
     int data_len = lrn_len + tag_len;
 
     len = data_len+NEW_PDU_HDR_SIZE;
@@ -164,7 +164,7 @@ void _dispatcher::make_reply(char *&msg,int &len,const CDriver::SResult_t &r)
     msg[2] = lrn_len;   //lrn_len
 
     memcpy(msg+NEW_PDU_HDR_SIZE,r.localRoutingNumber.c_str(),lrn_len);
-    memcpy(msg+NEW_PDU_HDR_SIZE+lrn_len,r.tag.c_str(),tag_len);
+    memcpy(msg+NEW_PDU_HDR_SIZE+lrn_len,r.localRoutingTag.c_str(),tag_len);
 }
 
 void _dispatcher::create_error_reply(char *&msg, int &len, std::string description, int code)

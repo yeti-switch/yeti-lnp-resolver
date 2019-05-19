@@ -24,12 +24,16 @@ class CDriver
                : logic_error(what) { }
     };
 
-    // Resolving output data
+    /**
+     * Resolving output data structure
+     * @note uses routing number or/and tag to detect provider
+     *       number, and resolver provides both in reply!
+     */
     struct SResult_t
     {
-        string localRoutingNumber;
-        string tag;                //TODO: is this usable ?
-        string rawData;
+        string localRoutingNumber;  // routing number like '+10901234567'
+        string localRoutingTag;     // routing tag like 'AT&T mobile'
+        string rawData;             // raw routing data
     };
 
   private:

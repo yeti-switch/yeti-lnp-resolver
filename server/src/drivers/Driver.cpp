@@ -1,6 +1,6 @@
 #include "SipDriver.h"
 #include "HttpThinqDriver.h"
-#include "CsvMhashDriver.h"
+#include "MhashCsvDriver.h"
 #include "HttpAlcazarDriver.h"
 #include "Driver.h"
 
@@ -40,6 +40,7 @@ unique_ptr<CDriver> CDriver::instantiate(const CDriverCfg::RawConfig_t & data)
       break;
 
     case ECDriverId::ERESOLVER_DRIVER_MHASH_CSV:
+      rv.reset(new CMhashCsvDriver(data));
       break;
 
     case ECDriverId::ERESOLVER_DRIVER_HTTP_ALCAZAR:

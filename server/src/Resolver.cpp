@@ -61,8 +61,15 @@ bool CResolver::loadResolveDrivers(Database_t & dbMap)
   }
   catch (const CDriverCfg::error & e)
   {
+    //FIXME: improve notification
     // show driver configuration error
     err("Driver config [%s]: %s", e.getIdent(), e.what())
+  }
+//  catch (const CDriver::error & e)
+  catch (const std::exception & e)
+  {
+    //FIXME: improve notification (show driver type)
+    err("Driver: %s", e.what())
   }
   catch (...)
   {
@@ -132,7 +139,7 @@ void CResolver::resolve(const CDriverCfg::CfgUniqId_t dbId,
         drv->getName(), drv->getUniqueId(),
         inData.c_str(),
         outResult.localRoutingNumber.c_str(),
-        outResult.tag.c_str(),
+        outResult.localRoutingTag.c_str(),
         req_diff.tv_sec, req_diff.tv_usec);
 
   }
