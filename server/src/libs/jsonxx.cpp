@@ -17,6 +17,11 @@ jsonxx::item::item(cJSON * root, const char * value)
   }
 
   mObjItem = cJSON_GetObjectItem(root, value);
+  if (!mObjItem)
+  {
+    throw  std::runtime_error("jsonxx: not found parsing item - "
+                              + string(value));
+  }
 }
 
 /**
