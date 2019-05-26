@@ -124,12 +124,12 @@ int _dispatcher::process_peer(char *msg, int len)
 
 	try {
 		create_reply(reply,reply_len,msg,len);
-	} catch(std::string &e){
+  } catch(const std::string & e){
 		err("got string exception: %s",e.c_str());
-		create_error_reply(reply,reply_len,std::string("Internal Error"),255);
-	} catch(CResolver::error & e){
-		err("got resolve exception: %s",e.what());
-		create_error_reply(reply,reply_len,e.what());
+    create_error_reply(reply,reply_len,ECErrorId::GENERAL_ERROR,std::string("Internal Error"));
+  } catch(const CResolverError & e){
+    err("got resolve exception: <%u> %s", static_cast<uint>(e.code()), e.what());
+    create_error_reply(reply,reply_len,e.code(),e.what());
 	}
 
 	int l = nn_send(s, reply, reply_len, 0);
@@ -140,13 +140,12 @@ int _dispatcher::process_peer(char *msg, int len)
 	return 0;
 }
 
-void _dispatcher::str2reply(char *&msg,int &len,const std::string &s,int code)
+void _dispatcher::str2reply(char *&msg,int &len,const ECErrorId code, const std::string &s)
 {
-  //FIXME: handle error code in a proper way after using the data format clarification
 	int l = s.size();
 	len = l+PDU_HDR_SIZE;
 	msg = new char[len];
-	msg[0]  = code;
+  msg[0]  = static_cast<char> (code);
 	msg[1] = l;
 	memcpy(msg+PDU_HDR_SIZE,s.c_str(),l);
 }
@@ -159,7 +158,7 @@ void _dispatcher::make_reply(char *&msg,int &len,const CDriver::SResult_t &r)
 
     len = data_len+NEW_PDU_HDR_SIZE;
     msg = new char[len];
-    msg[0] = 0;         //code
+    msg[0] = static_cast<char> (ECErrorId::NO_ERROR); //code
     msg[1] = data_len;  //global_len
     msg[2] = lrn_len;   //lrn_len
 
@@ -167,16 +166,15 @@ void _dispatcher::make_reply(char *&msg,int &len,const CDriver::SResult_t &r)
     memcpy(msg+NEW_PDU_HDR_SIZE+lrn_len,r.localRoutingTag.c_str(),tag_len);
 }
 
-void _dispatcher::create_error_reply(char *&msg, int &len, std::string description, int code)
-
+void _dispatcher::create_error_reply(char *&msg, int &len, const ECErrorId code, const std::string description)
 {
-	str2reply(msg,len,description, code);
+  str2reply(msg,len,code,description);
 }
 
 void _dispatcher::create_reply(char *&msg, int &len, const char *req, int req_len)
 {
     if(req_len < PDU_HDR_SIZE){
-        throw CResolver::error("request too small");
+        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request too small");
     }
 
     CDriver::SResult_t r;
@@ -188,7 +186,7 @@ void _dispatcher::create_reply(char *&msg, int &len, const char *req, int req_le
 
     if(!old_format){
         if(req_len < NEW_PDU_HDR_SIZE){
-            throw CResolver::error("request too small");
+            throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request too small");
         }
         version = data_len;
         data_len = req[2];
@@ -199,7 +197,7 @@ void _dispatcher::create_reply(char *&msg, int &len, const char *req, int req_le
 
     if((lnp_offset+data_len) > req_len){
         err("malformed request: too big data_len");
-        throw CResolver::error("malformed request");
+        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "malformed request");
     }
 
     std::string lnp(req+lnp_offset,data_len);
@@ -209,7 +207,7 @@ void _dispatcher::create_reply(char *&msg, int &len, const char *req, int req_le
     resolver::instance()->resolve(database_id,lnp,r);
 
     if(old_format){
-        str2reply(msg,len,r.localRoutingNumber,0);
+        str2reply(msg,len,ECErrorId::NO_ERROR,r.localRoutingNumber);
     } else {
         make_reply(msg,len,r);
     }

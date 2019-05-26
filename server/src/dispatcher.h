@@ -11,6 +11,7 @@
 
 #include <confuse.h>
 
+#include "ResolverException.h"
 #include "Resolver.h"
 #include "singleton.h"
 
@@ -19,10 +20,10 @@ class _dispatcher {
 	int stop_event_fd;
 
 	int process_peer(char *msg, int len);
-	void str2reply(char *&msg,int &len,const std::string &s,int code);
+  void str2reply(char *&msg,int &len,const ECErrorId code,const std::string &s);
 	void make_reply(char *&msg,int &len,const CDriver::SResult_t &r);
 	void create_reply(char *&msg, int &len, const char *req, int req_len);
-	void create_error_reply(char *&msg, int &len,std::string description,int code=1);
+  void create_error_reply(char *&msg, int &len,const ECErrorId code,const std::string description);
 
   protected:
 	void dispose() {}

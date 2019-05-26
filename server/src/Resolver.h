@@ -7,13 +7,11 @@ using std::string;
 #include <memory>
 using std::unique_ptr;
 
-#include <stdexcept>
-using std::logic_error;
-
 #include <map>
 
 #include "singleton.h"
 #include "drivers/Driver.h"
+#include "ResolverException.h"
 
 /*
  * Forward declaration for
@@ -27,10 +25,6 @@ using resolver = singleton<CResolver>;
  */
 class CResolver
 {
-  public:
-    // Redefine resolver error
-    using error = CDriver::error;
-
   private:
     // Databases type defines
     using Database_t = std::map<CDriverCfg::CfgUniqId_t, unique_ptr<CDriver> >;

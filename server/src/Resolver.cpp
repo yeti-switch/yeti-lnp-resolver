@@ -62,15 +62,12 @@ bool CResolver::loadResolveDrivers(Database_t & dbMap)
   catch (const CDriverCfg::error & e)
   {
     // show driver configuration error (abort main process)
-    err("Driver config [%s]: %s", e.getIdent(), e.what())
-  }
-  catch (const CDriver::error & e)
-  {
-    err("Driver: %s", e.what())
+    err("Driver config [%s]: %s", e.getIdent(), e.what());
   }
   catch (...)
   {
-    err("Unexpected exception");
+    // general exception handler (abort main process)
+    err("Unexpected driver loading exception");
   }
 
   return rv;
@@ -112,7 +109,7 @@ void CResolver::resolve(const CDriverCfg::CfgUniqId_t dbId,
   auto mapItem = mDriversMap.find(dbId);
   if (mapItem == mDriversMap.end())
   {
-    throw CDriver::error("unknown database id");
+    throw CResolverError(ECErrorId::GENERAL_RESOLVING_ERROR, "unknown database id");
   }
 
   // Declare variables for resolving procedure time execution
@@ -140,14 +137,14 @@ void CResolver::resolve(const CDriverCfg::CfgUniqId_t dbId,
         req_diff.tv_sec, req_diff.tv_usec);
 
   }
-  catch(CDriver::error & e)
+  catch(const CDriver::error & e)
   {
-    throw e;
+    throw CResolverError(ECErrorId::DRIVER_RESOLVING_ERROR, e.what());
   }
   catch(...)
   {
-    dbg("unknown resolve exception");
-    throw CDriver::error("internal error");
+    throw CResolverError(ECErrorId::GENERAL_RESOLVING_ERROR,
+                         "unknown resovling exception");
   }
 
   lnp_cache::instance()->sync(
