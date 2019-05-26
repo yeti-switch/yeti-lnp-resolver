@@ -6,12 +6,13 @@ using std::uint16_t;
 using std::uint32_t;
 
 #include <stdexcept>
-using std::logic_error;
+using std::runtime_error;
 
 #include <string>
 using std::string;
 
 #include "thread.h"
+#include "libs/fmterror.h"
 
 /**
  * @brief Forward declarations
@@ -26,11 +27,12 @@ class CSipClient: public thread
 {
   public:
     // Client exception class
-    class error: public logic_error
+    class error: public runtime_error
     {
       public:
-        explicit error(const string & what) :
-            logic_error("{SipClient} " + what) { }
+        template <typename ... Args>
+        explicit error(const char * fmt, Args ... args) :
+          runtime_error(fmterror(fmt, args ...).get()) { }
     };
 
     // Execution result code enumeration

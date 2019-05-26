@@ -94,9 +94,16 @@ CMhashCsvDriver::CMhashCsvDriver(const CDriverCfg::RawConfig_t & data)
 {
   mCfg.reset(new CMhashCsvDriverCfg(data));
 
-  mCsvHash.reset(new CCsvClient(mCfg->getFilePath(),
-                                ECSV_FIELD_NUMBER,
-                                ECSV_FIELD_MAX_VALUE));
+  try
+  {
+    mCsvHash.reset(new CCsvClient(mCfg->getFilePath(),
+                                  ECSV_FIELD_NUMBER,
+                                  ECSV_FIELD_MAX_VALUE));
+  }
+  catch (CCsvClient::error & e)
+  {
+    throw CMhashCsvDriverCfg::error(mCfg->getLabel(), e.what());
+  }
 }
 
 /**

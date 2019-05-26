@@ -61,14 +61,11 @@ bool CResolver::loadResolveDrivers(Database_t & dbMap)
   }
   catch (const CDriverCfg::error & e)
   {
-    //FIXME: improve notification
-    // show driver configuration error
+    // show driver configuration error (abort main process)
     err("Driver config [%s]: %s", e.getIdent(), e.what())
   }
-//  catch (const CDriver::error & e)
-  catch (const std::exception & e)
+  catch (const CDriver::error & e)
   {
-    //FIXME: improve notification (show driver type)
     err("Driver: %s", e.what())
   }
   catch (...)

@@ -195,7 +195,6 @@ void _dispatcher::create_reply(char *&msg, int &len, const char *req, int req_le
         lnp_offset++;
     }
 
-    //TODO: required to check how this is used
     (void) version; // compiling error suppression
 
     if((lnp_offset+data_len) > req_len){

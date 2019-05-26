@@ -2,7 +2,7 @@
 #define SERVER_SRC_DRIVERS_MODULES_CSVCLIENT_H_
 
 #include <stdexcept>
-using std::logic_error;
+using std::runtime_error;
 
 #include <string>
 using std::string;
@@ -13,6 +13,8 @@ using std::vector;
 #include <unordered_map>
 using std::unordered_map;
 
+#include "libs/fmterror.h"
+
 /**
  * @brief CSV client class
  */
@@ -20,11 +22,12 @@ class CCsvClient
 {
   public:
     // Client exception class
-    class error: public logic_error
+    class error : public runtime_error
     {
       public:
-        explicit error(const string & what) :
-            logic_error("{CsvClient} " + what) { }
+        template <typename ... Args>
+        explicit error(const char * fmt, Args ... args) :
+          runtime_error(fmterror(fmt, args ...).get()) { }
     };
 
     // Related type defines

@@ -5,7 +5,7 @@
 using std::uint8_t;
 
 #include <stdexcept>
-using std::logic_error;
+using std::runtime_error;
 
 #include <string>
 using std::string;
@@ -13,6 +13,7 @@ using std::string;
 #include <pqxx/pqxx>
 
 #include "libs/jsonxx.h"
+#include "libs/fmterror.h"
 
 /**
  * @brief Enum typedef forward declaration
@@ -26,16 +27,21 @@ class CDriverCfg
 {
   public:
     // Driver configuration exception class
-    class error : public logic_error
+    class error : public runtime_error
     {
       private:
         string mIdent;
-       public:
-           explicit error(const char * ident, const string & what)
-             : logic_error(what), mIdent(ident)
-           { mIdent = (nullptr != ident) ? ident : "Unknown"; }
 
-           const char * getIdent() const { return mIdent.c_str(); }
+       public:
+        template <typename ... Args>
+        explicit error(const char * fmt, Args ... args) :
+          runtime_error(fmterror(fmt, args ...).get()), mIdent("Unknown") { }
+
+        template <typename ... Args>
+        explicit error(const char * ident, const char * fmt, Args ... args) :
+          runtime_error(fmterror(fmt, args ...).get()), mIdent(ident) { }
+
+        const char * getIdent() const { return mIdent.c_str(); }
     };
 
     // Configuration data types

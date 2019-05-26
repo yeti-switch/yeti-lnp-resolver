@@ -7,6 +7,7 @@ using std::string;
 #include <memory>
 using std::unique_ptr;
 
+#include "libs/fmterror.h"
 #include "DriverDefines.h"
 #include "DriverConfig.h"
 
@@ -17,11 +18,12 @@ class CDriver
 {
   public:
     // Resolver exception class
-    class error : public logic_error
+    class error : public runtime_error
     {
-       public:
-           explicit error(const std::string & what)
-               : logic_error(what) { }
+      public:
+        template <typename ... Args>
+        explicit error(const char * fmt, Args ... args) :
+          runtime_error(fmterror(fmt, args ...).get()) { }
     };
 
     /**

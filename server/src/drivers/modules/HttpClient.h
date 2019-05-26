@@ -7,12 +7,14 @@ using std::uint8_t;
 using std::uint32_t;
 
 #include <stdexcept>
-using std::logic_error;
+using std::runtime_error;
 
 #include <string>
 using std::string;
 
 #include <curl/curl.h>
+
+#include "libs/fmterror.h"
 
 /**
  * @brief HTTP client class
@@ -21,11 +23,12 @@ class CHttpClient
 {
   public:
     // Client exception class
-    class error: public logic_error
+    class error: public runtime_error
     {
       public:
-        explicit error(const string & what) :
-            logic_error("{HttpClient} " + what) { }
+        template <typename ... Args>
+        explicit error(const char * fmt, Args ... args) :
+          runtime_error(fmterror(fmt, args ...).get()) { }
     };
 
     // Authorization enumerations

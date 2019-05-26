@@ -27,7 +27,7 @@ static void loadCsvFile(CCsvClient::hash_t & hash,
   std::ifstream csvInStream(fileName);
   if (!csvInStream.is_open())
   {
-    throw CCsvClient::error("could not open file: " + string(fileName));
+    throw CCsvClient::error("could not open file: %s", fileName);
   }
 
   // CSV file parsing
@@ -50,8 +50,8 @@ static void loadCsvFile(CCsvClient::hash_t & hash,
     {
       if (!getline(lineStream, csvField[idx], delimiter))
       {
-        //FIXME: unexpected format field %idx at line %lineCnt
-        throw CCsvClient::error("unexpected line format");
+        throw CCsvClient::error("unexpected format field %zu at line %zu",
+                                 (idx + 1), lineCnt);
       }
       if (!csvField[idx].empty())
       {
@@ -63,8 +63,8 @@ static void loadCsvFile(CCsvClient::hash_t & hash,
     size_t requiredFieldsCnt = fieldsNumber - 1;
     if (validityCnt < requiredFieldsCnt)
     {
-      //FIXME: required at least %validityCnt valid fields in the line %lineCnt
-      throw CCsvClient::error("empty mandatory fields");
+      throw CCsvClient::error("required at least %zu valid fields in the line %zu",
+                               fieldsNumber, lineCnt);
     }
 
     const auto it = hash.find(csvField[primaryIdx]);

@@ -360,12 +360,12 @@ CDriverCfg::CDriverCfg(const RawConfig_t & data)
   mUniqId = getRawUniqId(data);
   if (-1 == mUniqId)
   {
-    throw error(nullptr, "not found driver unique identifier!");
+    throw error("not found driver unique identifier!");
   }
 
   mLabel = getRawLabel(data);
   if (0 == mLabel.length())
   {
-    throw error(nullptr, "not found user defined name for driver!");
+    throw error("not found user defined name for driver!");
   }
 }
