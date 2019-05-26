@@ -99,7 +99,7 @@ class CDriverCfg
     static const CfgUserName_t getRawUserName(JSONConfig_t & data);
 
   public:
-    CDriverCfg(const RawConfig_t & data);
+    explicit CDriverCfg(const RawConfig_t & data);
     virtual ~CDriverCfg() = default;
 
     static const ECDriverId   getID(const RawConfig_t & data);

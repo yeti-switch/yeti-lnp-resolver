@@ -7,7 +7,7 @@ bool CHttpClient::sInitialize = false;
  * @brief Class constructor
  */
 CHttpClient::CHttpClient()
-  : mCtx(nullptr), mHdrList(NULL)
+  : mCtx(nullptr), mHdrList(nullptr)
 {
   mErrBuffer[0] = '\0';
 
@@ -31,7 +31,7 @@ CHttpClient::CHttpClient()
  */
 CHttpClient::~CHttpClient()
 {
-    if (NULL != mHdrList)
+    if (nullptr != mHdrList)
     {
         curl_slist_free_all(mHdrList);
     }
@@ -53,8 +53,8 @@ void CHttpClient::setSSLVerification(bool onoff)
 {
     const long verify = onoff ? 2L : 0L;
 
-    if ((curl_easy_setopt(mCtx, CURLOPT_SSL_VERIFYPEER, verify) != CURLE_OK) ||
-        (curl_easy_setopt(mCtx, CURLOPT_SSL_VERIFYHOST, verify) != CURLE_OK))
+    if ((CURLE_OK != curl_easy_setopt(mCtx, CURLOPT_SSL_VERIFYPEER, verify)) ||
+        (CURLE_OK != curl_easy_setopt(mCtx, CURLOPT_SSL_VERIFYHOST, verify)))
         throw error("SSL verification option error");
 }
 
@@ -79,8 +79,8 @@ void CHttpClient::setAuthType(ECAuth type)
  */
 void CHttpClient::setAuthData(const char * login, const char * pass)
 {
-    if ((curl_easy_setopt(mCtx,  CURLOPT_USERNAME, login) != CURLE_OK) ||
-        (curl_easy_setopt(mCtx,  CURLOPT_PASSWORD, pass)  != CURLE_OK))
+    if ((CURLE_OK != curl_easy_setopt(mCtx,  CURLOPT_USERNAME, login)) ||
+        (CURLE_OK != curl_easy_setopt(mCtx,  CURLOPT_PASSWORD, pass)))
         throw error("authorization data error");
 }
 
@@ -101,8 +101,8 @@ void CHttpClient::setAuthData(const string & login, const string & pass)
  */
 void CHttpClient::setTimeout(const uint32_t timeout)
 {
-    if ((curl_easy_setopt(mCtx, CURLOPT_TIMEOUT_MS, timeout) != CURLE_OK) ||
-        (curl_easy_setopt(mCtx, CURLOPT_NOSIGNAL, 1L)        != CURLE_OK))
+    if ((CURLE_OK != curl_easy_setopt(mCtx, CURLOPT_TIMEOUT_MS, timeout)) ||
+        (CURLE_OK != curl_easy_setopt(mCtx, CURLOPT_NOSIGNAL, 1L)))
         throw error("set up timeout value error");
 }
 
@@ -138,8 +138,8 @@ void CHttpClient::setHeader(const string & header)
  */
 void CHttpClient::setWriteCallback(WriteFunc_t fn, void * ptr)
 {
-    if ((curl_easy_setopt(mCtx, CURLOPT_WRITEFUNCTION, fn)   != CURLE_OK) ||
-        (curl_easy_setopt(mCtx, CURLOPT_WRITEDATA, ptr) != CURLE_OK))
+    if ((CURLE_OK != curl_easy_setopt(mCtx, CURLOPT_WRITEFUNCTION, fn)) ||
+        (CURLE_OK != curl_easy_setopt(mCtx, CURLOPT_WRITEDATA, ptr)))
         throw error("initializing write callback data error");
 }
 
@@ -162,16 +162,16 @@ const char * CHttpClient::getErrorStr() const
  */
 CHttpClient::ECReqCode CHttpClient::perform(const char * url)
 {
-    if (curl_easy_setopt(mCtx, CURLOPT_URL, url) != CURLE_OK)
+    if (CURLE_OK != curl_easy_setopt(mCtx, CURLOPT_URL, url))
         throw error("URL processing error");
 
     if (mHdrList)
     {
-        if (curl_easy_setopt(mCtx, CURLOPT_HTTPHEADER, mHdrList) != CURLE_OK)
+        if (CURLE_OK != curl_easy_setopt(mCtx, CURLOPT_HTTPHEADER, mHdrList))
             throw error("headers processing error");
     }
 
-    if(curl_easy_setopt(mCtx, CURLOPT_ERRORBUFFER, mErrBuffer) != CURLE_OK)
+    if(CURLE_OK != curl_easy_setopt(mCtx, CURLOPT_ERRORBUFFER, mErrBuffer))
         throw error("error buffer initializing error");
 
     CURLcode rc = curl_easy_perform(mCtx);

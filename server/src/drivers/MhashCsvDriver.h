@@ -17,7 +17,7 @@ class CMhashCsvDriverCfg: public CDriverCfg
     static const CfgFilePath_t getRawFilePath(JSONConfig_t & data);
 
   public:
-    CMhashCsvDriverCfg(const CDriverCfg::RawConfig_t & data);
+    explicit CMhashCsvDriverCfg(const CDriverCfg::RawConfig_t & data);
     ~CMhashCsvDriverCfg() override = default;
 
     const char * getFilePath() const  { return mFilePath.c_str(); }
@@ -46,7 +46,7 @@ class CMhashCsvDriver: public CDriver
     unique_ptr<CCsvClient> mCsvHash;
 
   public:
-    CMhashCsvDriver(const CDriverCfg::RawConfig_t & data);
+    explicit CMhashCsvDriver(const CDriverCfg::RawConfig_t & data);
     ~CMhashCsvDriver() override = default;
 
     void showInfo() const override;

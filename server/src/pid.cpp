@@ -58,12 +58,15 @@ void delete_pid_file(){
 	int file_pid;
 	if(fscanf(f,"%d",&file_pid)!=1){
 		err("can't get pid from pid_file '%s",cfg.pid_file);
+    fclose(f);
 		return;
 	}
 
 	if(cfg.pid!=file_pid){
 		//err("pid in pid_file doesn't matched with our own. skip unlink",cfg.pid_file);
+    fclose(f);
 		return;
 	}
+  fclose(f);
 	unlink(cfg.pid_file);
 }

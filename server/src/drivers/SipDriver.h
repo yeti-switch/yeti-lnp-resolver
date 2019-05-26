@@ -30,7 +30,7 @@ class CSipDriverCfg: public CDriverCfg
     CfgTimeout_t          mTimeout;
 
   public:
-    CSipDriverCfg(const CDriverCfg::RawConfig_t & data);
+    explicit CSipDriverCfg(const CDriverCfg::RawConfig_t & data);
 
     const char *        getUserAgent() const { return mUserAgent; }
     const char *        getProtocol() const  { return mProtocol; }
@@ -55,7 +55,7 @@ class CSipDriver: public CDriver
     string mURISuffix;
 
   public:
-    CSipDriver(const CDriverCfg::RawConfig_t & data);
+    explicit CSipDriver(const CDriverCfg::RawConfig_t & data);
     ~CSipDriver() override = default;
 
     void showInfo() const override;

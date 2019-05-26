@@ -13,15 +13,14 @@ using std::unique_ptr;
 #include "drivers/Driver.h"
 #include "ResolverException.h"
 
-/*
- * Forward declaration for
- * singleton driver type define
+/**
+ * @brief Forward declaration for singleton driver type define
  */
 class CResolver;
 using resolver = singleton<CResolver>;
 
-/*
- * Resolver class
+/**
+ * @brief Resolver class
  */
 class CResolver
 {
@@ -32,7 +31,7 @@ class CResolver
     Database_t mDriversMap;
     mutex      mDriversMutex;
 
-    bool loadResolveDrivers(Database_t & db);
+    static bool loadResolveDrivers(Database_t & db);
 
   public:
     CResolver() = default;

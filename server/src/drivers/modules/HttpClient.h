@@ -58,13 +58,12 @@ class CHttpClient
 
     static bool sInitialize;
 
-    // Copying procedure denied
-    CHttpClient(const CHttpClient & hc) = delete;
-    CHttpClient & operator=(const CHttpClient & hc) = delete;
-
   public:
     CHttpClient();
     ~CHttpClient();
+
+    CHttpClient(const CHttpClient & hc)             = delete;
+    CHttpClient & operator=(const CHttpClient & hc) = delete;
 
     // Configuration setters
     void setSSLVerification(bool onoff);

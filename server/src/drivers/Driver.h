@@ -46,10 +46,11 @@ class CDriver
     CDriver(const ECDriverId id, const char * name);
     virtual ~CDriver() = default;
 
-    const char * getName() const  { return mName; }
     virtual const CDriverCfg::CfgUniqId_t getUniqueId() const = 0;
     virtual void showInfo() const = 0;
     virtual void resolve(const string & in, SResult_t & out) const = 0;
+
+    const char * getName() const  { return mName; }
 
     static unique_ptr<CDriver> instantiate(const CDriverCfg::RawConfig_t & data);
 };

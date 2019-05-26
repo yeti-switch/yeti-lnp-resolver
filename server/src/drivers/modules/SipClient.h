@@ -75,6 +75,7 @@ class CSipClient: public thread
 
     CSipClient()                                  = default;
     ~CSipClient() override                        = default;
+
     CSipClient(const CSipClient & sc)             = delete;
     CSipClient & operator=(const CSipClient & sc) = delete;
 
@@ -85,12 +86,12 @@ class CSipClient: public thread
   public:
     static CSipClient & getInstance(const char * userAgent = nullptr);
 
-    void setContactData(const char * data);
-    void setFromData(const char * name, const char * uri);
-    void setTimeout(const uint32_t timeout);
+    static void setContactData(const char * data);
+    static void setFromData(const char * name, const char * uri);
+    static void setTimeout(const uint32_t timeout);
 
-    ECCode perform(const char * number, SReplyData & reply);
-    ECCode perform(const string & number, SReplyData & reply);
+    static ECCode perform(const char * number, SReplyData & reply);
+    static ECCode perform(const string & number, SReplyData & reply);
 };
 
 #endif /* SERVER_SRC_DRIVERS_MODULES_SIPCLIENT_H_ */

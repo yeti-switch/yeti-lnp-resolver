@@ -6,7 +6,7 @@
 
 #include <cstdlib>
 #include <ctype.h>
-#include "unistd.h"
+#include <unistd.h>
 
 void parse_opts(int argc, char *argv[])
 {

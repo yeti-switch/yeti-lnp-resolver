@@ -1,6 +1,9 @@
 #ifndef SERVER_SRC_DRIVERS_DRIVERDEFINES_H_
 #define SERVER_SRC_DRIVERS_DRIVERDEFINES_H_
 
+#include <cstdint>
+using std::uint8_t;
+
 #include <array>
 
 /**
@@ -19,6 +22,7 @@ enum class ECDriverId : uint8_t
 
 /**
  * @brief An array with driver types, that depend on configuration format
+ *
  * @note numberId   The type used with yeti-web v1.7
  * @note stringId   The type used with yeti-web v1.8
  */
@@ -29,7 +33,7 @@ struct SDriverTypeMap_t
     const char *  stringId;
 };
 static const std::array<SDriverTypeMap_t,
-  (static_cast<long unsigned int> (ECDriverId::ERESOLVER_DRIVER_MAX_ID) - 1)>
+  (static_cast<uint8_t> (ECDriverId::ERESOLVER_DRIVER_MAX_ID) - 1)>
 sDriverTypeArray =
 {{
      { ECDriverId::ERESOLVER_DRIVER_SIP,            1,  "Lnp::DatabaseSipRedirect" }

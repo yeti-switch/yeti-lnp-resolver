@@ -21,7 +21,7 @@ class CHttpThinqDriverCfg: public CDriverCfg
     static const CfgToken_t getRawToken(JSONConfig_t & data);
 
   public:
-    CHttpThinqDriverCfg(const CDriverCfg::RawConfig_t & data);
+    explicit CHttpThinqDriverCfg(const CDriverCfg::RawConfig_t & data);
 
     const char *        getProtocol() const { return mProtocol; }
     const char *        getHost() const     { return mHost.c_str(); }
@@ -42,7 +42,7 @@ class CHttpThinqDriver: public CDriver
     string mURLSuffix;
 
   public:
-    CHttpThinqDriver(const CDriverCfg::RawConfig_t & data);
+    explicit CHttpThinqDriver(const CDriverCfg::RawConfig_t & data);
     ~CHttpThinqDriver() override = default;
 
     void showInfo() const override;

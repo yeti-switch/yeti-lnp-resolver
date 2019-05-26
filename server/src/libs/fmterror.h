@@ -32,8 +32,8 @@ class fmterror
 /**
  * @brief Format error class constructor
  *
- * @param fmt   The string format
- * @param args  Variable arguments for formatting
+ * @param[in] fmt   The string format
+ * @param[in] args  Variable arguments for formatting
  */
 template <typename ... Args>
 fmterror::fmterror(const char * fmt, Args ... args) noexcept
@@ -51,9 +51,9 @@ fmterror::fmterror(const char * fmt, Args ... args) noexcept
 }
 
 /**
- * @brief Getter for formatted string
+ * @brief Getter for formatted string value
  *
- * @return formatter string
+ * @return formatted string
  */
 inline string fmterror::get() const
 {

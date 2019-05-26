@@ -20,7 +20,7 @@ class CHttpAlcazarDriverCfg: public CDriverCfg
     static const CfgKey_t getRawKey(JSONConfig_t & data);
 
   public:
-    CHttpAlcazarDriverCfg(const CDriverCfg::RawConfig_t & data);
+    explicit CHttpAlcazarDriverCfg(const CDriverCfg::RawConfig_t & data);
 
     const char *       getProtocol() const { return mProtocol; }
     const char *       getHost() const     { return mHost.c_str(); }
@@ -39,7 +39,7 @@ class CHttpAlcazarDriver: public CDriver
     string mURLPrefix;
 
   public:
-    CHttpAlcazarDriver(const CDriverCfg::RawConfig_t & data);
+    explicit CHttpAlcazarDriver(const CDriverCfg::RawConfig_t & data);
     ~CHttpAlcazarDriver() override = default;
 
     void showInfo() const override;
