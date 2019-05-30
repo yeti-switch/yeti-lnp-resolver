@@ -128,7 +128,7 @@ class thread {
 	virtual void on_stop()=0;
   public:
 	unsigned long _pid;
-	pid_t thread_pid;
+	pthread_t thread_pid;
 
 	thread();
 	virtual ~thread() {}

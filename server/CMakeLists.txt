@@ -9,13 +9,14 @@ find_package(NanoMsg REQUIRED)
 find_package(Confuse REQUIRED)
 find_package(YetiCC REQUIRED)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-write-strings")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-write-strings")
 
 include_directories(
 	${PQXX_INCLUDE_DIRECTORIES}
 	${LIBRE_BUNDLED_INCLUDE_DIRS}
 	${CURL_INCLUDE_DIRS}
 	${YETICC_INCLUDE_DIRS}
+	${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 file(GLOB_RECURSE SRCS src/*.cpp src/*.c)
