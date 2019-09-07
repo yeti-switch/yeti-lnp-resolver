@@ -1,4 +1,4 @@
-MESSAGE(STATUS "Enable building of the bundled Curl")
+MESSAGE(STATUS "Enable building of the bundled libre")
 
 set (LIBRE_DIR third/re)
 set (LIBRE_SRC_DIR ${PROJECT_SOURCE_DIR}/${LIBRE_DIR})
@@ -10,6 +10,7 @@ add_custom_target(libre ALL DEPENDS ${LIBRE_BUNDLED_LIB})
 
 file(MAKE_DIRECTORY ${LIBRE_BIN_DIR})
 
+message(INFO test)
 add_custom_command(OUTPUT ${LIBRE_BUNDLED_LIB}
     PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${LIBRE_SRC_DIR} ${LIBRE_BIN_DIR}
