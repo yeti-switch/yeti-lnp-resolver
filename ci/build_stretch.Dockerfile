@@ -12,7 +12,7 @@ RUN echo "deb http://pkg.yeti-switch.org/debian/stretch unstable main ext" >> /e
 
 RUN apt-get update && apt-get -y --no-install-recommends install build-essential devscripts \
     ca-certificates apt-transport-https debhelper fakeroot lintian python-jinja2 \
-    git-changelog python-setuptools lsb-release curl cmake g++ gcc libcurl4-openssl-dev libcurl3 libcurl3-dev libpqxx-dev libnanomsg-dev libconfuse-dev
+    git-changelog python-setuptools lsb-release curl cmake g++ gcc libcurl4-openssl-dev libcurl3 libcurl3-dev libpqxx-dev libnanomsg-dev libconfuse-dev libyeticc-dev
 
 ADD . /build/yeti-lb/
 
