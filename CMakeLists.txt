@@ -1,5 +1,7 @@
 cmake_minimum_required (VERSION 2.8)
 
+project(yeti-lnp-resolver)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 list(APPEND CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS} -g")
