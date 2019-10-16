@@ -2,6 +2,7 @@
 #include "HttpThinqDriver.h"
 #include "MhashCsvDriver.h"
 #include "HttpAlcazarDriver.h"
+#include "HttpCoureAnqDriver.h"
 #include "Driver.h"
 
 /**
@@ -46,6 +47,10 @@ unique_ptr<CDriver> CDriver::instantiate(const CDriverCfg::RawConfig_t & data)
     case ECDriverId::ERESOLVER_DRIVER_HTTP_ALCAZAR:
       rv.reset(new CHttpAlcazarDriver(data));
       break;
+
+  case ECDriverId::ERESOLVER_DIRVER_HTTP_COUREANQ:
+    rv.reset(new CHttpCoureAnqDriver(data));
+    break;
 
     default:
       break;
