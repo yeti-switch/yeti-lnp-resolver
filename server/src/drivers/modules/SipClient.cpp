@@ -290,15 +290,17 @@ CSipClient::ECCode CSipClient::perform(const char * uri, SReplyData & reply)
     }
   };
 
-  int rv = sipsess_connect(&session, sSipSocket, uri,
-                           sInstance->mFromName,
-                           sInstance->mFromUri,
-                           sInstance->mContactField,
-                           nullptr, 0, "", nullptr,
-                           nullptr, nullptr, false,
-                           nullptr, nullptr, nullptr,
-                           nullptr, nullptr, nullptr,
-                           closeHandler, &reply, nullptr);
+  int rv = sipsess_connect(&session,                        //sessp
+                           sSipSocket,                      //sock
+                           uri,                             //to_uri
+                           sInstance->mFromName,            //from_name
+                           sInstance->mFromUri,             //from_uri
+                           sInstance->mContactField,        //cuser
+                           nullptr, 0, "", nullptr,         //routev[], routec, ctype, desc
+                           nullptr, nullptr, false,         //authh, aarg, aref
+                           nullptr, nullptr, nullptr,       //offerh, answerh, progrh
+                           nullptr, nullptr, nullptr,       //eastbh, infoh, referh
+                           closeHandler, &reply, nullptr);  //closeh, arg, fmt
   if (0 != rv)
   {
     throw error("unable to perform SIP request");
@@ -310,10 +312,10 @@ CSipClient::ECCode CSipClient::perform(const char * uri, SReplyData & reply)
   {
     // Close all SIP sessions in the case timeout
     sipsess_close_all(sSipSocket);
+  } else {
+    // Terminate session
+    mem_deref(session);
   }
-
-  // Terminate session
-  mem_deref(session);
 
   return rv ? ECCode::OK : ECCode::FAIL;
 }
