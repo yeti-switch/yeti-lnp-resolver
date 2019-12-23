@@ -39,9 +39,9 @@ void _dispatcher::loop()
         throw std::string("nn_socket()");
     }
 
-    size_t vallen;
+    size_t vallen = sizeof(nn_poll_fd);
     if(0!=nn_getsockopt(s, NN_SOL_SOCKET, NN_RCVFD, &nn_poll_fd, &vallen)) {
-        throw std::string("nn_setsockopt(NN_LINGER)");
+        throw std::string("nn_getsockopt(NN_SOL_SOCKET, NN_RCVFD)");
     }
 
     ev.data.fd = nn_poll_fd;
