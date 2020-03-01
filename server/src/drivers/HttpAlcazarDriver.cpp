@@ -218,6 +218,8 @@ void CHttpAlcazarDriver::resolve(const string & inData, SResult_t & outResult) c
   try {
     outResult.localRoutingNumber =
         static_cast<decltype(outResult.localRoutingNumber)> (jsonxx(replyBuf)["LRN"]);
+    outResult.localRoutingTag =
+        static_cast<decltype(outResult.localRoutingTag)> (jsonxx(replyBuf)["JURISDICTION"]);
   }
   catch (std::exception & e)
   {
