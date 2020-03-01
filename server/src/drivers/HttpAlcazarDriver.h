@@ -25,7 +25,7 @@ class CHttpAlcazarDriverCfg: public CDriverCfg
     const char *       getProtocol() const { return mProtocol; }
     const char *       getHost() const     { return mHost.c_str(); }
     const CfgPort_t    getPort() const     { return mPort; }
-    const char *       geKey() const       { return mHost.c_str(); }
+    const char *       geKey() const       { return mKey.c_str(); }
     const CfgTimeout_t getTimeout() const  { return mTimeout; }
 };
 
