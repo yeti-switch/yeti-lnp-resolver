@@ -6,7 +6,6 @@ find_package(CURL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(PQXX REQUIRED)
 find_package(NanoMsg REQUIRED)
-find_package(Confuse REQUIRED)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-write-strings")
 
