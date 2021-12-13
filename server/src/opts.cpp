@@ -17,7 +17,7 @@ void parse_opts(int argc, char *argv[])
 		case 'p': cfg.pid_file = optarg; break;
 		case '?':
 			switch(optopt){
-			case NULL:
+			case 0:
 				continue;
 				break;
 			case 'p':

@@ -5,144 +5,44 @@
 #include <errno.h>
 #include <cstring>
 
-#include "yeti/yeticc.h"
-
 #include <vector>
 using std::vector;
 #include <algorithm>
 
 #define LNP_CFG_PART "lnp"
 
-cfg_opt_t opts[] = {
-	CFG_INT("node_id",0,CFGF_NODEFAULT),
-	CFG_INT("cfg_timeout",1000,CFGF_NONE),
-	CFG_STR_LIST("cfg_urls","{tcp://127.0.0.1:4445}",CFGF_NONE),
+cfg_opt_t daemon_section_opts[] = {
+	CFG_STR_LIST((char*)"listen",(char *)"{tcp://127.0.0.1:4444}",CFGF_NODEFAULT),
+	CFG_INT((char *)"log_level",L_INFO, CFGF_NODEFAULT),
 	CFG_END()
 };
 
-class cfg_value {
-  public:
-	enum {
-		Undef = 0,
-		Int,
-		String
-	};
-  private:
-	short type;
-	union {
-		long int	v_int;
-		const char *v_str;
-	};
-  public:
-
-	cfg_value(): type(Undef) {}
-
-	cfg_value(const cfg_value& v) {
-		type = Undef;
-		*this = v;
-	}
-
-	cfg_value& operator=(const cfg_value& v){
-	  if(this == &v)
-	    return *this;
-		type = v.type;
-		switch(type){
-		case Int: v_int = v.v_int; break;
-		case String: v_str = strdup(v.v_str); break;
-		case Undef: break;
-		default: throw std::string("cfg_value: uknown rhs type");
-		}
-		return *this;
-	}
-
-	cfg_value(const int &v): type(Int), v_int(v) {}
-	cfg_value(const long int &v): type(Int), v_int(v) {}
-
-	cfg_value(const char *v): type(String) { v_str = strdup(v); }
-	cfg_value(const std::string &v): type(String) { v_str = strdup(v.c_str()); }
-
-	template <typename T>
-	inline T get() const;
-
-	std::string asString() const;
-
-	~cfg_value(){
-		switch(type){
-		case String: free((void *)v_str); break;
-		default: break;
-		}
-		type = Undef;
-	}
+cfg_opt_t lnp_section_db_opts[] = {
+	CFG_INT("port",0,CFGF_NODEFAULT),
+	CFG_STR("host",nullptr,CFGF_NODEFAULT),
+	CFG_STR("name",nullptr,CFGF_NODEFAULT),
+	CFG_STR("user",nullptr,CFGF_NODEFAULT),
+	CFG_STR("pass",nullptr,CFGF_NODEFAULT),
+	CFG_INT("conn_timeout",0,CFGF_NODEFAULT),
+	CFG_INT("check_interval",0,CFGF_NODEFAULT),
+	CFG_STR("schema",nullptr,CFGF_NODEFAULT),
+	CFG_END()
 };
 
-template<>
-inline std::string cfg_value::get() const {
-	switch(type){
-	case String: return std::string(v_str); break;
-	case Int: {
-		return std::to_string(v_int);
-	} break;
-	default: return std::string();
-	}
-}
-
-template<>
-inline int cfg_value::get() const {
-	switch(type){
-	case String:
-		err("attempt to return string as integer");
-		return 0;
-		break;
-	case Int:
-		return v_int;
-		break;
-	default:
-		return 0;
-	}
-}
-
-class remote_cfg_reader : public yeti::cfg::reader {
-  private:
-	typedef std::map<std::string,cfg_value> cfg_keys_t;
-	cfg_keys_t keys;
-  public:
-	void on_key_value_param(const string &name,const string &value){
-		keys[name] = value;
-	}
-	void on_key_value_param(const string &name,int value){
-		keys[name] = value;
-	}
-	const cfg_value &get_value(const char *s){
-		cfg_keys_t::const_iterator i = keys.find(s);
-		if(i==keys.end()){
-			err("key '%s' missed in loaded configuration",s);
-			throw std::string("configuration error",s);
-		}
-		return i->second;
-	}
+cfg_opt_t lnp_section_sip_opts[] = {
+	CFG_STR("contact_user","yeti-lnp-resolver",CFGF_NONE),
+	CFG_STR("from_uri","sip:yeti-lnp-resolver@localhost",CFGF_NONE),
+	CFG_STR("from_name","yeti-lnp-resolver",CFGF_NONE),
+	CFG_END()
 };
 
-std::list<string> explode2list(const string& s, const string& delim,
-				const bool keep_empty = false) {
-	std::list<string> result;
-	if (delim.empty()) {
-		result.push_back(s);
-		return result;
-	}
-	string::const_iterator substart = s.begin(), subend;
-	while (true) {
-		subend = std::search(substart, s.end(), delim.begin(), delim.end());
-		string temp(substart, subend);
-		if (keep_empty || !temp.empty()) {
-			result.push_back(temp);
-		}
-		if (subend == s.end()) {
-			break;
-		}
-		substart = subend + delim.size();
-	}
-	return result;
-}
+cfg_opt_t opts[] = {
+	CFG_INT("node_id",0,CFGF_NODEFAULT),
+	CFG_SEC("daemon",daemon_section_opts,CFGF_NONE),
+	CFG_SEC("db",lnp_section_db_opts,CFGF_NONE),
+	CFG_SEC("sip",lnp_section_sip_opts,CFGF_NONE),
+	CFG_END()
+};
 
 #define LOG_BUF_SIZE 2048
 void cfg_reader_error(cfg_t *c, const char *fmt, va_list ap)
@@ -153,40 +53,11 @@ void cfg_reader_error(cfg_t *c, const char *fmt, va_list ap)
 	err("%.*s",ret,buf);
 }
 
-bool apply(remote_cfg_reader &r){
-#define str_val(dst,src) dst = r.get_value(#src).get<string>();
-#define int_val(dst,src) dst = r.get_value(#src).get<int>();
-
-	global_cfg_t::db_cfg &gdbc = cfg.db;
-
-	str_val(gdbc.host,db.host);
-	int_val(gdbc.port,db.port);
-	str_val(gdbc.user,db.user);
-	str_val(gdbc.pass,db.pass);
-	str_val(gdbc.database,db.name);
-	str_val(gdbc.schema ,db.schema);
-	int_val(gdbc.timeout,db.conn_timeout);
-	int_val(gdbc.check_timeout,db.check_interval);
-
-	str_val(cfg.sip.contact,sip.contact_user);
-	str_val(cfg.sip.from_uri,sip.from_uri);
-	str_val(cfg.sip.from_name ,sip.from_name);
-
-	cfg.bind_urls = explode2list(r.get_value("daemon.listen").get<string>(),",");
-
-	int_val(log_level,daemon.log_level);
-	if(log_level < L_ERR) log_level = L_ERR;
-	if(log_level > L_DBG) log_level = L_DBG;
-
-	return true;
-#undef str_val
-#undef int_val
-}
-
 bool load_cfg(const char *path)
 {
+#define with_section(SECTION_NAME) if(cfg_t *s = cfg_getsec(c, SECTION_NAME))
 	bool ret = false;
-	remote_cfg_reader r;
+	//remote_cfg_reader r;
 	cfg_t *c = cfg_init(opts, CFGF_NONE);
 	cfg_set_error_function(c,cfg_reader_error);
 
@@ -203,24 +74,39 @@ bool load_cfg(const char *path)
 		err("unexpected error on configuration file '%s' processing", path);
 	}
 
-	r.set_cfg_part(LNP_CFG_PART);
-	r.set_node_id(cfg_getint(c,"node_id"));
-	r.set_timeout(cfg_getint(c,"cfg_timeout"));
-	for(unsigned int i = 0; i < cfg_size(c, "cfg_urls"); i++){
-		r.add_url(cfg_getnstr(c, "cfg_urls", i));
+	with_section("daemon") {
+		for(unsigned int i = 0; i < cfg_size(s, "listen"); i++) {
+			cfg.bind_urls.emplace_back(cfg_getnstr(s, "listen", i));
+		}
+
+		log_level = cfg_getint(s,"log_level");
+		if(log_level < L_ERR) log_level = L_ERR;
+		if(log_level > L_DBG) log_level = L_DBG;
 	}
 
-	try {
-		r.load();
-	} catch(yeti::cfg::server_exception &e){
-		err("can't load yeti config: %d %s",e.code,e.what());
-		goto out;
-	} catch(std::exception &e){
-		err("can't load yeti config: %s",e.what());
-		goto out;
+	with_section("db") {
+		cfg.db.host = cfg_getstr(s, "host");
+		cfg.db.port = cfg_getint(s, "port");
+
+		cfg.db.user = cfg_getstr(s, "user");
+		cfg.db.pass = cfg_getstr(s, "pass");
+
+		cfg.db.database = cfg_getstr(s, "name");
+		cfg.db.schema = cfg_getstr(s, "schema");
+
+		cfg.db.timeout = cfg_getint(s, "conn_timeout");
+		cfg.db.check_timeout = cfg_getint(s, "check_interval");
 	}
-	ret = apply(r);
+
+	with_section("sip") {
+		cfg.sip.contact = cfg_getstr(s, "contact_user");
+		cfg.sip.from_uri = cfg_getstr(s, "from_uri");
+		cfg.sip.from_name = cfg_getstr(s, "from_name");
+	}
+
+	ret = true;
 out:
 	cfg_free(c);
 	return ret;
+#undef with_section
 }
