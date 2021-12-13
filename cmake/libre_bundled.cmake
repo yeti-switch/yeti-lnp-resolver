@@ -10,7 +10,6 @@ add_custom_target(libre ALL DEPENDS ${LIBRE_BUNDLED_LIB})
 
 file(MAKE_DIRECTORY ${LIBRE_BIN_DIR})
 
-message(INFO test)
 add_custom_command(OUTPUT ${LIBRE_BUNDLED_LIB}
     PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${LIBRE_SRC_DIR} ${LIBRE_BIN_DIR}
@@ -22,4 +21,4 @@ set(LIBRE_BUNDLED_INCLUDE_DIRS ${LIBRE_BIN_DIR}/include)
 
 add_library(libre_bundled STATIC IMPORTED)
 set_property(TARGET libre_bundled PROPERTY IMPORTED_LOCATION ${LIBRE_BUNDLED_LIB})
-set(LIBRE_BUNDLED_LIBRARIES -lssl -lcrypto -lz ${LIBRE_BUNDLED_LIB})
+set(LIBRE_BUNDLED_LIBRARIES ${LIBRE_BUNDLED_LIB} -lssl -lcrypto -lz )
