@@ -57,7 +57,7 @@ class CDriverCfg
     using CfgFilePath_t = string;
 
     // Raw driver configuration
-    using RawConfig_t = pqxx::result::tuple;
+    using RawConfig_t = pqxx::row;
     // JSON driver configuration
     using JSONConfig_t = jsonxx;
 

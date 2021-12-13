@@ -34,7 +34,7 @@ bool CResolver::loadResolveDrivers(Database_t & dbMap)
 
     for (pqxx::result::size_type i = 0; i < dbResult.size(); ++i)
     {
-      const pqxx::result::tuple & dbResultRaw = dbResult[i];
+      const pqxx::row & dbResultRaw = dbResult[i];
       unique_ptr<CDriver> drv = CDriver::instantiate(dbResultRaw);
       if (drv)
       {
