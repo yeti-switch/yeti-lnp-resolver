@@ -180,8 +180,8 @@ void CSipDriver::resolve(const string & inData, SResult_t & outResult) const
     sip.setTimeout(mCfg->getTimeout());
     if (CSipClient::ECCode::OK != sip.perform(dstUri, replyBuf))
     {
-      dbg("error on request performing: could not receive responce");
-      throw CDriver::error("no SIP responce");
+      dbg("error on request performing: could not receive response");
+      throw CDriver::error("no SIP response");
     }
   }
   catch (CSipClient::error & e)
@@ -206,12 +206,15 @@ void CSipDriver::resolve(const string & inData, SResult_t & outResult) const
                                replyBuf.rawContactData.c_str());
 
   // Parse contact URI elements
-  vector<string> uriElements = split(replyBuf.rawContactData, ';');
-  if (2 > uriElements.size())
-  {
-    throw error("contact URI does not have user parameters, likely wrong number");
+  if(string::npos == replyBuf.rawContactData.find_first_of(';')) {
+    //failover to use whole username as LRN
+    //TODO: separate driver type in DB
+    dbg("no user-params in reply Contact. use whole user-part as LRN");
+    outResult.localRoutingNumber = outResult.rawData = replyBuf.rawContactData;
+    return;
   }
 
+  vector<string> uriElements = split(replyBuf.rawContactData, ';');
   // Parse elements to name and value
   bool isValueFound = false;
   for (const auto & i : uriElements)
@@ -231,7 +234,7 @@ void CSipDriver::resolve(const string & inData, SResult_t & outResult) const
 
   if (!isValueFound)
   {
-    throw error("invalid contact data without required tag");
+    throw error("Сontact user without 'rn' parameter");
   }
 
   outResult.rawData = replyBuf.rawContactData;
