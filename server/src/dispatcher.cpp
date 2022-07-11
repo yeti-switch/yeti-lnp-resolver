@@ -5,8 +5,13 @@
 #include "dispatcher.h"
 #include "Resolver.h"
 
-#define PDU_HDR_SIZE 2
-#define NEW_PDU_HDR_SIZE 3
+#define TAGGED_REQ_VERSION 0
+#define TAGGED_PDU_HDR_SIZE 3
+#define TAGGED_ERR_RESPONSE_HDR_SIZE 2
+
+#define CNAM_REQ_VERSION 1
+#define CNAM_HDR_SIZE 6
+#define CNAM_RESPONSE_HDR_SIZE 4
 
 #define EPOLL_MAX_EVENTS 2048
 
@@ -120,15 +125,16 @@ void _dispatcher::stop()
 int _dispatcher::process_peer(char *msg, int len)
 {
     char *reply = nullptr;
+    int type;
 
     try {
-        reply = create_reply(msg,len);
+        reply = process_message(msg,len, type);
     } catch(const std::string & e){
         err("got string exception: %s",e.c_str());
-        reply = create_error_reply(ECErrorId::GENERAL_ERROR,e);
+        reply = create_error_reply(type, ECErrorId::GENERAL_ERROR,e);
     } catch(const CResolverError & e){
         err("got resolve exception: <%u> %s", static_cast<uint>(e.code()), e.what());
-        reply = create_error_reply(e.code(),e.what());
+        reply = create_error_reply(type, e.code(),e.what());
     }
 
     if(-1==nn_send(s, &reply, NN_MSG, 0)) {
@@ -138,80 +144,143 @@ int _dispatcher::process_peer(char *msg, int len)
     return 0;
 }
 
-char *_dispatcher::str2reply(const ECErrorId code, const std::string &s)
+char *_dispatcher::process_message(const char *req, int req_len, int &request_type)
 {
-    auto l = s.size();
-    auto msg = static_cast<char *>(nn_allocmsg(l+PDU_HDR_SIZE, 0));
+    request_type = TAGGED_REQ_VERSION;
 
-    msg[0]  = static_cast<char>(code);
-    msg[1] = static_cast<char>(l);
+    if(req_len < 2) {
+        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request too small");
+    }
 
-    memcpy(msg+PDU_HDR_SIZE,s.c_str(),l);
+    CDriver::SResult_t r;
 
-    return msg;
+    /* common req layout:
+    *    1 byte - database id
+    *    1 byte - request type
+    *      * 0: lnp_resolve_tagged
+    *      * 1: lnp_resolve_cnam
+    */
+
+    if(req_len < 2) {
+        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request too small");
+    }
+    request_type = req[1];
+    dbg("type: %d", request_type);
+
+    int database_id = req[0];
+    int data_offset, data_len;
+
+    //check type
+    switch(request_type) {
+    case TAGGED_REQ_VERSION:
+        /* tagged req layout:
+        *    1 byte - database id
+        *    1 byte - request type = 0
+        *    1 byte - number length
+        *    n bytes - number data
+        */
+        if(req_len < TAGGED_PDU_HDR_SIZE) {
+            throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request too small");
+        }
+        data_offset = TAGGED_PDU_HDR_SIZE;
+        data_len = req[2];
+        break;
+    case CNAM_REQ_VERSION:
+        /* cnam req layout:
+        *    1 byte - database id
+        *    1 byte - request type = 1
+        *    4 bytes - json length
+        *    n bytes - json data
+        */
+        if(req_len < CNAM_HDR_SIZE) {
+            throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request too small");
+        }
+        data_offset = CNAM_HDR_SIZE;
+        data_len = *(int *)(req+2);
+        break;
+    default:
+        request_type = 0; //force tagged reply
+        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "uknown request type");
+    }
+
+    if((data_offset+data_len) > req_len) {
+        err("malformed request: too big data_len");
+        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "malformed request");
+    }
+
+    std::string data(req+data_offset,static_cast<size_t>(data_len));
+    dbg("process request: database_id:%d, type:%d, data:%s",
+        database_id, request_type, data.data());
+
+    resolver::instance()->resolve(request_type, database_id,data,r);
+
+    if(request_type == CNAM_REQ_VERSION)
+        return create_json_reply(r);
+
+    return create_tagged_reply(r);
 }
 
-char *_dispatcher::make_reply(const CDriver::SResult_t &r)
+char *_dispatcher::create_tagged_reply(const CDriver::SResult_t &r)
 {
     auto lrn_len = r.localRoutingNumber.size();
     auto tag_len = r.localRoutingTag.size();
     auto data_len = lrn_len + tag_len;
 
-    auto msg = static_cast<char *>(nn_allocmsg(data_len+NEW_PDU_HDR_SIZE, 0));
+    auto msg = static_cast<char *>(nn_allocmsg(data_len+TAGGED_PDU_HDR_SIZE, 0));
 
     msg[0] = static_cast<char> (ECErrorId::NO_ERROR); //code
     msg[1] = static_cast<char>(data_len);  //global_len
     msg[2] = static_cast<char>(lrn_len);   //lrn_len
 
-    memcpy(msg+NEW_PDU_HDR_SIZE,r.localRoutingNumber.c_str(),lrn_len);
-    memcpy(msg+NEW_PDU_HDR_SIZE+lrn_len,r.localRoutingTag.c_str(),tag_len);
+    memcpy(msg+TAGGED_PDU_HDR_SIZE,r.localRoutingNumber.c_str(),lrn_len);
+    memcpy(msg+TAGGED_PDU_HDR_SIZE+lrn_len,r.localRoutingTag.c_str(),tag_len);
 
     return msg;
 }
 
-char *_dispatcher::create_error_reply(const ECErrorId code, const std::string description)
+char *_dispatcher::create_json_reply(const CDriver::SResult_t &r)
 {
-   return str2reply(code,description);
+    auto l = r.rawData.size();
+    auto msg = static_cast<char *>(nn_allocmsg(l+CNAM_RESPONSE_HDR_SIZE, 0));
+    *(int *)msg = l;
+    memcpy(msg+CNAM_RESPONSE_HDR_SIZE,r.rawData.data(),l);
+
+    return msg;
 }
 
-char *_dispatcher::create_reply(const char *req, int req_len)
+char *_dispatcher::create_error_reply(int type, const ECErrorId code, const std::string &description)
 {
-    if(req_len < PDU_HDR_SIZE) {
-        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request too small");
-    }
+    if(type == CNAM_REQ_VERSION)
+        return create_json_error_reply(code, description);
+   return create_tagged_error_reply(code,description);
+}
 
-    CDriver::SResult_t r;
-    int data_len = req[1];
-    int database_id = req[0];
-    int version = 0;
-    int lnp_offset = PDU_HDR_SIZE;
-    bool old_format = data_len!=0;
+char *_dispatcher::create_tagged_error_reply(const ECErrorId code, const std::string &s)
+{
+    auto l = s.size();
+    auto msg = static_cast<char *>(nn_allocmsg(l+TAGGED_ERR_RESPONSE_HDR_SIZE, 0));
 
-    if(!old_format) {
-        if(req_len < NEW_PDU_HDR_SIZE){
-            throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request too small");
-        }
-        version = data_len;
-        data_len = req[2];
-        lnp_offset++;
-    }
+    msg[0]  = static_cast<char>(code);
+    msg[1] = static_cast<char>(l);
 
-    (void) version; // compiling error suppression
+    memcpy(msg+TAGGED_ERR_RESPONSE_HDR_SIZE,s.c_str(),l);
 
-    if((lnp_offset+data_len) > req_len) {
-        err("malformed request: too big data_len");
-        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "malformed request");
-    }
+    return msg;
+}
 
-    std::string lnp(req+lnp_offset,static_cast<size_t>(data_len));
-    dbg("process request: database: %d, lnp: %s, old_format: %d",
-        database_id,lnp.c_str(),old_format);
+char *_dispatcher::create_json_error_reply(const ECErrorId code, const std::string &data)
+{
+    std::string s("{\"error\":{\"code\":");
+    s += std::to_string((int)code);
 
-    resolver::instance()->resolve(database_id,lnp,r);
+    s += ",\"reason\":\"";
+    s += data;
+    s += "\"}}";
 
-    if(old_format) {
-        return str2reply(ECErrorId::NO_ERROR,r.localRoutingNumber);
-    } else {
-        return make_reply(r);
-    }
+    auto l = s.size();
+    auto msg = static_cast<char *>(nn_allocmsg(l+CNAM_RESPONSE_HDR_SIZE, 0));
+    *(int *)msg = l;
+    memcpy(msg+CNAM_RESPONSE_HDR_SIZE,s.data(),l);
+
+    return msg;
 }

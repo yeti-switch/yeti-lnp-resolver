@@ -99,7 +99,8 @@ bool CResolver::configure()
  * @param[in]  inData     The input string with number for lookup
  * @param[out] outResult  The structure used to save a resolving result
  */
-void CResolver::resolve(const CDriverCfg::CfgUniqId_t dbId,
+void CResolver::resolve(int request_type,
+                        const CDriverCfg::CfgUniqId_t dbId,
                         const string & inData,
                         CDriver::SResult_t & outResult)
 {
@@ -119,6 +120,12 @@ void CResolver::resolve(const CDriverCfg::CfgUniqId_t dbId,
 
   CDriver * drv = mapItem->second.get();
 
+  if(drv->getDriverType() != request_type) {
+    throw CResolverError(
+      ECErrorId::GENERAL_RESOLVING_ERROR,
+      "request type is unsupported");
+  }
+
   try
   {
     gettimeofday(&req_start, nullptr);
@@ -129,12 +136,20 @@ void CResolver::resolve(const CDriverCfg::CfgUniqId_t dbId,
     gettimeofday(&req_end, nullptr);
     timersub(&req_end, &req_start, &req_diff);
 
-    dbg("Resolved (by '%s/%d'): %s -> %s (tag: '%s') [in %ld.%06ld ms]",
-        drv->getName(), drv->getUniqueId(),
-        inData.c_str(),
-        outResult.localRoutingNumber.c_str(),
-        outResult.localRoutingTag.c_str(),
-        req_diff.tv_sec, req_diff.tv_usec);
+    if(drv->getDriverType() == CDriver::DriverTypeTagged) {
+        dbg("Resolved (by '%s/%d'): %s -> %s (tag: '%s') [in %ld.%06ld ms]",
+            drv->getName(), drv->getUniqueId(),
+            inData.c_str(),
+            outResult.localRoutingNumber.c_str(),
+            outResult.localRoutingTag.c_str(),
+            req_diff.tv_sec, req_diff.tv_usec);
+    } else {
+        dbg("Resolved (by '%s/%d'): %s -> %s [in %ld.%06ld ms]",
+            drv->getName(), drv->getUniqueId(),
+            inData.data(),
+            outResult.rawData.data(),
+            req_diff.tv_sec, req_diff.tv_usec);
+    }
 
   }
   catch(const CDriver::error & e)
@@ -147,7 +162,7 @@ void CResolver::resolve(const CDriverCfg::CfgUniqId_t dbId,
                          "unknown resovling exception");
   }
 
-  lnp_cache::instance()->sync(
-        new cache_entry(drv->getUniqueId(), inData, outResult)
-  );
+  if(drv->getDriverType() == CDriver::DriverTypeTagged)
+    lnp_cache::instance()->sync(
+      new cache_entry(drv->getUniqueId(), inData, outResult));
 }

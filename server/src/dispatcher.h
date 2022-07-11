@@ -21,10 +21,13 @@ class _dispatcher {
 
     int process_peer(char *msg, int len);
 
-    char *str2reply(const ECErrorId code,const std::string &s);
-    char *make_reply(const CDriver::SResult_t &r);
-    char *create_reply(const char *req, int req_len);
-    char *create_error_reply(const ECErrorId code,const std::string description);
+    char *process_message(const char *req, int req_len, int &request_type);
+    char *create_tagged_reply(const CDriver::SResult_t &r);
+    char *create_json_reply(const CDriver::SResult_t &r);
+
+    char *create_error_reply(int type, const ECErrorId code,const std::string &description);
+    char *create_tagged_error_reply(const ECErrorId code,const std::string &s);
+    char *create_json_error_reply(const ECErrorId code,const std::string &data);
 
   protected:
     void dispose() {}

@@ -3,6 +3,7 @@
 #include "MhashCsvDriver.h"
 #include "HttpAlcazarDriver.h"
 #include "HttpCoureAnqDriver.h"
+#include "CnamHttpDriver.h"
 #include "Driver.h"
 
 /**
@@ -48,9 +49,13 @@ unique_ptr<CDriver> CDriver::instantiate(const CDriverCfg::RawConfig_t & data)
       rv.reset(new CHttpAlcazarDriver(data));
       break;
 
-  case ECDriverId::ERESOLVER_DIRVER_HTTP_COUREANQ:
-    rv.reset(new CHttpCoureAnqDriver(data));
-    break;
+    case ECDriverId::ERESOLVER_DIRVER_HTTP_COUREANQ:
+      rv.reset(new CHttpCoureAnqDriver(data));
+      break;
+
+    case ECDriverId::ERESOLVER_DIRVER_CNAM_HTTP:
+      rv.reset(new CCnamHttpDriver(data));
+      break;
 
     default:
       break;

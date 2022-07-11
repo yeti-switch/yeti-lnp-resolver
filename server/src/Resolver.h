@@ -38,7 +38,8 @@ class CResolver
     ~CResolver() = default;
 
     bool configure();
-    void resolve(const CDriverCfg::CfgUniqId_t dbId,
+    void resolve(int request_type,
+                 const CDriverCfg::CfgUniqId_t dbId,
                  const string & inData,
                  CDriver::SResult_t & outResult);
 };

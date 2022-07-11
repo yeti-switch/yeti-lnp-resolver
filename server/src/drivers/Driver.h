@@ -17,6 +17,10 @@ using std::unique_ptr;
 class CDriver
 {
   public:
+    enum DriverType {
+        DriverTypeTagged = 0,
+        DriverTypeCnam = 1
+    };
     // Resolver exception class
     class error : public runtime_error
     {
@@ -48,6 +52,8 @@ class CDriver
 
     virtual const CDriverCfg::CfgUniqId_t getUniqueId() const = 0;
     virtual void showInfo() const = 0;
+
+    virtual int getDriverType() const { return DriverTypeTagged; };
     virtual void resolve(const string & in, SResult_t & out) const = 0;
 
     const char * getName() const  { return mName; }

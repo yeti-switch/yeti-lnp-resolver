@@ -4,6 +4,7 @@
 #include "log.h"
 #include "drivers/modules/HttpClient.h"
 #include "HttpCoureAnqDriver.h"
+#include "JsonHelpers.h"
 
 #include <type_traits>
 
@@ -26,47 +27,6 @@ size_t static write_func(void * ptr, size_t size, size_t nmemb, void * userdata)
 /**************************************************************
  * Configuration implementation
 ***************************************************************/
-
-template<typename T>
-T getJsonValue(const cJSON &j)
-{
-    if(std::is_integral<T>::value) {
-        if(j.type!=cJSON_Number)
-            throw std::runtime_error("getJsonKey unexpected type for integral return");
-        return static_cast<T>(j.valueint);
-    } else if(std::is_floating_point<T>::value) {
-        if(j.type!=cJSON_Number)
-            throw std::runtime_error("getJsonKey unexpected type for floating point return");
-        return static_cast<T>(j.valuedouble);
-    } else {
-        throw std::runtime_error("getJsonKey: unsupported dst type");
-    }
-}
-
-template<>
-string getJsonValue(const cJSON &j)
-{
-    string ret;
-    if(j.type!=cJSON_String)
-        throw std::runtime_error("getJsonKey unexpected type for string return");
-    ret = string(j.valuestring);
-    if (0 == ret.compare(0, 1, "\""))
-        ret.erase(ret.begin());
-    if (0 == ret.compare(ret.size()-1, 1, "\""))
-        ret.erase(ret.end() - 1);
-    return ret;
-}
-
-template<typename T>
-T getJsonValueByKey(cJSON &j, const char *key)
-{
-    if(j.type!=cJSON_Object)
-        throw std::runtime_error("getJsonValueByKey passed non-object item");
-    auto i = cJSON_GetObjectItem(&j, key);
-    if(!i)
-        throw std::runtime_error("getJsonValueByKey key not found: ");
-    return getJsonValue<T>(*i);
-}
 
 void CHttpCoureAnqDriverCfg::OperatorsMap_t::parse(cJSON &j)
 {

@@ -17,6 +17,7 @@ enum class ECDriverId : uint8_t
   ,ERESOLVER_DRIVER_MHASH_CSV      = 3
   ,ERESOLVER_DRIVER_HTTP_ALCAZAR   = 4
   ,ERESOLVER_DIRVER_HTTP_COUREANQ  = 5
+  ,ERESOLVER_DIRVER_CNAM_HTTP      = 6
   ,ERESOLVER_DRIVER_MAX_ID
 };
 
@@ -41,6 +42,7 @@ sDriverTypeArray =
     ,{ ECDriverId::ERESOLVER_DRIVER_MHASH_CSV,      3,  "Lnp::DatabaseCsv" }
     ,{ ECDriverId::ERESOLVER_DRIVER_HTTP_ALCAZAR,   4,  "Lnp::DatabaseAlcazar" }
     ,{ ECDriverId::ERESOLVER_DIRVER_HTTP_COUREANQ,  5,  "Lnp::DatabaseCoureAnq" }
+    ,{ ECDriverId::ERESOLVER_DIRVER_CNAM_HTTP,      6,  "Cnam::DatabaseHttp" }
 }};
 
 #endif /* SERVER_SRC_DRIVERS_DRIVERDEFINES_H_ */
