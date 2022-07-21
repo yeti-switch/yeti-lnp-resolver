@@ -137,14 +137,14 @@ void CResolver::resolve(int request_type,
     timersub(&req_end, &req_start, &req_diff);
 
     if(drv->getDriverType() == CDriver::DriverTypeTagged) {
-        dbg("Resolved (by '%s/%d'): %s -> %s (tag: '%s') [in %ld.%06ld ms]",
+        dbg("Resolved (by '%s/%d'): %s -> %s (tag: '%s') [in %ld.%06ld seconds]",
             drv->getName(), drv->getUniqueId(),
             inData.c_str(),
             outResult.localRoutingNumber.c_str(),
             outResult.localRoutingTag.c_str(),
             req_diff.tv_sec, req_diff.tv_usec);
     } else {
-        dbg("Resolved (by '%s/%d'): %s -> %s [in %ld.%06ld ms]",
+        dbg("Resolved (by '%s/%d'): %s -> %s [in %ld.%06ld seconds]",
             drv->getName(), drv->getUniqueId(),
             inData.data(),
             outResult.rawData.data(),
