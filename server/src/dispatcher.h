@@ -16,10 +16,11 @@
 #include "singleton.h"
 
 class _dispatcher {
-    int s;
+    int nn_sock_fd;
+    int udp_sock_fd;
     int stop_event_fd;
 
-    int process_peer(char *msg, int len);
+    char* create_reply_for_msg(char *msg, int len);
 
     char *process_message(const char *req, int req_len, int &request_type);
     char *create_tagged_reply(const CDriver::SResult_t &r);

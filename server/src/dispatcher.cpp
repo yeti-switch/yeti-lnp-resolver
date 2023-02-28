@@ -1,7 +1,12 @@
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "cfg.h"
+#include "libs/uri_parser.h"
 #include "dispatcher.h"
 #include "Resolver.h"
 
@@ -14,6 +19,7 @@
 #define CNAM_RESPONSE_HDR_SIZE 4
 
 #define EPOLL_MAX_EVENTS 2048
+#define MSG_SZ 1024 * 2
 
 _dispatcher::_dispatcher()
 { }
@@ -23,36 +29,62 @@ void _dispatcher::loop()
     int ret;
     int epoll_fd;
     int nn_poll_fd;
+    int nn_id;
 
     struct epoll_event ev;
     struct epoll_event events[EPOLL_MAX_EVENTS];
 
+    socklen_t addr_size = 0;
+    struct sockaddr_in s_addr, cl_s_addr;
+
+    UriComponents uri_c;
+    char msg[MSG_SZ];
+    char *reply;
+    int rcv_l, snd_l;
+
+    // create 'stop event'
     if(-1 == (stop_event_fd = eventfd(0, EFD_NONBLOCK)))
         throw std::string("eventfd call failed");
 
     if((epoll_fd = epoll_create(EPOLL_MAX_EVENTS)) == -1)
         throw std::string("epoll_create call failed");
 
+    memset(&ev, 0, sizeof(epoll_event));
     ev.events = EPOLLIN;
-
     ev.data.fd = stop_event_fd;
     if(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, stop_event_fd, &ev) == -1)
         throw std::string("epoll_ctl call for stop_event_fd failed");
 
-    s = nn_socket(AF_SP,NN_REP);
-    if(s < 0){
+    // create 'nanomsg socket'
+    nn_sock_fd = nn_socket(AF_SP,NN_REP);
+    if(nn_sock_fd < 0){
         throw std::string("nn_socket()");
     }
 
     size_t vallen = sizeof(nn_poll_fd);
-    if(0!=nn_getsockopt(s, NN_SOL_SOCKET, NN_RCVFD, &nn_poll_fd, &vallen)) {
+    if(0!=nn_getsockopt(nn_sock_fd, NN_SOL_SOCKET, NN_RCVFD, &nn_poll_fd, &vallen)) {
         throw std::string("nn_getsockopt(NN_SOL_SOCKET, NN_RCVFD)");
     }
 
+    memset(&ev, 0, sizeof(epoll_event));
+    ev.events = EPOLLIN;
     ev.data.fd = nn_poll_fd;
     if(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, nn_poll_fd, &ev) == -1)
         throw std::string("epoll_ctl call for nn_poll_fd failed");
 
+    // create 'udp socket'
+    udp_sock_fd = socket(PF_INET, SOCK_DGRAM, 0);
+    if(udp_sock_fd < 0){
+        throw std::string("socket()");
+    }
+
+    memset(&ev, 0, sizeof(epoll_event));
+    ev.events = EPOLLIN;
+    ev.data.fd = udp_sock_fd;
+    if(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, udp_sock_fd, &ev) == -1)
+        throw std::string("epoll_ctl call for udp_sock_fd failed");
+
+    // bind sockets
     bool binded = false;
     if(cfg.bind_urls.empty()){
         throw std::string("no listen endpoints specified. check your config");
@@ -60,13 +92,32 @@ void _dispatcher::loop()
 
     for(const auto &i : cfg.bind_urls) {
         const char *url = i.c_str();
-        ret = nn_bind(s, url);
-        if(ret < 0){
-            err("can't bind to url '%s': %d (%s)",url,
-                errno,nn_strerror(errno));
-            continue;
+        uri_c = parseAddr(url);
+
+        // if 'protocol' is empty use udp socket
+        if (strlen(uri_c.proto) == 0) {
+            // bind 'udp socket'
+            memset(&s_addr, 0, sizeof(s_addr));
+            s_addr.sin_family = AF_INET;
+            s_addr.sin_port = htons(uri_c.port);
+            s_addr.sin_addr.s_addr = inet_addr(uri_c.host);
+
+            ret = bind(udp_sock_fd, (struct sockaddr*) &s_addr, sizeof(s_addr));
+            if (ret < 0) {
+                err("can't bind to url '%s': %d (%s)", url, errno, nn_strerror(errno));
+                continue;
+            }
+
+        } else {
+            // bind 'nanomsg socket'
+            nn_id = nn_bind(nn_sock_fd, url);
+            if (nn_id < 0) {
+                err("can't bind to url '%s': %d (%s)",url, errno,nn_strerror(errno));
+                continue;
+            }
         }
-        binded = true;
+
+        binded = binded || true;
         info("listen on %s",url);
     }
 
@@ -79,42 +130,99 @@ void _dispatcher::loop()
 
     bool _stop = false;
     while(!_stop) {
-        ret = epoll_wait(epoll_fd,events,EPOLL_MAX_EVENTS,-1);
-        if(ret == -1 && errno != EINTR){
+        ret = epoll_wait(epoll_fd, events, EPOLL_MAX_EVENTS,-1);
+        if(ret == -1 && errno != EINTR)
             err("dispatcher: epoll_wait: %s",strerror(errno));
-        }
+
         if(ret < 1)
             continue;
 
         for (int n = 0; n < ret; ++n) {
             struct epoll_event &e = events[n];
-            if(!(e.events & EPOLLIN)){
+            if (!(e.events & EPOLLIN))
                 continue;
-            }
-            if(e.data.fd == stop_event_fd) {
+
+            if (e.data.fd == stop_event_fd) {
                 dbg("got stop event. terminate");
                 _stop = true;
                 break;
             }
 
-            char *msg = nullptr;
-            int l = nn_recv(s, &msg, NN_MSG, 0);
-            if(l < 0) {
-                if(errno==EINTR) continue;
-                if(errno==EBADF) {
-                    err("nn_recv returned EBADF. terminate");
-                    _stop = true;
-                    break;
+            if (e.data.fd == nn_poll_fd || e.data.fd == udp_sock_fd) {
+                memset(&msg, 0, MSG_SZ);
+
+                // receive msg by 'nanomsg'
+                if (e.data.fd == nn_poll_fd) {
+                    rcv_l = nn_recv(nn_sock_fd, msg, MSG_SZ, 0);
+
+                    if (rcv_l < 0) {
+                        if(errno==EINTR) continue;
+                        if(errno==EBADF) {
+                            err("nn_recv returned EBADF. terminate");
+                            _stop = true;
+                            break;
+                        }
+                        dbg("nn_recv() = %d, errno = %d(%s)", rcv_l, errno, nn_strerror(errno));
+                        //!TODO: handle timeout, etc
+                        continue;
+                    }
                 }
-                dbg("nn_recv() = %d, errno = %d(%s)",l,errno,nn_strerror(errno));
-                //!TODO: handle timeout, etc
-                continue;
+
+                // receive msg by 'udp socket'
+                if (e.data.fd == udp_sock_fd) {
+                    memset(&cl_s_addr, 0, sizeof(cl_s_addr));
+                    addr_size = sizeof(cl_s_addr);  // addr_size is value/result
+
+                    rcv_l = recvfrom(udp_sock_fd, msg, MSG_SZ, 0, (struct sockaddr*)&cl_s_addr, &addr_size);
+
+                    if (rcv_l < 0) {
+                        if(errno==EINTR) continue;
+                        if(errno==EBADF) {
+                            err("recvfrom returned EBADF. terminate");
+                            _stop = true;
+                            break;
+                        }
+                        dbg("recvfrom() = %d, errno = %d(%s)", rcv_l, errno, nn_strerror(errno));
+                        //!TODO: handle timeout, etc
+                        continue;
+                    }
+                }
+
+                // msg did receive
+                msg[rcv_l] = '\0';
+
+                // make reply
+                reply = create_reply_for_msg(msg, rcv_l);
+
+                // send reply by 'nanomsg'
+                if (e.data.fd == nn_poll_fd) {
+                    snd_l = nn_send(nn_sock_fd, reply, strlen(reply), 0);
+
+                    if (snd_l < 0)
+                        err("nn_send(): %d(%s)", errno, nn_strerror(errno));
+                }
+
+                // send reply by 'udp socket'
+                if (e.data.fd == udp_sock_fd) {
+                    snd_l = sendto(udp_sock_fd, reply, strlen(reply), 0, (struct sockaddr*)&cl_s_addr, addr_size);
+
+                    if (snd_l < 0)
+                        err("sendto(): %d(%s)", errno, nn_strerror(errno));
+                }
+
+                nn_freemsg(reply);
+                reply = NULL;
             }
-            process_peer(msg,l);
-            nn_freemsg(msg);
         }
     }
-    nn_close(s);
+
+    close(epoll_fd);
+
+    nn_shutdown(nn_sock_fd, nn_id);
+    nn_close(nn_sock_fd);
+
+    shutdown(udp_sock_fd, SHUT_RDWR);
+    close(udp_sock_fd);
 }
 
 void _dispatcher::stop()
@@ -122,7 +230,7 @@ void _dispatcher::stop()
     eventfd_write(stop_event_fd, 1);
 }
 
-int _dispatcher::process_peer(char *msg, int len)
+char* _dispatcher::create_reply_for_msg(char *msg, int len)
 {
     char *reply = nullptr;
     int type;
@@ -137,11 +245,7 @@ int _dispatcher::process_peer(char *msg, int len)
         reply = create_error_reply(type, e.code(),e.what());
     }
 
-    if(-1==nn_send(s, &reply, NN_MSG, 0)) {
-        err("nn_send(): %d(%s)",errno,nn_strerror(errno));
-    }
-
-    return 0;
+    return reply;
 }
 
 char *_dispatcher::process_message(const char *req, int req_len, int &request_type)
