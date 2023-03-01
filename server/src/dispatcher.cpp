@@ -321,30 +321,35 @@ std::string _dispatcher::process_message(const char *req, int req_len, int &requ
     return create_tagged_reply(r);
 }
 
-char *_dispatcher::create_tagged_reply(const CDriver::SResult_t &r)
+std::string _dispatcher::create_tagged_reply(const CDriver::SResult_t &r)
 {
-    auto lrn_len = r.localRoutingNumber.size();
-    auto tag_len = r.localRoutingTag.size();
-    auto data_len = lrn_len + tag_len;
+    // compose header
+    char header[TAGGED_PDU_HDR_SIZE];
+    memset(header, '\0', TAGGED_PDU_HDR_SIZE);
+    if (TAGGED_PDU_HDR_SIZE > 0) header[0]= char(ECErrorId::NO_ERROR);
+    if (TAGGED_PDU_HDR_SIZE > 1) header[1]= char(r.localRoutingNumber.size() + r.localRoutingTag.size());
+    if (TAGGED_PDU_HDR_SIZE > 2) header[2]= char(r.localRoutingNumber.size());
 
-    auto msg = static_cast<char *>(nn_allocmsg(data_len+TAGGED_PDU_HDR_SIZE, 0));
-
-    msg[0] = static_cast<char> (ECErrorId::NO_ERROR); //code
-    msg[1] = static_cast<char>(data_len);  //global_len
-    msg[2] = static_cast<char>(lrn_len);   //lrn_len
-
-    memcpy(msg+TAGGED_PDU_HDR_SIZE,r.localRoutingNumber.c_str(),lrn_len);
-    memcpy(msg+TAGGED_PDU_HDR_SIZE+lrn_len,r.localRoutingTag.c_str(),tag_len);
+    // compose message
+    std::string msg;
+    msg += std::string(header, TAGGED_PDU_HDR_SIZE);
+    msg += r.localRoutingNumber;
+    msg += r.localRoutingTag;
 
     return msg;
 }
 
-char *_dispatcher::create_json_reply(const CDriver::SResult_t &r)
+std::string _dispatcher::create_json_reply(const CDriver::SResult_t &r)
 {
-    auto l = r.rawData.size();
-    auto msg = static_cast<char *>(nn_allocmsg(l+CNAM_RESPONSE_HDR_SIZE, 0));
-    *(int *)msg = l;
-    memcpy(msg+CNAM_RESPONSE_HDR_SIZE,r.rawData.data(),l);
+    // compose header
+    char header[CNAM_RESPONSE_HDR_SIZE];
+    memset(header, '\0', CNAM_RESPONSE_HDR_SIZE);
+    if (CNAM_RESPONSE_HDR_SIZE > 0) header[0]= char(r.rawData.size());
+
+    // compose message
+    std::string msg;
+    msg += std::string(header, CNAM_RESPONSE_HDR_SIZE);
+    msg += r.rawData;
 
     return msg;
 }
@@ -357,15 +362,18 @@ std::string _dispatcher::create_error_reply(int type, const ECErrorId code, cons
     return create_tagged_error_reply(code,description);
 }
 
-char *_dispatcher::create_tagged_error_reply(const ECErrorId code, const std::string &s)
+std::string _dispatcher::create_tagged_error_reply(const ECErrorId code, const std::string &s)
 {
-    auto l = s.size();
-    auto msg = static_cast<char *>(nn_allocmsg(l+TAGGED_ERR_RESPONSE_HDR_SIZE, 0));
+    // compose header
+    char header[TAGGED_ERR_RESPONSE_HDR_SIZE];
+    memset(header, '\0', TAGGED_ERR_RESPONSE_HDR_SIZE);
+    if (TAGGED_ERR_RESPONSE_HDR_SIZE > 0) header[0]= static_cast<char>(code);
+    if (TAGGED_ERR_RESPONSE_HDR_SIZE > 1) header[1]= static_cast<char>(s.size());
 
-    msg[0]  = static_cast<char>(code);
-    msg[1] = static_cast<char>(l);
-
-    memcpy(msg+TAGGED_ERR_RESPONSE_HDR_SIZE,s.c_str(),l);
+    // compose message
+    std::string msg;
+    msg += std::string(header, TAGGED_ERR_RESPONSE_HDR_SIZE);
+    msg += s;
 
     return msg;
 }
