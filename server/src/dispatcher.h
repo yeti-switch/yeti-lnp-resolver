@@ -20,15 +20,15 @@ class _dispatcher {
     int udp_sock_fd;
     int stop_event_fd;
 
-    char* create_reply_for_msg(char *msg, int len);
+    std::string create_reply_for_msg(char *msg, int len);
 
-    char *process_message(const char *req, int req_len, int &request_type);
+    std::string process_message(const char *req, int req_len, int &request_type);
     char *create_tagged_reply(const CDriver::SResult_t &r);
     char *create_json_reply(const CDriver::SResult_t &r);
 
-    char *create_error_reply(int type, const ECErrorId code,const std::string &description);
+    std::string create_error_reply(int type, const ECErrorId code,const std::string &description);
     char *create_tagged_error_reply(const ECErrorId code,const std::string &s);
-    char *create_json_error_reply(const ECErrorId code,const std::string &data);
+    std::string create_json_error_reply(const ECErrorId code,const std::string &data);
 
   protected:
     void dispose() {}

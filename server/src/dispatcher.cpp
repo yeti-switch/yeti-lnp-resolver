@@ -39,7 +39,7 @@ void _dispatcher::loop()
 
     UriComponents uri_c;
     char msg[MSG_SZ];
-    char *reply;
+    std::string reply;
     int rcv_l, snd_l;
 
     // create 'stop event'
@@ -196,7 +196,7 @@ void _dispatcher::loop()
 
                 // send reply by 'nanomsg'
                 if (e.data.fd == nn_poll_fd) {
-                    snd_l = nn_send(nn_sock_fd, reply, strlen(reply), 0);
+                    snd_l = nn_send(nn_sock_fd, reply.data(), reply.length(), 0);
 
                     if (snd_l < 0)
                         err("nn_send(): %d(%s)", errno, nn_strerror(errno));
@@ -204,14 +204,11 @@ void _dispatcher::loop()
 
                 // send reply by 'udp socket'
                 if (e.data.fd == udp_sock_fd) {
-                    snd_l = sendto(udp_sock_fd, reply, strlen(reply), 0, (struct sockaddr*)&cl_s_addr, addr_size);
+                    snd_l = sendto(udp_sock_fd, reply.data(), reply.length(), 0, (struct sockaddr*)&cl_s_addr, addr_size);
 
                     if (snd_l < 0)
                         err("sendto(): %d(%s)", errno, nn_strerror(errno));
                 }
-
-                nn_freemsg(reply);
-                reply = NULL;
             }
         }
     }
@@ -230,9 +227,9 @@ void _dispatcher::stop()
     eventfd_write(stop_event_fd, 1);
 }
 
-char* _dispatcher::create_reply_for_msg(char *msg, int len)
+std::string _dispatcher::create_reply_for_msg(char *msg, int len)
 {
-    char *reply = nullptr;
+    std::string reply;
     int type;
 
     try {
@@ -248,7 +245,7 @@ char* _dispatcher::create_reply_for_msg(char *msg, int len)
     return reply;
 }
 
-char *_dispatcher::process_message(const char *req, int req_len, int &request_type)
+std::string _dispatcher::process_message(const char *req, int req_len, int &request_type)
 {
     request_type = TAGGED_REQ_VERSION;
 
@@ -352,11 +349,12 @@ char *_dispatcher::create_json_reply(const CDriver::SResult_t &r)
     return msg;
 }
 
-char *_dispatcher::create_error_reply(int type, const ECErrorId code, const std::string &description)
+std::string _dispatcher::create_error_reply(int type, const ECErrorId code, const std::string &description)
 {
     if(type == CNAM_REQ_VERSION)
         return create_json_error_reply(code, description);
-   return create_tagged_error_reply(code,description);
+
+    return create_tagged_error_reply(code,description);
 }
 
 char *_dispatcher::create_tagged_error_reply(const ECErrorId code, const std::string &s)
@@ -372,19 +370,24 @@ char *_dispatcher::create_tagged_error_reply(const ECErrorId code, const std::st
     return msg;
 }
 
-char *_dispatcher::create_json_error_reply(const ECErrorId code, const std::string &data)
+std::string _dispatcher::create_json_error_reply(const ECErrorId code, const std::string &data)
 {
-    std::string s("{\"error\":{\"code\":");
-    s += std::to_string((int)code);
+    // compose json
+    std::string json("{\"error\":{\"code\":");
+    json += std::to_string((int)code);
+    json += ",\"reason\":\"";
+    json += data;
+    json += "\"}}";
 
-    s += ",\"reason\":\"";
-    s += data;
-    s += "\"}}";
+    // compose header
+    char header[CNAM_RESPONSE_HDR_SIZE];
+    memset(header, '\0', CNAM_RESPONSE_HDR_SIZE);
+    if (CNAM_RESPONSE_HDR_SIZE > 0) header[0]= char(json.size());
 
-    auto l = s.size();
-    auto msg = static_cast<char *>(nn_allocmsg(l+CNAM_RESPONSE_HDR_SIZE, 0));
-    *(int *)msg = l;
-    memcpy(msg+CNAM_RESPONSE_HDR_SIZE,s.data(),l);
+    // compose message
+    std::string msg;
+    msg += std::string(header, CNAM_RESPONSE_HDR_SIZE);
+    msg += json;
 
     return msg;
 }
