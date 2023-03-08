@@ -30,7 +30,16 @@ target_link_libraries(${BIN_NAME}
 
 install(TARGETS ${BIN_NAME} DESTINATION ${RUNTIME_DIR})
 
+# workaround for support newer CMake 3.14 version
+# push the current (NEW) CMake policy onto the stack, and apply the OLD policy.
+cmake_policy(PUSH)
+cmake_policy(SET CMP0026 OLD)
+
+# obsolete method: "the Location property may not be read from target"
 get_property(TARGET_BINS TARGET ${BIN_NAME} PROPERTY LOCATION)
+
+# pop the previous policy from the stack to re-apply the NEW behavior.
+cmake_policy(POP)
 
 file(GLOB_RECURSE TARGET_CFGS ${CMAKE_CURRENT_SOURCE_DIR}/etc/*)
 
