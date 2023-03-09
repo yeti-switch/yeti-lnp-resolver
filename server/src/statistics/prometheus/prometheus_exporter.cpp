@@ -12,7 +12,16 @@ void PrometheusExporter::start()
 	unsigned int port = cfg.prometheus.port;
 	string bind_address = host + ":" + to_string(port);
 	info("bind %s", bind_address.c_str());
-	exposer = make_shared<Exposer>(bind_address);
+
+	try {
+		exposer = make_shared<Exposer>(bind_address);
+	} catch(std::string &s){
+		err("%s",s.c_str());
+		return;
+	} catch(std::exception &e) {
+		err("%s\n",e.what());
+		return;
+	}
 
 	// create a metrics registry
 	regisrty = make_shared<Registry>();

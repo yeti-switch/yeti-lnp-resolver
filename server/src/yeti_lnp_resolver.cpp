@@ -51,7 +51,6 @@ int main(int argc,char *argv[])
 		if(!resolver::instance()->configure()){
 			throw std::string("can't init resolvers");
 		}
-
 		lnp_cache::instance()->start();
 		prometheus_exporter::instance()->start();
 		dispatcher::instance()->loop();
