@@ -9,9 +9,11 @@
 #include "usage.h"
 #include "dispatcher.h"
 #include "cache.h"
+#include "statistics/prometheus/prometheus_exporter.h"
 
 #include "cfg_reader.h"
 #include "Resolver.h"
+
 
 int main(int argc,char *argv[])
 {
@@ -50,7 +52,9 @@ int main(int argc,char *argv[])
 		if(!resolver::instance()->configure()){
 			throw std::string("can't init resolvers");
 		}
+
 		lnp_cache::instance()->start();
+		prometheus_exporter::instance()->start("127.0.0.1", 9091);
 		dispatcher::instance()->loop();
 	} catch(std::string &s){
 		err("%s",s.c_str());
