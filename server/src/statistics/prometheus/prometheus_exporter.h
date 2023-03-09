@@ -19,7 +19,7 @@ using namespace detail;
 class PrometheusExporter
 {
 public:
-	void start(string ip, uint16_t port);
+	void start();
 	void stop();
 
 	void driver_requests_count_increment(string driver);

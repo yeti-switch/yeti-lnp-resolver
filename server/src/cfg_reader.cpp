@@ -36,11 +36,18 @@ cfg_opt_t lnp_section_sip_opts[] = {
 	CFG_END()
 };
 
+cfg_opt_t prometheus_section_opts[] = {
+	CFG_INT("port",9091,CFGF_NONE),
+	CFG_STR("host","127.0.0.1",CFGF_NONE),
+	CFG_END()
+};
+
 cfg_opt_t opts[] = {
 	CFG_INT("node_id",0,CFGF_NODEFAULT),
 	CFG_SEC("daemon",daemon_section_opts,CFGF_NONE),
 	CFG_SEC("db",lnp_section_db_opts,CFGF_NONE),
 	CFG_SEC("sip",lnp_section_sip_opts,CFGF_NONE),
+	CFG_SEC("prometheus",prometheus_section_opts,CFGF_NONE),
 	CFG_END()
 };
 
@@ -102,6 +109,11 @@ bool load_cfg(const char *path)
 		cfg.sip.contact = cfg_getstr(s, "contact_user");
 		cfg.sip.from_uri = cfg_getstr(s, "from_uri");
 		cfg.sip.from_name = cfg_getstr(s, "from_name");
+	}
+	
+	with_section("prometheus") {
+		cfg.prometheus.host = cfg_getstr(s, "host");
+		cfg.prometheus.port = cfg_getint(s, "port");
 	}
 
 	ret = true;

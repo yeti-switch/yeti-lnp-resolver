@@ -1,13 +1,17 @@
 #include "prometheus_exporter.h"
 #include "log.h"
+#include "cfg.h"
 
-void PrometheusExporter::start(string ip, uint16_t port)
+void PrometheusExporter::start()
 {
 	// stop if exporter already started
 	stop();
 
 	// create an http server
-	string bind_address = ip + ":" + to_string(port);
+	string host = cfg.prometheus.host;
+	unsigned int port = cfg.prometheus.port;
+	string bind_address = host + ":" + to_string(port);
+	info("bind %s", bind_address.c_str());
 	exposer = make_shared<Exposer>(bind_address);
 
 	// create a metrics registry

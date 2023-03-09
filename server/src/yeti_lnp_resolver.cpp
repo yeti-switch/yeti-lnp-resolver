@@ -14,7 +14,6 @@
 #include "cfg_reader.h"
 #include "Resolver.h"
 
-
 int main(int argc,char *argv[])
 {
 	parse_opts(argc,argv);
@@ -54,7 +53,7 @@ int main(int argc,char *argv[])
 		}
 
 		lnp_cache::instance()->start();
-		prometheus_exporter::instance()->start("127.0.0.1", 9091);
+		prometheus_exporter::instance()->start();
 		dispatcher::instance()->loop();
 	} catch(std::string &s){
 		err("%s",s.c_str());
