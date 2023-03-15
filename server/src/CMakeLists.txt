@@ -10,6 +10,12 @@ find_package(NanoMsg REQUIRED)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-write-strings -fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}/=")
 
+# workaround
+# remove '-Werror=format-security' flag
+# it fixes compilation error for 'fmterror' class
+# error: format not a string literal and no format arguments [-Werror=format-security]
+string(REPLACE "-Werror=format-security" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
 include_directories(
 	${PQXX_INCLUDE_DIRECTORIES}
 	${LIBRE_BUNDLED_INCLUDE_DIRS}
