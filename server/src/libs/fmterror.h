@@ -1,8 +1,7 @@
 #ifndef SERVER_SRC_LIBS_FMTERROR_H
 #define SERVER_SRC_LIBS_FMTERROR_H
 
-#include <cstdio>
-using std::snprintf;
+#include <stdio.h>
 
 #include <string>
 using std::string;
@@ -42,12 +41,10 @@ fmterror::fmterror(const char * fmt, Args ... args) noexcept
   {
     fmt = "unknown error";
   }
-
-  mBufLen = snprintf(nullptr, 0, fmt, args ...);
-  mBufLen += 1; // Extra space for '\0'
-
-  mBuf.reset(new char [mBufLen]);
-  snprintf(mBuf.get(), mBufLen, fmt, args ...);
+  
+  char* tmp_buf;
+  mBufLen = asprintf(&tmp_buf, fmt, args ...);
+  mBuf.reset(tmp_buf);
 }
 
 /**
@@ -57,12 +54,7 @@ fmterror::fmterror(const char * fmt, Args ... args) noexcept
  */
 inline string fmterror::get() const
 {
-  char * bufStart = mBuf.get();
-  char * bufEnd   = mBuf.get() + mBufLen;
-         bufEnd   -= 1; // We don't want the '\0' inside
-
-  return std::string(bufStart, bufEnd);
+  return string(mBuf.get(), mBufLen);
 }
 
 #endif /* SERVER_SRC_LIBS_FMTERROR_H */
-
