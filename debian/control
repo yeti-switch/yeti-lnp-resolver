@@ -1,0 +1,10 @@
+Source: yeti-lnp-resolver
+Section: net
+Priority: optional
+Maintainer: Michael Furmur <m.furmur@gmail.com>
+Build-Depends: debhelper (>= 7.0.50~), dh-make, pkg-config, devscripts, libc6 (>= 2.34), libcurl4 (>= 7.16.2), libgcc-s1 (>= 3.0), libnanomsg5 (>= 1.1.5), libpqxx-6.4 (>= 6.4), libssl3 (>= 3.0.0), libstdc++6 (>= 11), zlib1g (>= 1:1.1.4)
+Standards-Version: 3.9.5
+
+Package: yeti-lnp-resolver
+Architecture: amd64
+Description: lnp resolver for YETI project

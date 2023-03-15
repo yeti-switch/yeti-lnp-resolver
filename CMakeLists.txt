@@ -45,6 +45,25 @@ endif(VERBOSE_LOGGING)
 add_subdirectory(server)
 
 #packaging
-include(${CMAKE_SOURCE_DIR}/cmake/pkg_target.cmake)
-add_pkg_target(server)
-add_custom_target(deb DEPENDS package-server)
+set(DEF_FILES ./debian/yeti_lnp_resolver)
+set(SYSLOG_FILES ./debian/yeti-lnp-resolver.conf)
+set(SERVICE_FILES ./debian/yeti-lnp-resolver.service)
+
+#process init.d default files
+FOREACH(def_path ${DEF_FILES})
+	get_filename_component(def_name ${def_path} NAME)
+	install(FILES ${def_path} DESTINATION "@DEF_CFG_DIR@")
+	file(APPEND conffiles "@DEF_CFG_DIR@/${def_name}\n")
+ENDFOREACH(def_path)
+
+#process syslog files
+FOREACH(cfg_path ${SYSLOG_FILES})
+	get_filename_component(cfg_name ${cfg_path} NAME)
+	install(FILES ${cfg_path} DESTINATION "@SYSLOG_CFG_DIR@")
+	file(APPEND conffiles "@SYSLOG_CFG_DIR@/${cfg_name}\n")
+ENDFOREACH(cfg_path)
+
+#process systemd unit files
+FOREACH(service_path ${SERVICE_FILES})
+    install(PROGRAMS ${service_path} DESTINATION /lib/systemd/system)
+ENDFOREACH(service_path)

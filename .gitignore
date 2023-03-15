@@ -1,2 +1,11 @@
 build
 CMakeLists.txt.user
+conffiles
+/debian/.debhelper/
+/debian/debhelper-build-stamp
+/debian/yeti-lnp-resolver.substvars
+/debian/yeti-lnp-resolver/
+/debian/files
+/debian/yeti-lnp-resolver.postinst.debhelper
+/debian/yeti-lnp-resolver.postrm.debhelper
+/debian/yeti-lnp-resolver.prerm.debhelper
