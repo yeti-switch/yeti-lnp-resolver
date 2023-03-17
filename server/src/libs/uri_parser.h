@@ -15,7 +15,7 @@ typedef struct {
     int port;
 } UriComponents;
 
-int parseAddr(const char *addr, UriComponents *uc);
+int parseAddr(const char *addr, UriComponents *out);
 
 #ifdef __cplusplus
 }
