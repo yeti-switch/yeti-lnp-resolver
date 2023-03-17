@@ -3,54 +3,61 @@
 #include <string.h>
 #include <stdlib.h>
 
-UriComponents parseAddr(const char *addr) {
-	UriComponents res;
-	char* delim;
-	size_t comp_sz;
-
-	memset(&res, 0, sizeof(UriComponents));
-
+int parseAddr(const char *addr, UriComponents *uc) {
 	// check whether address is valid
 	if (addr == NULL || strlen(addr) == 0 || strlen(addr) >= SOCKADDR_SIZE)
-		return res;
+		return -1;
+
+	// check uri components
+	if (uc == NULL)
+		return -1;
+
+	// fill uri components
+	memset(uc, 0, sizeof(UriComponents));
+
+	const char *delim;
+	size_t delim_sz;
+	size_t comp_sz;
 
 	// parse protocol
 	delim = strstr(addr, "://");
+	delim_sz = strlen("://");
 
 	if (delim != NULL)
 	{
 		comp_sz = delim - addr;
 
 		if (comp_sz > 0 && comp_sz <= PROTOCOL_SIZE)
-			strncpy(res.proto, addr, comp_sz);
+			strncpy(uc->proto, addr, comp_sz);
 
-		addr += comp_sz + strlen("://");
+		addr += comp_sz + delim_sz;
 	}
 
 	// parse host
-	delim = strstr(addr, ":");
+	delim = strchr(addr, ':');
+	delim_sz = sizeof(char);
 
 	if (delim != NULL)
 	{
 		comp_sz = delim - addr;
 
 		if (comp_sz > 0 && comp_sz <= HOST_SIZE)
-			strncpy(res.host, addr, comp_sz);
+			strncpy(uc->host, addr, comp_sz);
 
-		addr += comp_sz + strlen(":");
+		addr += comp_sz + delim_sz;
 
 		// parse port
-		res.port = atoi(addr);
+		uc->port = atoi(addr);
 	}
 	else
 	{
 		comp_sz = strlen(addr);
 
 		if (comp_sz > 0 && comp_sz <= HOST_SIZE)
-			strncpy(res.host, addr, comp_sz);
+			strncpy(uc->host, addr, comp_sz);
 
-		strncpy(res.host, addr, strlen(addr));
+		strncpy(uc->host, addr, strlen(addr));
 	}
 
-	return res;
+	return 0;
 }

@@ -92,7 +92,8 @@ void _dispatcher::loop()
 
     for(const auto &i : cfg.bind_urls) {
         const char *url = i.c_str();
-        uri_c = parseAddr(url);
+        if (parseAddr(url, &uri_c) == -1)
+            continue;
 
         // if 'protocol' is empty use udp socket
         if (strlen(uri_c.proto) == 0) {
