@@ -130,7 +130,7 @@ void CResolver::resolve(int request_type,
 
   try
   {
-    prometheus_exporter::instance()->driver_requests_count_increment(drv->getName());
+    drv->requests_count_increment();
     gettimeofday(&req_start, nullptr);
 
     // Make resolving action
@@ -155,16 +155,16 @@ void CResolver::resolve(int request_type,
             req_diff.tv_sec, req_diff.tv_usec);
     }
 
-    prometheus_exporter::instance()->driver_requests_time_increment(drv->getName(), req_diff_millis);
+    drv->requests_finished_increment(req_diff_millis);
   }
   catch(const CDriver::error & e)
   {
-    prometheus_exporter::instance()->driver_requests_failed_increment(drv->getName());
+    drv->requests_failed_increment();
     throw CResolverError(ECErrorId::DRIVER_RESOLVING_ERROR, e.what());
   }
   catch(...)
   {
-    prometheus_exporter::instance()->driver_requests_failed_increment(drv->getName());
+    drv->requests_failed_increment();
     throw CResolverError(ECErrorId::GENERAL_RESOLVING_ERROR,
                          "unknown resovling exception");
   }

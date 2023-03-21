@@ -1,5 +1,4 @@
-#ifndef SERVER_SRC_DRIVERS_DRIVER_H_
-#define SERVER_SRC_DRIVERS_DRIVER_H_
+#pragma once
 
 #include <string>
 using std::string;
@@ -45,6 +44,7 @@ class CDriver
   private:
      ECDriverId mId;      // Driver identifier
      const char * mName;  // Driver string name
+     void init_metrics();
 
   public:
     CDriver(const ECDriverId id, const char * name);
@@ -59,6 +59,9 @@ class CDriver
     const char * getName() const  { return mName; }
 
     static unique_ptr<CDriver> instantiate(const CDriverCfg::RawConfig_t & data);
-};
 
-#endif /* SERVER_SRC_DRIVERS_DRIVER_H_ */
+    //metrics
+    void requests_count_increment();
+    void requests_failed_increment();
+    void requests_finished_increment(const double time_consumed);
+};

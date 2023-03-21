@@ -1,5 +1,4 @@
-#ifndef PROMEXPORTER_H
-#define PROMEXPORTER_H
+#pragma once
 
 #include <string>
 
@@ -8,6 +7,8 @@
 #include "prometheus/exposer.h"
 #include "prometheus/family.h"
 #include "prometheus/registry.h"
+
+#include "drivers/Driver.h"
 
 class PrometheusExporter;
 typedef singleton<PrometheusExporter> prometheus_exporter;
@@ -22,9 +23,19 @@ public:
 	void start();
 	void stop();
 
-	void driver_requests_count_increment(string driver);
-	void driver_requests_failed_increment(string driver);
-	void driver_requests_time_increment(string driver, const double val);
+	void driver_requests_count_increment(
+		const string &type, CDriverCfg::CfgUniqId_t id);
+
+	void driver_requests_failed_increment(
+		const string &type, CDriverCfg::CfgUniqId_t id);
+
+	void driver_requests_finished_increment(
+		const string &type, CDriverCfg::CfgUniqId_t id,
+		const double time_consumed);
+
+	void driver_init_metrics(
+		const string &type,
+		CDriverCfg::CfgUniqId_t id);
 
 private:
 	shared_ptr<Exposer> exposer;
@@ -34,8 +45,6 @@ private:
 
 	Family<Counter>* driver_requests_count;
 	Family<Counter>* driver_requests_failed;
+	Family<Counter>* driver_requests_finished;
 	Family<Counter>* driver_requests_time;
 };
-
-
-#endif // PROMEXPORTER_H

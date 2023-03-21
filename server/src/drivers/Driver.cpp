@@ -6,6 +6,8 @@
 #include "CnamHttpDriver.h"
 #include "Driver.h"
 
+#include "statistics/prometheus/prometheus_exporter.h"
+
 /**
  * @brief Class constructor
  */
@@ -61,6 +63,31 @@ unique_ptr<CDriver> CDriver::instantiate(const CDriverCfg::RawConfig_t & data)
       break;
   }
 
+  if(rv) rv->init_metrics();
+
   return rv;
 };
 
+void CDriver::init_metrics()
+{
+    prometheus_exporter::instance()->
+        driver_init_metrics(getName(), getUniqueId());
+}
+
+void CDriver::requests_count_increment()
+{
+    prometheus_exporter::instance()->
+        driver_requests_count_increment(getName(), getUniqueId());
+}
+
+void CDriver::requests_failed_increment()
+{
+    prometheus_exporter::instance()->
+        driver_requests_failed_increment(getName(), getUniqueId());
+}
+
+void CDriver::requests_finished_increment(const double time_consumed)
+{
+    prometheus_exporter::instance()->
+        driver_requests_finished_increment(getName(), getUniqueId(), time_consumed);
+}
