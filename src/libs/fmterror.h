@@ -43,7 +43,12 @@ fmterror::fmterror(const char * fmt, Args ... args) noexcept
   }
   
   char* tmp_buf;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
   mBufLen = asprintf(&tmp_buf, fmt, args ...);
+#pragma GCC diagnostic pop
+
   mBuf.reset(tmp_buf);
 }
 
