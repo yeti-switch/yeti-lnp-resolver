@@ -21,6 +21,11 @@ struct global_cfg_t {
 		string contact, from_uri, from_name;
 	} sip;
 
+	struct prometheus_cfg {
+		string host;
+		unsigned int port;
+	} prometheus;
+
 	global_cfg_t();
 
 	bool validate_opts();

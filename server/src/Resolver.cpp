@@ -6,6 +6,7 @@
 #include "drivers/Driver.h"
 #include "drivers/DriverConfig.h"
 #include "Resolver.h"
+#include "statistics/prometheus/prometheus_exporter.h"
 
 static const char * sLoadLNPConfigSTMT = "SELECT * FROM load_lnp_databases()";
 
@@ -117,6 +118,7 @@ void CResolver::resolve(int request_type,
   timeval req_start;
   timeval req_end;
   timeval req_diff;
+  uint64_t req_diff_millis;
 
   CDriver * drv = mapItem->second.get();
 
@@ -128,6 +130,7 @@ void CResolver::resolve(int request_type,
 
   try
   {
+    prometheus_exporter::instance()->driver_requests_count_increment(drv->getName());
     gettimeofday(&req_start, nullptr);
 
     // Make resolving action
@@ -135,6 +138,7 @@ void CResolver::resolve(int request_type,
 
     gettimeofday(&req_end, nullptr);
     timersub(&req_end, &req_start, &req_diff);
+    req_diff_millis = req_diff.tv_sec * 1000 + req_diff.tv_usec / 1000;
 
     if(drv->getDriverType() == CDriver::DriverTypeTagged) {
         dbg("Resolved (by '%s/%d'): %s -> %s (tag: '%s') [in %ld.%06ld seconds]",
@@ -151,13 +155,16 @@ void CResolver::resolve(int request_type,
             req_diff.tv_sec, req_diff.tv_usec);
     }
 
+    prometheus_exporter::instance()->driver_requests_time_increment(drv->getName(), req_diff_millis);
   }
   catch(const CDriver::error & e)
   {
+    prometheus_exporter::instance()->driver_requests_failed_increment(drv->getName());
     throw CResolverError(ECErrorId::DRIVER_RESOLVING_ERROR, e.what());
   }
   catch(...)
   {
+    prometheus_exporter::instance()->driver_requests_failed_increment(drv->getName());
     throw CResolverError(ECErrorId::GENERAL_RESOLVING_ERROR,
                          "unknown resovling exception");
   }
