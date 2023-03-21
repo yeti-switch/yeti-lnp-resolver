@@ -1,0 +1,6 @@
+yeti-lnp-resolver (1.1.10) stable; urgency=medium
+
+  * udp transport support
+  * prometheus metrics
+
+ -- Michael Furmur <m.furmur@gmail.com>  Tue, 14 Mar 2023 11:10:10 +0200

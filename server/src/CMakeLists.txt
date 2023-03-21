@@ -1,5 +1,8 @@
 set(BIN_NAME yeti_lnp_resolver)
 
+include(../../cmake/libre_bundled.cmake)
+include(../../cmake/confuse_bundled.cmake)
+
 find_package(CURL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(PQXX REQUIRED)
@@ -25,6 +28,12 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-write-strings -fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}/=")
 
+# workaround
+# remove '-Werror=format-security' flag
+# it fixes compilation error for 'fmterror' class
+# error: format not a string literal and no format arguments [-Werror=format-security]
+string(REPLACE "-Werror=format-security" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
 include_directories(
 	${PQXX_INCLUDE_DIRECTORIES}
 	${LIBRE_BUNDLED_INCLUDE_DIRS}
@@ -46,6 +55,9 @@ target_link_libraries(${BIN_NAME}
 	${CURL_LIBRARIES}
 	${YETICC_LIBRARIES}
 	${PROMETHEUS_LIBRARIES})
+
+add_dependencies(${BIN_NAME} libre)
+add_dependencies(${BIN_NAME} libconfuse)
 
 install(TARGETS ${BIN_NAME} DESTINATION ${RUNTIME_DIR})
 
