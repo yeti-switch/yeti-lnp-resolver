@@ -1,5 +1,5 @@
 build
-CMakeLists.txt.user
+CMakeLists.txt.*
 third/prometheus-cpp/
 debian/conffiles
 debian/.debhelper/
