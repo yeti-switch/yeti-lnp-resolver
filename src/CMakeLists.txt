@@ -17,7 +17,7 @@ else()
     prometheus-cpp
     GIT_REPOSITORY https://github.com/jupp0r/prometheus-cpp.git
     GIT_TAG v1.1.0
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/third/prometheus-cpp/
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/third/prometheus-cpp
     CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DENABLE_PUSH=OFF -DENABLE_COMPRESSION=OFF)
 
     FetchContent_MakeAvailable(prometheus-cpp)
