@@ -1,2 +1,1 @@
-install(FILES yeti_lnp_resolver DESTINATION /etc/default)
-install(FILES yeti-lnp-resolver.conf DESTINATION /etc/rsyslog.d)
+install(FILES yeti-lnp-resolver.conf.rsyslog DESTINATION /etc/rsyslog.d RENAME yeti-lnp-resolver.conf)

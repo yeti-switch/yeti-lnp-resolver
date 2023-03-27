@@ -1,4 +1,4 @@
 yeti-lnp-resolver (0.1.4) stable; urgency=medium
   * udp transport support
   * add prometheus metrics for drivers
- -- Michael Furmur <m.furmur@gmail.com>  Tue, 21 Mar 2023 18:45:30 +0200
+ -- Michael Furmur <furmur@pm.me>  Tue, 21 Mar 2023 18:45:30 +0200

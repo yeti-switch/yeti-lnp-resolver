@@ -36,4 +36,4 @@ endif(VERBOSE_LOGGING)
 add_subdirectory(src)
 add_subdirectory(debian)
 
-install(FILES etc/lnp_resolver.cfg DESTINATION /etc/yeti)
+install(FILES etc/lnp_resolver.cfg.dist DESTINATION /etc/yeti)
