@@ -20,7 +20,11 @@ else()
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/third/prometheus-cpp
     CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DENABLE_PUSH=OFF -DENABLE_COMPRESSION=OFF -DGENERATE_PKG_CONFIG=OFF)
 
-    FetchContent_MakeAvailable(prometheus-cpp)
+    FetchContent_GetProperties(prometheus-cpp)
+    if(NOT prometheus-cpp_POPULATED)
+        FetchContent_Populate(prometheus-cpp)
+        add_subdirectory(${prometheus-cpp_SOURCE_DIR} ${prometheus-cpp_BINARY_DIR} EXCLUDE_FROM_ALL)
+    endif()
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-write-strings -fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}/=")
