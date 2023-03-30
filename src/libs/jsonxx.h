@@ -95,7 +95,6 @@ inline jsonxx::item::operator T() const
 /**
  * @brief JSON item class cast operator for boolean values
  */
-template <>
 inline jsonxx::item::operator bool() const
 {
   bool rv = false;

@@ -250,10 +250,6 @@ std::string _dispatcher::process_message(const char *req, int req_len, int &requ
 {
     request_type = TAGGED_REQ_VERSION;
 
-    if(req_len < 2) {
-        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request too small");
-    }
-
     CDriver::SResult_t r;
 
     /* common req layout:

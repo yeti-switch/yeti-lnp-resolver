@@ -55,6 +55,8 @@ class CDriverCfg
     using CfgToken_t    = string;
     using CfgKey_t      = string;
     using CfgFilePath_t = string;
+    using CfgUrl_t      = string;
+    using CfgFlag_t     = bool;
 
     // Raw driver configuration
     using RawConfig_t = pqxx::row;

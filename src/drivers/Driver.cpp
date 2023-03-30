@@ -4,6 +4,7 @@
 #include "HttpAlcazarDriver.h"
 #include "HttpCoureAnqDriver.h"
 #include "CnamHttpDriver.h"
+#include "HttpBulkvsDriver.h"
 #include "Driver.h"
 
 #include "statistics/prometheus/prometheus_exporter.h"
@@ -57,6 +58,10 @@ unique_ptr<CDriver> CDriver::instantiate(const CDriverCfg::RawConfig_t & data)
 
     case ECDriverId::ERESOLVER_DIRVER_CNAM_HTTP:
       rv.reset(new CCnamHttpDriver(data));
+      break;
+
+    case ECDriverId::ERESOLVER_DIRVER_HTTP_BULKVS:
+      rv.reset(new CHttpBuklvsDriver(data));
       break;
 
     default:
