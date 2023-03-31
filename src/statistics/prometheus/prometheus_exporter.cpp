@@ -4,6 +4,32 @@
 
 #define METRICS_PREFIX "yeti_lnp_resolver_"
 
+::prometheus::Labels static_labels;
+
+extern int label_func(cfg_t *cfg, cfg_opt_t *, int argc, const char **argv)
+{
+    if(argc != 2) {
+        cfg_error(cfg, "label must have 2 arguments");
+        return 1;
+    }
+    std::string option, value;
+    switch(argc)
+    {
+    case 0:
+        return 1;
+    case 2:
+        value = argv[1];
+        /* fall through */
+    case 1:
+        option = argv[0];
+        break;
+    }
+
+    static_labels.emplace(option, value);
+
+    return 0;
+}
+
 void PrometheusExporter::start()
 {
 	// stop if exporter already started
@@ -27,34 +53,38 @@ void PrometheusExporter::start()
 	}
 
 	// create a metrics registry
-	regisrty = make_shared<Registry>();
+	registry = make_shared<Registry>();
 
 	// create driver_requests_count
 	driver_requests_count = &BuildCounter()
 		.Name(METRICS_PREFIX "driver_requests_count")
 		.Help("The total number of requests attempts")
-		.Register(*regisrty);
+		.Labels(static_labels)
+		.Register(*registry);
 
 	// create driver_requests_failed
 	driver_requests_failed = &BuildCounter()
 		.Name(METRICS_PREFIX "driver_requests_failed")
 		.Help("Failed requests count")
-		.Register(*regisrty);
+		.Labels(static_labels)
+		.Register(*registry);
 
 	// create driver_requests_finished
 	driver_requests_finished = &BuildCounter()
 		.Name(METRICS_PREFIX "driver_requests_finished")
 		.Help("Finished requests count")
-		.Register(*regisrty);
+		.Labels(static_labels)
+		.Register(*registry);
 
 	// create driver_requests_time
 	driver_requests_time = &BuildCounter()
 		.Name(METRICS_PREFIX "driver_requests_time")
 		.Help("Accumulated request processing time in ms")
-		.Register(*regisrty);
+		.Labels(static_labels)
+		.Register(*registry);
 
 	// ask the exposer to scrape the registry on incoming HTTP requests
-	exposer->RegisterCollectable(regisrty);
+	exposer->RegisterCollectable(registry);
 
 	info("started");
 }
@@ -62,7 +92,7 @@ void PrometheusExporter::start()
 void PrometheusExporter::stop()
 {
 	exposer = NULL;
-	regisrty = NULL;
+	registry = NULL;
 	driver_requests_count = NULL;
 	driver_requests_failed = NULL;
 	driver_requests_time = NULL;

@@ -2,6 +2,8 @@
 
 #include "log.h"
 #include "cfg.h"
+#include "statistics/prometheus/prometheus_exporter.h"
+
 #include <errno.h>
 #include <cstring>
 
@@ -39,6 +41,7 @@ cfg_opt_t lnp_section_sip_opts[] = {
 cfg_opt_t prometheus_section_opts[] = {
 	CFG_INT("port",9091,CFGF_NONE),
 	CFG_STR("host","127.0.0.1",CFGF_NONE),
+	CFG_FUNC("label", &label_func),
 	CFG_END()
 };
 

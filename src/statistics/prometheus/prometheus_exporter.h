@@ -3,6 +3,8 @@
 #include <string>
 
 #include "singleton.h"
+#include <confuse.h>
+
 #include "prometheus/counter.h"
 #include "prometheus/exposer.h"
 #include "prometheus/family.h"
@@ -39,7 +41,7 @@ public:
 
 private:
 	shared_ptr<Exposer> exposer;
-	shared_ptr<Registry> regisrty;
+	shared_ptr<Registry> registry;
 
 	mutable std::mutex mutex_;
 
@@ -48,3 +50,5 @@ private:
 	Family<Counter>* driver_requests_finished;
 	Family<Counter>* driver_requests_time;
 };
+
+extern int label_func(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv);
