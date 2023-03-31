@@ -1,3 +1,9 @@
+yeti-lnp-resolver (0.1.6) stable; urgency=medium
+  * PrometheusExporter
+    - add 'yeti_lnp_resolver_' prefix for metrics
+    - add label(attribute,value) function for 'prometheus' section
+ -- Michael Furmur <furmur@pm.me>  Fri, 31 Mar 2023 18:40:03 +0300
+
 yeti-lnp-resolver (0.1.5) stable; urgency=medium
   * add HttpBulkvsDriver with 'Lnp::DatabaseBulkvs' db type name
  -- Michael Furmur <furmur@pm.me>  Thu, 30 Mar 2023 17:30:02 +0300
