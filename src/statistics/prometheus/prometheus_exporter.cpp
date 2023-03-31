@@ -2,6 +2,8 @@
 #include "log.h"
 #include "cfg.h"
 
+#define METRICS_PREFIX "yeti_lnp_resolver_"
+
 void PrometheusExporter::start()
 {
 	// stop if exporter already started
@@ -29,25 +31,25 @@ void PrometheusExporter::start()
 
 	// create driver_requests_count
 	driver_requests_count = &BuildCounter()
-		.Name("driver_requests_count")
+		.Name(METRICS_PREFIX "driver_requests_count")
 		.Help("The total number of requests attempts")
 		.Register(*regisrty);
 
 	// create driver_requests_failed
 	driver_requests_failed = &BuildCounter()
-		.Name("driver_requests_failed")
+		.Name(METRICS_PREFIX "driver_requests_failed")
 		.Help("Failed requests count")
 		.Register(*regisrty);
 
 	// create driver_requests_finished
 	driver_requests_finished = &BuildCounter()
-		.Name("driver_requests_finished")
+		.Name(METRICS_PREFIX "driver_requests_finished")
 		.Help("Finished requests count")
 		.Register(*regisrty);
 
 	// create driver_requests_time
 	driver_requests_time = &BuildCounter()
-		.Name("driver_requests_time")
+		.Name(METRICS_PREFIX "driver_requests_time")
 		.Help("Accumulated request processing time in ms")
 		.Register(*regisrty);
 
