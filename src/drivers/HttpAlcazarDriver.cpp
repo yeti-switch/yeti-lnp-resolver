@@ -2,25 +2,8 @@
 #include <cstring>
 
 #include "log.h"
-#include "drivers/modules/HttpClient.h"
+#include "resolver/Resolver.h"
 #include "HttpAlcazarDriver.h"
-
-/**************************************************************
- * Implementation helpers
-***************************************************************/
-/**
- * @brief Callback function for processing HTTP response
- */
-size_t static write_func(void * ptr, size_t size, size_t nmemb, void * userdata)
-{
-    if (userdata)
-    {
-      std::string & s = *(reinterpret_cast<std::string *>(userdata));
-      s.append(static_cast<char *> (ptr), (size * nmemb));
-    }
-
-    return (size * nmemb);
-}
 
 /**************************************************************
  * Configuration implementation
@@ -161,69 +144,59 @@ void CHttpAlcazarDriver::showInfo() const
 
 /**
  * @brief Executing resolving procedure
- *
- * @param[in] inData      The source data for making resolving
- * @param[out] outResult  The structure for saving resolving result
  */
-void CHttpAlcazarDriver::resolve(const string & inData, SResult_t & outResult) const
-{
+void CHttpAlcazarDriver::resolve(ResolverRequest &request,
+                                 Resolver *resolver,
+                                 ResolverDelegate *delegate) const {
+
   /*
    * Request URL:
    * http://api.east.alcazarnetworks.com/api/2.2/lrn?extended=true&output=json& \
    *      key=5ddc2fba-0cc4-4c93-9a28-bd28ddf5e6d4&tn=14846642959
    */
 
-  string dstURL = mURLPrefix + inData;
-  dbg("resolving by URL: '%s'", dstURL.c_str());
+    string dstURL = mURLPrefix + request.data;
+    dbg("resolving by URL: '%s'", dstURL.c_str());
 
-  string replyBuf;
-  try
-  {
-    CHttpClient http;
+    HttpRequest http_request;
+    http_request.id = request.id;
+    http_request.method = GET;
+    http_request.url = dstURL.c_str();
 
-    http.setSSLVerification(false);
-    http.setAuthType(CHttpClient::ECAuth::NONE);
-    http.setTimeout(mCfg->getTimeout());
-    http.setWriteCallback(write_func, &replyBuf);
-    http.setHeader("Content-Type: application/json");
+    http_request.verify_ssl = false;
+    http_request.auth_type = ECAuth::NONE;
+    http_request.timeout_ms = mCfg->getTimeout();
+    http_request.headers = { "Content-Type: application/json" };
 
-    if (CHttpClient::ECReqCode::OK != http.perform(dstURL))
-    {
-      dbg("error on perform request: %s", http.getErrorStr());
-      throw CDriver::error(http.getErrorStr());
+    if (delegate != nullptr)
+        delegate->make_http_request(resolver, request, http_request);
+}
+
+void CHttpAlcazarDriver::parse(const string &data, ResolverRequest &request) const {
+    /*
+     * Processing reply. Example:
+     * {
+     *    "LRN":"14847880088",
+     *    "SPID":"7513",
+     *    "OCN":"7513",
+     *    "LATA":"228",
+     *    "CITY":"ALLENTOWN",
+     *    "STATE":"PA",
+     *    "JURISDICTION":"INDETERMINATE",
+     *    "LEC":"CTSI, INC. - PA",
+     *    "LINETYPE":"LANDLINE"
+     * }
+     */
+
+    try {
+      request.result.localRoutingNumber =
+          static_cast<decltype(request.result.localRoutingNumber)> (jsonxx(data)["LRN"]);
     }
-  }
-  catch (CHttpClient::error & e)
-  {
-    throw CDriver::error(e.what());
-  }
+    catch (std::exception & e)
+    {
+      warn("couldn't parse reply as JSON format: '%s'", data.c_str());
+      throw error(e.what());
+    }
 
-  /*
-   * Processing reply. Example:
-   * {
-   *    "LRN":"14847880088",
-   *    "SPID":"7513",
-   *    "OCN":"7513",
-   *    "LATA":"228",
-   *    "CITY":"ALLENTOWN",
-   *    "STATE":"PA",
-   *    "JURISDICTION":"INDETERMINATE",
-   *    "LEC":"CTSI, INC. - PA",
-   *    "LINETYPE":"LANDLINE"
-   * }
-   */
-
-  dbg("HTTP reply: %s", replyBuf.c_str());
-
-  try {
-    outResult.localRoutingNumber =
-        static_cast<decltype(outResult.localRoutingNumber)> (jsonxx(replyBuf)["LRN"]);
-  }
-  catch (std::exception & e)
-  {
-    warn("couldn't parse reply as JSON format: '%s'", replyBuf.c_str());
-    throw error(e.what());
-  }
-
-  outResult.rawData = replyBuf;
+    request.result.rawData = data;
 }

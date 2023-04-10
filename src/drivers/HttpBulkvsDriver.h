@@ -2,11 +2,12 @@
 #define SERVER_SRC_DRIVERS_HTTPBULKVSDRIVER_H_
 
 #include "Driver.h"
+#include "resolver/Resolver.h"
 
 /**
  * @brief Driver configuration class
  */
-class CHttpBuklvsDriverCfg: public CDriverCfg
+class CHttpBulkvsDriverCfg: public CDriverCfg
 {
   private:
     CfgUrl_t              mUrl;
@@ -19,7 +20,7 @@ class CHttpBuklvsDriverCfg: public CDriverCfg
     static const CfgFlag_t getRawValidateHttpsCer(JSONConfig_t & data);
 
   public:
-    explicit CHttpBuklvsDriverCfg(const CDriverCfg::RawConfig_t & data);
+    explicit CHttpBulkvsDriverCfg(const CDriverCfg::RawConfig_t & data);
 
     const CfgKey_t       getToken() const               { return mToken; }
     const CfgUrl_t       getUrl() const                 { return mUrl; }
@@ -30,17 +31,21 @@ class CHttpBuklvsDriverCfg: public CDriverCfg
 /**
  * @brief Driver class
  */
-class CHttpBuklvsDriver: public CDriver
+class CHttpBulkvsDriver: public CDriver
 {
   private:
-    unique_ptr<CHttpBuklvsDriverCfg> mCfg;
+    unique_ptr<CHttpBulkvsDriverCfg> mCfg;
 
   public:
-    explicit CHttpBuklvsDriver(const CDriverCfg::RawConfig_t & data);
-    ~CHttpBuklvsDriver() override = default;
+    explicit CHttpBulkvsDriver(const CDriverCfg::RawConfig_t & data);
+    ~CHttpBulkvsDriver() override = default;
 
     void showInfo() const override;
-    void resolve(const string & inData, SResult_t & outResult) const override;
+    void resolve(ResolverRequest &request,
+                 Resolver *resolver,
+                 ResolverDelegate *delegate) const override;
+
+    void parse(const string &data, ResolverRequest &request) const override;
 
     const CDriverCfg::CfgUniqId_t getUniqueId() const override
                                                 { return mCfg->getUniqId(); }

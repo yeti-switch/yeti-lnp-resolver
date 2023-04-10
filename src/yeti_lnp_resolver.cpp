@@ -7,12 +7,13 @@
 #include "sig.h"
 #include "opts.h"
 #include "usage.h"
-#include "dispatcher.h"
+#include "dispatcher/Dispatcher.h"
 #include "cache.h"
 #include "statistics/prometheus/prometheus_exporter.h"
 
 #include "cfg_reader.h"
-#include "Resolver.h"
+#include "resolver/Resolver.h"
+#include "transport/Transport.h"
 
 int main(int argc,char *argv[])
 {
@@ -52,6 +53,8 @@ int main(int argc,char *argv[])
 		if(!resolver::instance()->configure()){
 			throw std::string("can't init resolvers");
 		}
+
+		transport::instance()->set_delegate(resolver::instance());
 		lnp_cache::instance()->start();
 		dispatcher::instance()->loop();
 	} catch(std::string &s){

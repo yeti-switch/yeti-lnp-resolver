@@ -1,8 +1,8 @@
 #include <signal.h>
 
-#include "dispatcher.h"
+#include "dispatcher/Dispatcher.h"
 #include "cache.h"
-#include "Resolver.h"
+#include "resolver/Resolver.h"
 #include "sig.h"
 
 void sig_handler(int sig)

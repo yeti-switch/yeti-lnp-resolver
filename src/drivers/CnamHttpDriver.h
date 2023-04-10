@@ -57,7 +57,10 @@ class CCnamHttpDriver: public CDriver
     {
         return DriverTypeCnam;
     };
-    void resolve(const string & inData, SResult_t & outResult) const override;
+    void resolve(ResolverRequest &request,
+                 Resolver *resolver,
+                 ResolverDelegate *delegate) const override;
+    void parse(const string &data, ResolverRequest &request) const override;
 
     const CDriverCfg::CfgUniqId_t getUniqueId() const override
     {

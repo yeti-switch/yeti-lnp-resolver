@@ -61,7 +61,7 @@ unique_ptr<CDriver> CDriver::instantiate(const CDriverCfg::RawConfig_t & data)
       break;
 
     case ECDriverId::ERESOLVER_DIRVER_HTTP_BULKVS:
-      rv.reset(new CHttpBuklvsDriver(data));
+      rv.reset(new CHttpBulkvsDriver(data));
       break;
 
     default:

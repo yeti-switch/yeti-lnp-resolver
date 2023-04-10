@@ -1,4 +1,5 @@
 #include "log.h"
+#include "resolver/Resolver.h"
 #include "MhashCsvDriver.h"
 
 /**************************************************************
@@ -121,41 +122,41 @@ void CMhashCsvDriver::showInfo() const
 
 /**
  * @brief Executing resolving procedure
- *
- * @param[in] inData      The source data for making resolving
- * @param[out] outResult  The structure for saving resolving result
- *
  * @note Supports the resolve tag and number in the output result
  */
-void CMhashCsvDriver::resolve(const string & inData, SResult_t & outResult) const
-{
-  /*
-   * CSV file has a format with following fields:
-   * 0730112354,AT&T mobile,0901234455
-   */
+void CMhashCsvDriver::resolve(ResolverRequest &request,
+                         Resolver *resolver,
+                         ResolverDelegate *delegate) const {
+    /*
+    * CSV file has a format with following fields:
+    * 0730112354,AT&T mobile,0901234455
+    */
 
-  dbg("resolving by in-memory search for number '%s'", inData.c_str());
+    dbg("resolving by in-memory search for number '%s'", request.data.c_str());
 
-  try
-  {
-    const CCsvClient::row_t * csvRow = mCsvHash->perform(inData);
-
-    if (!csvRow)
+    try
     {
-      //TODO: check if this logic required
-      dbg("number '%s' not found in hash. Set out to input data with epty tag",
-           inData.c_str());
+        const CCsvClient::row_t * csvRow = mCsvHash->perform(request.data);
 
-      outResult.localRoutingNumber = inData;
+        if (!csvRow) {
+            //TODO: check if this logic required
+            dbg("number '%s' not found in hash. Set out to input data with epty tag",
+            request.data.c_str());
+
+            request.result.localRoutingNumber = request.data;
+        }
+        else
+        {
+            request.result.localRoutingNumber = csvRow->field[ECSV_FIELD_ROUTING_NUMBER];
+            request.result.localRoutingTag    = csvRow->field[ECSV_FIELD_ROUTING_TAG];
+        }
     }
-    else
-    {
-      outResult.localRoutingNumber = csvRow->field[ECSV_FIELD_ROUTING_NUMBER];
-      outResult.localRoutingTag    = csvRow->field[ECSV_FIELD_ROUTING_TAG];
+    catch (CCsvClient::error & e) {
+        throw error(e.what());
     }
-  }
-  catch (CCsvClient::error & e)
-  {
-    throw error(e.what());
-  }
+
+    request.is_done = true;
+}
+
+void CMhashCsvDriver::parse(const string &data, ResolverRequest &request) const {
 }

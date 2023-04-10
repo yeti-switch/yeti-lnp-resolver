@@ -2,25 +2,9 @@
 #include <cstring>
 
 #include "log.h"
-#include "drivers/modules/HttpClient.h"
+#include "resolver/Resolver.h"
 #include "HttpThinqDriver.h"
 
-/**************************************************************
- * Implementation helpers
-***************************************************************/
-/**
- * @brief Callback function for processing HTTP response
- */
-size_t static write_func(void * ptr, size_t size, size_t nmemb, void * userdata)
-{
-    if (userdata)
-    {
-      std::string & s = *(reinterpret_cast<std::string *>(userdata));
-      s.append(static_cast<char *> (ptr), (size * nmemb));
-    }
-
-    return (size * nmemb);
-}
 
 /**************************************************************
  * Configuration implementation
@@ -175,73 +159,61 @@ void CHttpThinqDriver::showInfo() const
 
 /**
  * @brief Executing resolving procedure
- *
- * @param[in] inData      The source data for making resolving
- * @param[out] outResult  The structure for saving resolving result
- *
  * @docs - https://api.thinq.com/docs/
  */
-void CHttpThinqDriver::resolve(const string & inData, SResult_t & outResult) const
-{
-  /*
+void CHttpThinqDriver::resolve(ResolverRequest &request,
+                               Resolver *resolver,
+                               ResolverDelegate *delegate) const {
+    /*
    * Request URL:
    * https://api.thinq.com/lrn/extended/9194841422?format=json
    */
 
-  string dstURL = mURLPrefix + inData + mURLSuffix;
-  dbg("resolving by URL: '%s'", dstURL.c_str());
+    string dstURL = mURLPrefix + request.data + mURLSuffix;
+    dbg("resolving by URL: '%s'", dstURL.c_str());
 
-  string replyBuf;
-  try
-  {
-    CHttpClient http;
+    HttpRequest http_request;
+    http_request.id = request.id;
+    http_request.method = GET;
+    http_request.verify_ssl = false;
+    http_request.auth_type = ECAuth::BASIC;
+    http_request.login = mCfg->getUserName();
+    http_request.pass = mCfg->geToken();
+    http_request.timeout_ms = mCfg->getTimeout();
+    http_request.url = dstURL.c_str();
+    http_request.headers = { "Content-Type: application/json" };
 
-    http.setSSLVerification(false);
-    http.setAuthType(CHttpClient::ECAuth::BASIC);
-    http.setAuthData(mCfg->getUserName(),mCfg->geToken());
-    http.setTimeout(mCfg->getTimeout());
-    http.setWriteCallback(write_func, &replyBuf);
-    http.setHeader("Content-Type: application/json");
+    if (delegate != nullptr)
+        delegate->make_http_request(resolver, request, http_request);
+}
 
-    if (CHttpClient::ECReqCode::OK != http.perform(dstURL))
-    {
-      dbg("error on perform request: %s", http.getErrorStr());
-      throw error(http.getErrorStr());
+void CHttpThinqDriver::parse(const string &data, ResolverRequest &request) const {
+
+    /*
+    * Processing reply. Example:
+    * {
+    *    "lrn": "9198900000",
+    *    "lerg": {
+    *      "npa": "919",
+    *      "nxx": "287",
+    *      "y": "A",
+    *      "lata": "426",
+    *      "ocn": "7555",
+    *      "company": "TW TELECOM OF NC",
+    *      "rc": "DURHAM",
+    *      "state": "NC"
+    *    }
+    * }
+    */
+
+    try {
+        request.result.localRoutingNumber =
+            static_cast<decltype(request.result.localRoutingNumber)>(jsonxx(data)["lrn"]);
     }
-  }
-  catch (CHttpClient::error & e)
-  {
-    throw error(e.what());
-  }
+    catch (std::exception & e) {
+        warn("couldn't parse reply as JSON format: '%s'", data.c_str());
+        throw error(e.what());
+    }
 
-  /*
-   * Processing reply. Example:
-   * {
-   *    "lrn": "9198900000",
-   *    "lerg": {
-   *      "npa": "919",
-   *      "nxx": "287",
-   *      "y": "A",
-   *      "lata": "426",
-   *      "ocn": "7555",
-   *      "company": "TW TELECOM OF NC",
-   *      "rc": "DURHAM",
-   *      "state": "NC"
-   *    }
-   * }
-   */
-
-  dbg("HTTP reply: %s", replyBuf.c_str());
-
-  try {
-    outResult.localRoutingNumber =
-        static_cast<decltype(outResult.localRoutingNumber)> (jsonxx(replyBuf)["lrn"]);
-  }
-  catch (std::exception & e)
-  {
-    warn("couldn't parse reply as JSON format: '%s'", replyBuf.c_str());
-    throw error(e.what());
-  }
-
-  outResult.rawData = replyBuf;
+    request.result.rawData = data;
 }

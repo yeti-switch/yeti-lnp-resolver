@@ -2,27 +2,11 @@
 #include <cstring>
 
 #include "log.h"
-#include "drivers/modules/HttpClient.h"
+#include "resolver/Resolver.h"
 #include "CnamHttpDriver.h"
 #include "JsonHelpers.h"
 
 #include <type_traits>
-
-/**************************************************************
- * Implementation helpers
-***************************************************************/
-/**
- * @brief Callback function for processing HTTP response
- */
-size_t static write_func(void * ptr, size_t size, size_t nmemb, void * userdata)
-{
-    if (userdata) {
-        std::string & s = *(reinterpret_cast<std::string *>(userdata));
-        s.append(static_cast<char *> (ptr), (size * nmemb));
-    }
-
-    return (size * nmemb);
-}
 
 /**************************************************************
  * Configuration implementation
@@ -195,15 +179,14 @@ void CCnamHttpDriver::showInfo() const
 
 /**
  * @brief Executing resolving procedure
- *
- * @param[in] inData      The source data for making resolving
- * @param[out] outResult  The structure for saving resolving result
  */
-void CCnamHttpDriver::resolve(const string & inData, SResult_t & outResult) const
-{
+void CCnamHttpDriver::resolve(ResolverRequest &request,
+                         Resolver *resolver,
+                         ResolverDelegate *delegate) const {
+
     //parse inData as json
     std::unique_ptr<cJSON, void(*)(cJSON*)> request_json(
-        cJSON_Parse(inData.data()), cJSON_Delete);
+        cJSON_Parse(request.data.data()), cJSON_Delete);
     if(!request_json)
         throw CDriver::error("failed to parse request json");
     if(request_json->type != cJSON_Object)
@@ -211,31 +194,26 @@ void CCnamHttpDriver::resolve(const string & inData, SResult_t & outResult) cons
 
     //replace placeholders in dstURL using data from json
     string dstURL = cfg.template_processor.get_url(request_json.get());
-    //dbg("resolved url: %s", dstURL.data());
 
-    string replyBuf;
-    try {
-        CHttpClient http;
+    HttpRequest http_request;
+    http_request.id = request.id;
+    http_request.method = GET;
+    http_request.url = dstURL.c_str();
 
-        http.setSSLVerification(false);
-        http.setAuthType(CHttpClient::ECAuth::NONE);
-        http.setTimeout(cfg.timeout);
-        http.setWriteCallback(write_func, &replyBuf);
-        http.setHeader("Content-Type: application/json");
+    http_request.verify_ssl = false;
+    http_request.auth_type = ECAuth::NONE;
+    http_request.timeout_ms = cfg.timeout;
+    http_request.headers = { "Content-Type: application/json" };
 
-        if (CHttpClient::ECReqCode::OK != http.perform(dstURL)) {
-            dbg("error on perform request: %s", http.getErrorStr());
-            throw CDriver::error(http.getErrorStr());
-        }
-    } catch (CHttpClient::error & e) {
-        throw CDriver::error(e.what());
-    }
+    if (delegate != nullptr)
+        delegate->make_http_request(resolver, request, http_request);
+}
 
-    //dbg("HTTP reply: %s", replyBuf.c_str());
-    outResult.rawData = replyBuf;
+void CCnamHttpDriver::parse(const string &data, ResolverRequest &request) const {
+    request.result.rawData = data;
 
     std::unique_ptr<cJSON, void(*)(cJSON*)> j(
-        cJSON_Parse(replyBuf.data()),cJSON_Delete);
+        cJSON_Parse(data.data()),cJSON_Delete);
     if(!j)
         throw CDriver::error("failed to parse reply JSON");
     if(j->type != cJSON_Object)
@@ -246,6 +224,6 @@ void CCnamHttpDriver::resolve(const string & inData, SResult_t & outResult) cons
     char *s = cJSON_PrintUnformatted(response_json);
     cJSON_Delete(response_json);
 
-    outResult.rawData = s;
+    request.result.rawData = s;
     free(s);
 }

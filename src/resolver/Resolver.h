@@ -1,0 +1,116 @@
+#pragma once
+
+#include <string>
+using std::string;
+
+#include <memory>
+using std::unique_ptr;
+
+#include <map>
+#include <utility>
+
+#include "singleton.h"
+#include "drivers/Driver.h"
+#include "ResolverException.h"
+#include "transport/Transport.h"
+#include "drivers/modules/AsyncHttpClient.h"
+
+/**
+ * @brief Forward declaration for singleton driver type define
+ */
+class Resolver;
+using resolver = singleton<Resolver>;
+
+typedef struct ResolverRequest {
+    uint32_t id = -1;
+    int type = -1;
+    CDriverCfg::CfgUniqId_t db_id = -1;
+    ClientInfo client_info;
+    string data;
+    timeval req_start;
+    bool is_done = false;
+    CDriver::SResult_t result;
+} ResolverRequest;
+
+/**
+ * @brief Resolver Delegate
+ */
+
+ class ResolverDelegate {
+public:
+    virtual void make_http_request(Resolver* resolver,
+                                   const ResolverRequest &request,
+                                   const HttpRequest &http_request) = 0;
+};
+
+/**
+ * @brief Resolver class
+ */
+class Resolver :
+    public TransportDelegate,
+    public AsyncHttpClientDelegate,
+    public ResolverDelegate {
+
+public:
+    Resolver() = default;
+    ~Resolver() = default;
+
+    bool configure();
+
+    /* TransportDelegate */
+    virtual void data_received(Transport *transport,
+                               const RecvData &recv_data) override;
+
+    /* ResolverDelegate */
+    virtual void make_http_request(Resolver* resolver,
+                                   const ResolverRequest &request,
+                                   const HttpRequest &http_request) override;
+
+    /* AsyncHttpClientDelegate */
+    virtual void response_received(AsyncHttpClient *http_client,
+                                   const HttpResponse &response) override;
+
+    static void prepare_reply(const ResolverRequest &request,
+                              string &out);
+
+private:
+    void resolve(ResolverRequest &request);
+
+    void parse_response(const HttpResponse &response,
+                        ResolverRequest &request);
+
+    void handle_request_is_done(const ResolverRequest &request, CDriver *driver);
+
+    // Databases type defines
+    using Database_t = std::map<CDriverCfg::CfgUniqId_t, unique_ptr<CDriver> >;
+    static bool loadResolveDrivers(Database_t & db);
+
+    static void prepare_request(const RecvData &recv_data, ResolverRequest &out);
+
+    static void prepare_tagged_reply(const ResolverRequest &request,
+                                     string &out);
+
+    static void prepare_json_reply(const ResolverRequest &request,
+                                   string &out);
+
+    static void prepare_error_reply(const ResolverRequest &request,
+                                    const ECErrorId code,
+                                    const string &description,
+                                    string &out);
+
+    static void prepare_tagged_error_reply(const ResolverRequest &request,
+                                           const ECErrorId code,
+                                           const string &s,
+                                           string &out);
+
+    static void prepare_json_error_reply(const ResolverRequest &request,
+                                         const ECErrorId code,
+                                         const string &s, string &out);
+
+    Database_t mDriversMap;
+    mutex mDriversMutex;
+
+    unique_ptr<AsyncHttpClient> http_client;
+    map<uint32_t, ResolverRequest> waiting_requests;
+};
+

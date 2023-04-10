@@ -10,6 +10,10 @@ using std::unique_ptr;
 #include "DriverDefines.h"
 #include "DriverConfig.h"
 
+class Resolver;
+struct ResolverRequest;
+class ResolverDelegate;
+
 /**
  * @brief Resolver driver class
  */
@@ -42,9 +46,9 @@ class CDriver
     };
 
   private:
-     ECDriverId mId;      // Driver identifier
-     const char * mName;  // Driver string name
-     void init_metrics();
+    ECDriverId mId;      // Driver identifier
+    const char * mName;  // Driver string name
+    void init_metrics();
 
   public:
     CDriver(const ECDriverId id, const char * name);
@@ -54,7 +58,11 @@ class CDriver
     virtual void showInfo() const = 0;
 
     virtual int getDriverType() const { return DriverTypeTagged; };
-    virtual void resolve(const string & in, SResult_t & out) const = 0;
+    virtual void resolve(ResolverRequest &request,
+                         Resolver *resolver,
+                         ResolverDelegate *delegate) const = 0;
+
+    virtual void parse(const string &data, ResolverRequest &request) const = 0;
 
     const char * getName() const  { return mName; }
 

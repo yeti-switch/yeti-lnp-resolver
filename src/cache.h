@@ -9,7 +9,7 @@
 
 #include <pqxx/pqxx>
 
-#include "Resolver.h"
+#include "resolver/Resolver.h"
 
 using std::string;
 //using std::list;

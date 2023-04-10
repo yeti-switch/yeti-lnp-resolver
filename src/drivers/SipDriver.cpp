@@ -4,6 +4,7 @@ using std::vector;
 
 #include "log.h"
 #include "cfg.h"
+#include "resolver/Resolver.h"
 #include "SipDriver.h"
 
 /**************************************************************
@@ -147,95 +148,102 @@ void CSipDriver::showInfo() const
 
 /**
  * @brief Executing resolving procedure
- *
- * @param[in] inData      The source data for making resolving
- * @param[out] outResult  The structure for saving resolving result
- *
  * @note used SIP 301/302 redirect message with Contact field tag 'rn'
  */
-void CSipDriver::resolve(const string & inData, SResult_t & outResult) const
-{
-  /*
-   * Request SIP Invite message
-   *
-   * INVITE sip:12345563234@yeti.example.org:5060 SIP/2.0
-   * Via: SIP/2.0/UDP yeti.example.org:60715;branch=z9hG4bK713e3b0aa798bde5;rport
-   * Contact: <sip:yeti-lnp-resolver@yeti.example.org:60715>
-   * Max-Forwards: 70
-   * To: <sip:12345563234@yeti.example.org:5060>
-   * From: "LNP resolver" <sip:yeti-lnp-resolver@yeti.example.org>;tag=3e078f3166fec4d6
-   * Call-ID: 0f0a3b2ff62587bd
-   * CSeq: 19067 INVITE
-   * User-Agent: Yeti LNP resolver
-   * Content-Length: 0
-   */
+void CSipDriver::resolve(ResolverRequest &request,
+                         Resolver *resolver,
+                         ResolverDelegate *delegate) const {
 
-  string dstUri = mURIPrefix + inData + mURISuffix;
-  dbg("resolving by INVITE request <%s>", dstUri.c_str());
+   /*
+    * Request SIP Invite message
+    *
+    * INVITE sip:12345563234@yeti.example.org:5060 SIP/2.0
+    * Via: SIP/2.0/UDP yeti.example.org:60715;branch=z9hG4bK713e3b0aa798bde5;rport
+    * Contact: <sip:yeti-lnp-resolver@yeti.example.org:60715>
+    * Max-Forwards: 70
+    * To: <sip:12345563234@yeti.example.org:5060>
+    * From: "LNP resolver" <sip:yeti-lnp-resolver@yeti.example.org>;tag=3e078f3166fec4d6
+    * Call-ID: 0f0a3b2ff62587bd
+    * CSeq: 19067 INVITE
+    * User-Agent: Yeti LNP resolver
+    * Content-Length: 0
+    */
 
-  CSipClient::SReplyData replyBuf;
-  try
-  {
-    CSipClient & sip = CSipClient::getInstance();
-    sip.setTimeout(mCfg->getTimeout());
-    if (CSipClient::ECCode::OK != sip.perform(dstUri, replyBuf))
+    string dstUri = mURIPrefix + request.data + mURISuffix;
+    dbg("resolving by INVITE request <%s>", dstUri.c_str());
+
+    CSipClient::SReplyData replyBuf;
+    try
     {
-      dbg("error on request performing: could not receive response");
-      throw CDriver::error("no SIP response");
+        CSipClient & sip = CSipClient::getInstance();
+        sip.setTimeout(mCfg->getTimeout());
+        if (CSipClient::ECCode::OK != sip.perform(dstUri, replyBuf))
+        {
+            dbg("error on request performing: could not receive response");
+            throw CDriver::error("no SIP response");
+        }
     }
-  }
-  catch (CSipClient::error & e)
-  {
-    throw error(e.what());
-  }
-
-  /*
-   * Processing reply. Example:
-   *
-   * SIP/2.0 302 Moved Temporarily
-   * Via: SIP/2.0/UDP yeti.example.org:60715;branch=z9hG4bK713e3b0aa798bde5;rport
-   * From: "yeti-lnp-resolver" <sip:yeti-lnp-resolver@localhost>;tag=3e078f3166fec4d6
-   * To: <sip:12345563234@yeti.example.org:5060>;tag=1
-   * Call-ID: 0f0a3b2ff62587bd
-   * CSeq: 19067 INVITE
-   * Contact: <sip:yeti-sip;rn=4681665911@yeti.example.org:5060;transport=UDP>
-   * Content-Length: 0
-   */
-
-  dbg("SIP reply: [%u] '%s'", replyBuf.statusCode,
-                               replyBuf.rawContactData.c_str());
-
-  // Parse contact URI elements
-  if(string::npos == replyBuf.rawContactData.find_first_of(';')) {
-    //failover to use whole username as LRN
-    //TODO: separate driver type in DB
-    dbg("no user-params in reply Contact. use whole user-part as LRN");
-    outResult.localRoutingNumber = outResult.rawData = replyBuf.rawContactData;
-    return;
-  }
-
-  vector<string> uriElements = split(replyBuf.rawContactData, ';');
-  // Parse elements to name and value
-  bool isValueFound = false;
-  for (const auto & i : uriElements)
-  {
-    // elm[0] = name
-    // elm[1] = value
-    vector<string> elm = split(i, '=');
-    if ((2 == elm.size()) && ("rn" == elm[0]))
+    catch (CSipClient::error & e)
     {
-      // rn=<local_routing_number>
-      outResult.localRoutingNumber = elm[1];
-      isValueFound                 = true;
-
-      break;
+        throw error(e.what());
     }
-  }
 
-  if (!isValueFound)
-  {
-    throw error("Сontact user without 'rn' parameter");
-  }
+    dbg("SIP reply: [%u] '%s'", replyBuf.statusCode,
+                            replyBuf.rawContactData.c_str());
 
-  outResult.rawData = replyBuf.rawContactData;
+    parse(replyBuf.rawContactData, request);
+    request.is_done = true;
+}
+
+/**
+ * @brief Parses contact URI elements
+ * @note used SIP 301/302 redirect message with Contact field tag 'rn'
+ */
+void CSipDriver::parse(const string &data, ResolverRequest &request) const {
+
+   /*
+    * Processing reply. Example:
+    *
+    * SIP/2.0 302 Moved Temporarily
+    * Via: SIP/2.0/UDP yeti.example.org:60715;branch=z9hG4bK713e3b0aa798bde5;rport
+    * From: "yeti-lnp-resolver" <sip:yeti-lnp-resolver@localhost>;tag=3e078f3166fec4d6
+    * To: <sip:12345563234@yeti.example.org:5060>;tag=1
+    * Call-ID: 0f0a3b2ff62587bd
+    * CSeq: 19067 INVITE
+    * Contact: <sip:yeti-sip;rn=4681665911@yeti.example.org:5060;transport=UDP>
+    * Content-Length: 0
+    */
+
+    if(string::npos == data.find_first_of(';')) {
+        //failover to use whole username as LRN
+        //TODO: separate driver type in DB
+        dbg("no user-params in reply Contact. use whole user-part as LRN");
+        request.result.localRoutingNumber = request.result.rawData = data;
+        return;
+    }
+
+    vector<string> uriElements = split(data, ';');
+    // Parse elements to name and value
+    bool isValueFound = false;
+    for (const auto & i : uriElements)
+    {
+        // elm[0] = name
+        // elm[1] = value
+        vector<string> elm = split(i, '=');
+        if ((2 == elm.size()) && ("rn" == elm[0]))
+        {
+            // rn=<local_routing_number>
+            request.result.localRoutingNumber = elm[1];
+            isValueFound           = true;
+
+            break;
+        }
+    }
+
+    if (!isValueFound)
+    {
+        throw error("Сontact user without 'rn' parameter");
+    }
+
+    request.result.rawData = data;
 }

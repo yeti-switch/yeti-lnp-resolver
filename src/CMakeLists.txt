@@ -3,7 +3,6 @@ set(BIN_NAME yeti_lnp_resolver)
 find_package(CURL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(PQXX REQUIRED)
-find_package(NanoMsg REQUIRED)
 
 #prometheus
 set(PROMETHEUS_LIBRARIES prometheus-cpp::pull)
@@ -44,7 +43,6 @@ target_link_libraries(${BIN_NAME}
     ${PQXX_LIBRARIES}
     ${LIBRE_BUNDLED_LIBRARIES}
     ${CONFUSE_BUNDLED_LIBS}
-    ${NanoMsg_LIBRARIES}
     ${CURL_LIBRARIES}
     ${PROMETHEUS_LIBRARIES})
 
