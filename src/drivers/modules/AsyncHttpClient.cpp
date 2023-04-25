@@ -253,7 +253,7 @@ void AsyncHttpClient::check_multi_info() {
         curl_easy_getinfo(easy, CURLINFO_PRIVATE, &conn);
         curl_easy_getinfo(easy, CURLINFO_EFFECTIVE_URL, &eff_url);
 
-        response = make_unique<HttpResponse>();
+        auto response = make_unique<HttpResponse>();
         response->id = conn->id;
 
         if (res == CURLE_OK) {
@@ -264,6 +264,7 @@ void AsyncHttpClient::check_multi_info() {
             response->data = conn->error;
         }
 
+        response_queue.push(move(response));
         info("DONE: %s => (%d) %s", eff_url, res, conn->error);
 
         curl_multi_remove_handle(multi, easy);
@@ -432,8 +433,13 @@ void AsyncHttpClient::respose_notifier_event_handler() {
     eventfd_t value;
     eventfd_read(respose_notifier_fd, &value);
 
-    if (response != nullptr && delegate != nullptr)
-        delegate->response_received(this, *(move(response)));
+    while (response_queue.size()) {
+        auto response = move(response_queue.front());
+        response_queue.pop();
+
+        if (delegate != nullptr)
+            delegate->response_received(this, *(move(response)));
+    }
 }
 
 /* EventHandler overrides */

@@ -8,6 +8,7 @@
 #include <curl/curl.h>
 #include <stdexcept>
 #include <vector>
+#include <queue>
 
 using namespace std;
 
@@ -100,7 +101,7 @@ protected:
     void respose_notifier_event_handler();
 
 private:
-    unique_ptr<HttpResponse> response;
+    queue<unique_ptr<HttpResponse>> response_queue;
     int respose_notifier_fd = -1;
     int timer_fd = -1;
     int still_running;
