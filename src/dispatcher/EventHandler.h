@@ -19,6 +19,7 @@ public:
 
 protected:
     int link(int fd, uint32_t events);
+    int modify_link(int fd, uint32_t events);
     int unlink(int fd);
     int unlink_all_events();
 

@@ -74,6 +74,30 @@ int EventHandler::link(int fd, uint32_t events) {
     return res;
 }
 
+int EventHandler::modify_link(int fd, uint32_t events) {
+    auto ev_it = events_map.find(fd);
+    if(ev_it == events_map.end()) {
+        err("modify_link for NX fd: %d, failover to link()", fd);
+        return link(fd, events);
+    }
+
+    if (epoll_fd < 0)
+        return -1;
+
+    struct epoll_event ev;
+    memset(&ev, 0, sizeof(epoll_event));
+    ev.events = events;
+    ev.data.fd = fd;
+
+    int res = epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev);
+    if (res == 0) {
+        ev_it->second = events;
+    } else {
+        err("EPOLL_CTL_MOD failed for fd: %d : %s", fd, strerror(errno));
+    }
+
+    return res;
+}
 int EventHandler::unlink(int fd) {
     if (epoll_fd < 0)
         return -1;

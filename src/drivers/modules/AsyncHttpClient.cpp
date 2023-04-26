@@ -295,14 +295,15 @@ void AsyncHttpClient::set_sock(SockInfo *sock_info, curl_socket_t sock_fd, CURL 
     int events = ((action & CURL_POLL_IN) ? EPOLLIN : 0) |
                  ((action & CURL_POLL_OUT) ? EPOLLOUT : 0);
 
-    if (sock_info->sock_fd)
-        unlink(sock_info->sock_fd);
-
     sock_info->sock_fd = sock_fd;
     sock_info->action = action;
     sock_info->easy = easy;
 
-    link(sock_fd, events);
+    if (sock_info->sock_fd) {
+        modify_link(sock_info->sock_fd, events);
+    } else {
+        link(sock_fd, events);
+    }
 }
 
 void AsyncHttpClient::rem_sock(SockInfo *sock_info) {
@@ -313,6 +314,7 @@ void AsyncHttpClient::rem_sock(SockInfo *sock_info) {
         unlink(sock_info->sock_fd);
 
     free(sock_info);
+    sock_info = nullptr;
 }
 
 void AsyncHttpClient::socket_event_handler(curl_socket_t sock_fd, int events) {
