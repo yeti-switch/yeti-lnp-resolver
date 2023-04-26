@@ -175,7 +175,7 @@ void Resolver::make_http_request(Resolver* resolver,
                                  const HttpRequest &http_request) {
 
     if (http_client == nullptr) {
-        http_client = make_unique<AsyncHttpClient>();
+        http_client = std::make_unique<AsyncHttpClient>();
         http_client->set_delegate(this);
     }
 
