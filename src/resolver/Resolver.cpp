@@ -380,7 +380,7 @@ void Resolver::prepare_request(const RecvData &recv_data, ResolverRequest &out) 
     }
 
     out.data = string(msg+data_offset,static_cast<size_t>(data_len));
-    info("prepare request: db_id:%d, type:%d, data:%s", out.db_id, out.type, out.data.c_str());
+    dbg("prepare request: db_id:%d, type:%d, data:%s", out.db_id, out.type, out.data.c_str());
 }
 
 void Resolver::prepare_reply(const ResolverRequest &request,

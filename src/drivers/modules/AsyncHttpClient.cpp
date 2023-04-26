@@ -189,7 +189,7 @@ int AsyncHttpClient::make_request(const HttpRequest &request) {
         throw error("error buffer initializing error");
     }
 
-    info("adding easy %p to multi %p (%s)", easy, multi, url);
+    dbg("adding easy %p to multi %p (%s)", easy, multi, url);
 
     // add handle
     CURLMcode rc = curl_multi_add_handle(multi, easy);
@@ -265,7 +265,7 @@ void AsyncHttpClient::check_multi_info() {
         }
 
         response_queue.push(move(response));
-        info("DONE: %s => (%d) %s", eff_url, res, conn->error);
+        dbg("DONE: %s => (%d) %s", eff_url, res, conn->error);
 
         curl_multi_remove_handle(multi, easy);
         curl_easy_cleanup(easy);
@@ -328,7 +328,7 @@ void AsyncHttpClient::socket_event_handler(curl_socket_t sock_fd, int events) {
     check_multi_info();
 
     if (still_running <= 0) {
-        info("last transfer done, kill timeout");
+        dbg("last transfer done, kill timeout");
         set_timer_value(-1);
     }
 }
