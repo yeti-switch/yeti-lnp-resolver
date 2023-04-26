@@ -211,6 +211,8 @@ int AsyncHttpClient::make_request(const HttpRequest &request) {
 int AsyncHttpClient::socket_cb(CURL *easy, curl_socket_t sock_fd, int what, SockInfo *sock_info) {
     const char *whatstr[] = { "none", "IN", "OUT", "INOUT", "REMOVE" };
 
+    if(what == CURL_POLL_NONE) return 0;
+
     if (what == CURL_POLL_REMOVE) {
         dbg("remove socket");
         rem_sock(sock_info);
@@ -292,8 +294,18 @@ void AsyncHttpClient::add_sock(curl_socket_t sock_fd, CURL *easy, int action) {
 }
 
 void AsyncHttpClient::set_sock(SockInfo *sock_info, curl_socket_t sock_fd, CURL *easy, int action) {
-    int events = ((action & CURL_POLL_IN) ? EPOLLIN : 0) |
-                 ((action & CURL_POLL_OUT) ? EPOLLOUT : 0);
+    int events = EPOLLERR;
+    switch(action) {
+    case CURL_POLL_IN:
+        events |= EPOLLIN;
+        break;
+    case CURL_POLL_OUT:
+        events |= EPOLLOUT;
+        break;
+    case CURL_POLL_INOUT:
+        events |= EPOLLOUT | EPOLLIN;
+        break;
+    }
 
     sock_info->sock_fd = sock_fd;
     sock_info->action = action;
@@ -319,7 +331,8 @@ void AsyncHttpClient::rem_sock(SockInfo *sock_info) {
 
 void AsyncHttpClient::socket_event_handler(curl_socket_t sock_fd, int events) {
     int action = ((events & EPOLLIN) ? CURL_CSELECT_IN : 0) |
-                 ((events & EPOLLOUT) ? CURL_CSELECT_OUT : 0);
+                 ((events & EPOLLOUT) ? CURL_CSELECT_OUT : 0) |
+                 ((events & EPOLLERR) ? CURL_CSELECT_ERR : 0);
 
     CURLMcode rc = curl_multi_socket_action(multi, sock_fd, action, &still_running);
     if (rc != CURLM_OK) {
