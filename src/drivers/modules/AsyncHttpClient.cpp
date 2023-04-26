@@ -59,7 +59,8 @@ static size_t write_cb_static(void *ptr, size_t size, size_t nmemb, ConnInfo *co
 /* HttpClient */
 
 AsyncHttpClient::AsyncHttpClient()
-    : EventHandler() {
+  : EventHandler()
+{
     init_timer();
     init_respose_notifier();
     multi = curl_multi_init();
@@ -307,15 +308,15 @@ void AsyncHttpClient::set_sock(SockInfo *sock_info, curl_socket_t sock_fd, CURL 
         break;
     }
 
-    sock_info->sock_fd = sock_fd;
-    sock_info->action = action;
-    sock_info->easy = easy;
-
     if (sock_info->sock_fd) {
         modify_link(sock_info->sock_fd, events);
     } else {
         link(sock_fd, events);
     }
+
+    sock_info->sock_fd = sock_fd;
+    sock_info->action = action;
+    sock_info->easy = easy;
 }
 
 void AsyncHttpClient::rem_sock(SockInfo *sock_info) {
