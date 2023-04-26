@@ -52,7 +52,7 @@ class CMhashCsvDriver: public CDriver
     void showInfo() const override;
     void resolve(ResolverRequest &request,
                  Resolver *resolver,
-                 ResolverDelegate *delegate) const override;
+                 ResolverHandler *handler) const override;
     void parse(const string &data, ResolverRequest &request) const override;
 
     const CDriverCfg::CfgUniqId_t getUniqueId() const override

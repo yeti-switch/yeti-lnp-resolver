@@ -182,7 +182,7 @@ void CCnamHttpDriver::showInfo() const
  */
 void CCnamHttpDriver::resolve(ResolverRequest &request,
                          Resolver *resolver,
-                         ResolverDelegate *delegate) const {
+                         ResolverHandler *handler) const {
 
     //parse inData as json
     std::unique_ptr<cJSON, void(*)(cJSON*)> request_json(
@@ -205,8 +205,8 @@ void CCnamHttpDriver::resolve(ResolverRequest &request,
     http_request.timeout_ms = cfg.timeout;
     http_request.headers = { "Content-Type: application/json" };
 
-    if (delegate != nullptr)
-        delegate->make_http_request(resolver, request, http_request);
+    if (handler != nullptr)
+        handler->make_http_request(resolver, request, http_request);
 }
 
 void CCnamHttpDriver::parse(const string &data, ResolverRequest &request) const {

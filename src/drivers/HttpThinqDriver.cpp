@@ -163,7 +163,7 @@ void CHttpThinqDriver::showInfo() const
  */
 void CHttpThinqDriver::resolve(ResolverRequest &request,
                                Resolver *resolver,
-                               ResolverDelegate *delegate) const {
+                               ResolverHandler *handler) const {
     /*
    * Request URL:
    * https://api.thinq.com/lrn/extended/9194841422?format=json
@@ -183,8 +183,8 @@ void CHttpThinqDriver::resolve(ResolverRequest &request,
     http_request.url = dstURL.c_str();
     http_request.headers = { "Content-Type: application/json" };
 
-    if (delegate != nullptr)
-        delegate->make_http_request(resolver, request, http_request);
+    if (handler != nullptr)
+        handler->make_http_request(resolver, request, http_request);
 }
 
 void CHttpThinqDriver::parse(const string &data, ResolverRequest &request) const {

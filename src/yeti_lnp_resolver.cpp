@@ -54,7 +54,7 @@ int main(int argc,char *argv[])
 			throw std::string("can't init resolvers");
 		}
 
-		transport::instance()->set_delegate(resolver::instance());
+		transport::instance()->set_handler(resolver::instance());
 		lnp_cache::instance()->start();
 		dispatcher::instance()->loop();
 	} catch(std::string &s){

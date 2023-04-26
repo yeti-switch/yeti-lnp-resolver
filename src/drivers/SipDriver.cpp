@@ -152,7 +152,7 @@ void CSipDriver::showInfo() const
  */
 void CSipDriver::resolve(ResolverRequest &request,
                          Resolver *resolver,
-                         ResolverDelegate *delegate) const {
+                         ResolverHandler *handler) const {
 
    /*
     * Request SIP Invite message

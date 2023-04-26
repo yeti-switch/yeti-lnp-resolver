@@ -17,8 +17,8 @@ Transport::~Transport() {
     shutdown_sock();
 }
 
-void Transport::set_delegate(TransportDelegate *delegate) {
-    this->delegate = delegate;
+void Transport::set_handler(TransportHandler *transport_handler) {
+    handler = transport_handler;
 }
 
 int Transport::init_sock() {
@@ -155,8 +155,8 @@ int Transport::handle_event(int fd, uint32_t events, bool &stop) {
         return -1;
     }
 
-    if (delegate != nullptr)
-        delegate->data_received(this, data);
+    if (handler != nullptr)
+        handler->data_received(this, data);
 
     return 0;
 }

@@ -44,10 +44,10 @@ struct HttpResponse {
 };
 
 /**
- * @brief AsyncHttpClientDelegate
+ * @brief AsyncHttpClientHandler
  */
 
-class AsyncHttpClientDelegate {
+class AsyncHttpClientHandler {
 public:
     virtual void response_received(AsyncHttpClient *http_client,
                                    const HttpResponse &response) = 0;
@@ -68,10 +68,9 @@ public:
           runtime_error(fmterror(fmt, args ...).get()) { }
     };
 
-    AsyncHttpClient();
+    AsyncHttpClient(AsyncHttpClientHandler *http_handler);
     virtual ~AsyncHttpClient();
 
-    void set_delegate(AsyncHttpClientDelegate *delegate);
     int make_request(const HttpRequest &request);
 
     int socket_cb(CURL *easy, curl_socket_t sock_fd, int what, SockInfo *sock_info);
@@ -106,5 +105,5 @@ private:
     int timer_fd = -1;
     int still_running;
     CURLM *multi;
-    AsyncHttpClientDelegate *delegate;
+    AsyncHttpClientHandler *handler;
 };

@@ -126,7 +126,7 @@ void CMhashCsvDriver::showInfo() const
  */
 void CMhashCsvDriver::resolve(ResolverRequest &request,
                          Resolver *resolver,
-                         ResolverDelegate *delegate) const {
+                         ResolverHandler *handler) const {
     /*
     * CSV file has a format with following fields:
     * 0730112354,AT&T mobile,0901234455

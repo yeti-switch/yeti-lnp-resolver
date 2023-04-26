@@ -26,7 +26,7 @@ typedef struct RecvData {
     size_t length;
 } RecvData;
 
-class TransportDelegate {
+class TransportHandler {
 public:
     virtual void data_received(Transport *transport, const RecvData &recv_data) = 0;
 };
@@ -37,7 +37,7 @@ public:
     Transport();
     virtual ~Transport();
 
-    void set_delegate(TransportDelegate *delegate);
+    void set_handler(TransportHandler *transport_handler);
     int send_data(string data, const ClientInfo &client_info);
     int send_data(const void *buf, size_t size, const ClientInfo &client_info);
 
@@ -53,5 +53,5 @@ protected:
 
 private:
     int sock_fd = -1;
-    TransportDelegate *delegate;
+    TransportHandler *handler;
 };

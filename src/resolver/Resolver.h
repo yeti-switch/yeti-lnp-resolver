@@ -33,10 +33,10 @@ typedef struct ResolverRequest {
 } ResolverRequest;
 
 /**
- * @brief Resolver Delegate
+ * @brief Resolver Handler
  */
 
- class ResolverDelegate {
+ class ResolverHandler {
 public:
     virtual void make_http_request(Resolver* resolver,
                                    const ResolverRequest &request,
@@ -47,9 +47,9 @@ public:
  * @brief Resolver class
  */
 class Resolver :
-    public TransportDelegate,
-    public AsyncHttpClientDelegate,
-    public ResolverDelegate {
+    public TransportHandler,
+    public AsyncHttpClientHandler,
+    public ResolverHandler {
 
 public:
     Resolver() = default;
@@ -57,16 +57,16 @@ public:
 
     bool configure();
 
-    /* TransportDelegate */
+    /* TransportHandler */
     virtual void data_received(Transport *transport,
                                const RecvData &recv_data) override;
 
-    /* ResolverDelegate */
+    /* ResolverHandler */
     virtual void make_http_request(Resolver* resolver,
                                    const ResolverRequest &request,
                                    const HttpRequest &http_request) override;
 
-    /* AsyncHttpClientDelegate */
+    /* AsyncHttpClientHandler */
     virtual void response_received(AsyncHttpClient *http_client,
                                    const HttpResponse &response) override;
 

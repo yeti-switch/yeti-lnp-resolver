@@ -12,7 +12,7 @@ using std::unique_ptr;
 
 class Resolver;
 struct ResolverRequest;
-class ResolverDelegate;
+class ResolverHandler;
 
 /**
  * @brief Resolver driver class
@@ -60,7 +60,7 @@ class CDriver
     virtual int getDriverType() const { return DriverTypeTagged; };
     virtual void resolve(ResolverRequest &request,
                          Resolver *resolver,
-                         ResolverDelegate *delegate) const = 0;
+                         ResolverHandler *handler) const = 0;
 
     virtual void parse(const string &data, ResolverRequest &request) const = 0;
 

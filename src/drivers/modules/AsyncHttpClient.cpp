@@ -58,8 +58,8 @@ static size_t write_cb_static(void *ptr, size_t size, size_t nmemb, ConnInfo *co
 
 /* HttpClient */
 
-AsyncHttpClient::AsyncHttpClient()
-  : EventHandler()
+AsyncHttpClient::AsyncHttpClient(AsyncHttpClientHandler *http_handler)
+  : handler(http_handler)
 {
     init_timer();
     init_respose_notifier();
@@ -72,10 +72,6 @@ AsyncHttpClient::AsyncHttpClient()
 
 AsyncHttpClient::~AsyncHttpClient() {
     curl_multi_cleanup(multi);
-}
-
-void AsyncHttpClient::set_delegate(AsyncHttpClientDelegate *delegate) {
-    this->delegate = delegate;
 }
 
 /* request */
@@ -453,8 +449,8 @@ void AsyncHttpClient::respose_notifier_event_handler() {
         auto response = move(response_queue.front());
         response_queue.pop();
 
-        if (delegate != nullptr)
-            delegate->response_received(this, *(move(response)));
+        if (handler != nullptr)
+            handler->response_received(this, *(move(response)));
     }
 }
 

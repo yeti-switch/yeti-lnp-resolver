@@ -135,7 +135,7 @@ void CHttpBulkvsDriver::showInfo() const
  */
 void CHttpBulkvsDriver::resolve(ResolverRequest &request,
                                 Resolver *resolver,
-                                ResolverDelegate *delegate) const {
+                                ResolverHandler *handler) const {
   /*
    * Request URL:
    * {url}/?id={token}&did={inData}&format=json
@@ -158,8 +158,8 @@ void CHttpBulkvsDriver::resolve(ResolverRequest &request,
     http_request.auth_type = ECAuth::BASIC;
     http_request.timeout_ms = mCfg->getTimeout();
 
-    if (delegate != nullptr)
-        delegate->make_http_request(resolver, request, http_request);
+    if (handler != nullptr)
+        handler->make_http_request(resolver, request, http_request);
 }
 
  void CHttpBulkvsDriver::parse(const string &data, ResolverRequest &request) const {

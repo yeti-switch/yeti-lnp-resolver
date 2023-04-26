@@ -102,9 +102,9 @@ bool Resolver::configure()
 }
 
 /**
- * @brief Transport delegate func
+ * @brief Transport handler func
  */
-void Resolver::data_received(Transport *transopot, const RecvData &recv_data) {
+void Resolver::data_received(Transport *transport, const RecvData &recv_data) {
     ResolverRequest request;
 
     try
@@ -169,14 +169,13 @@ void Resolver::resolve(ResolverRequest &request) {
         handle_request_is_done(request, driver);
 }
 
-/* ResolverDelegate */
+/* ResolverHandler */
 void Resolver::make_http_request(Resolver* resolver,
                                  const ResolverRequest &request,
                                  const HttpRequest &http_request) {
 
     if (http_client == nullptr) {
-        http_client = std::make_unique<AsyncHttpClient>();
-        http_client->set_delegate(this);
+        http_client = std::make_unique<AsyncHttpClient>(this);
     }
 
     waiting_requests[request.id] = std::move(request);
@@ -184,7 +183,7 @@ void Resolver::make_http_request(Resolver* resolver,
 }
 
 /**
- * @brief AsyncHttpClient delegate func
+ * @brief AsyncHttpClient handler func
  */
 void Resolver::response_received(AsyncHttpClient *http_client, const HttpResponse &response) {
 
@@ -337,7 +336,7 @@ void Resolver::prepare_request(const RecvData &recv_data, ResolverRequest &out) 
     out.type = msg[5];
     dbg("db_id %d, type: %d", out.db_id, out.type);
 
-    int data_offset, data_len;
+    size_t data_offset, data_len;
 
     //check type
     switch(out.type) {
