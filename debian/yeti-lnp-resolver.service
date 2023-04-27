@@ -13,4 +13,4 @@ LimitCORE=infinity
 ExecStart=/usr/bin/yeti_lnp_resolver -p /var/run/yeti_lnp_resolver.pid
 PIDFile=/var/run/yeti_lnp_resolver.pid
 Type=forking
-Restart=on-abnormal
+Restart=always
