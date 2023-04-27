@@ -1,3 +1,8 @@
+yeti-lnp-resolver (0.1.8) stable; urgency=medium
+  * remove forking
+  * yeti-lnp-resolver.service: forking -> simple
+ -- Michael Furmur <furmur@pm.me>  Thu, 27 Apr 2023 23:30:55 +0300
+
 yeti-lnp-resolver (0.1.7) stable; urgency=medium
   * yeti-lnp-resolver.service: Restart on-abnormal -> always
   * fix exit code on config/init errors
