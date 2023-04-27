@@ -6,7 +6,6 @@ using std::string;
 #include <list>
 
 struct global_cfg_t {
-	bool daemonize;
 	int pid;
 	char *pid_file;
 	std::list<string> bind_urls;

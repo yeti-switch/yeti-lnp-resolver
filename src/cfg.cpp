@@ -8,7 +8,6 @@ struct global_cfg_t cfg;
 #define DEFAULT_PID_FILE	"/var/run/yeti_mgmt.pid"
 
 global_cfg_t::global_cfg_t():
-	daemonize(true),
 	pid(0),
 	pid_file(0)
 {}
