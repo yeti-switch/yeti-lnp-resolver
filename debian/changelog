@@ -1,3 +1,8 @@
+yeti-lnp-resolver (0.1.7) stable; urgency=medium
+  * yeti-lnp-resolver.service: Restart on-abnormal -> always
+  * fix exit code on config/init errors
+ -- Michael Furmur <furmur@pm.me>  Thu, 27 Apr 2023 20:08:30 +0300
+
 yeti-lnp-resolver (0.1.6) stable; urgency=medium
   * PrometheusExporter
     - add 'yeti_lnp_resolver_' prefix for metrics
