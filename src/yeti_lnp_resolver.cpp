@@ -16,6 +16,8 @@
 
 int main(int argc,char *argv[])
 {
+	int ret = 1;
+
 	parse_opts(argc,argv);
 	if(!cfg.validate_opts()) {
 		usage();
@@ -54,6 +56,7 @@ int main(int argc,char *argv[])
 		}
 		lnp_cache::instance()->start();
 		dispatcher::instance()->loop();
+		ret = 0;
 	} catch(std::string &s){
 		err("%s",s.c_str());
 	} catch(std::exception &e) {
@@ -65,6 +68,6 @@ int main(int argc,char *argv[])
 	info("terminated");
 	close_log();
 
-	return 0;
+	return ret;
 }
 
