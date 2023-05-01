@@ -1,4 +1,4 @@
-#include "Resolver.h"
+﻿#include "Resolver.h"
 #include "cfg.h"
 #include "cache.h"
 #include "drivers/Driver.h"
@@ -7,6 +7,8 @@
 
 #include <pqxx/pqxx>
 #include <sys/time.h>
+
+#define CNFRM_RESPONSE_HDR_SIZE 4
 
 #define TAGGED_REQ_VERSION 0
 #define TAGGED_PDU_HDR_SIZE 7
@@ -109,6 +111,12 @@ void Resolver::data_received(Transport *transport, const RecvData &recv_data) {
 
     try
     {
+        // make confirmational reply (RTT)
+        string reply;
+        prepare_confrm_reply(recv_data, request, reply);
+        transport::instance()->send_data(reply, recv_data.client_info);
+
+        // make resolvation
         prepare_request(recv_data, request);
         resolve(request);
     } catch(const string & e) {
@@ -309,6 +317,34 @@ void Resolver::handle_request_is_done(const ResolverRequest &request, CDriver *d
 
 /* Static functions */
 
+void Resolver::prepare_confrm_reply(const RecvData &recv_data, ResolverRequest &request, string &out) {
+
+    /* common req layout:
+    *    4 byte - request id
+    */
+
+    uint32_t id;
+    auto &msg = recv_data.data;
+    auto &len = recv_data.length;
+
+    request.type = TAGGED_REQ_VERSION;
+    request.client_info = std::move(recv_data.client_info);
+
+    if (len < CNFRM_RESPONSE_HDR_SIZE) {
+        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request too small");
+    }
+
+    id = *(uint32_t *)msg;
+
+    // compose header
+    char header[CNFRM_RESPONSE_HDR_SIZE];
+    memset(header, '\0', CNFRM_RESPONSE_HDR_SIZE);
+    *(uint32_t *)header = id;
+
+    // compose result
+    out = string(header, CNFRM_RESPONSE_HDR_SIZE);
+}
+
 void Resolver::prepare_request(const RecvData &recv_data, ResolverRequest &out) {
 
     /* common req layout:
@@ -327,7 +363,7 @@ void Resolver::prepare_request(const RecvData &recv_data, ResolverRequest &out) 
     out.is_done = false;
     gettimeofday(&out.req_start, nullptr);
 
-    if(len < 6) {
+    if (len < 6) {
         throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request too small");
     }
 

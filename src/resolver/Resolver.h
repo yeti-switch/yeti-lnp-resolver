@@ -85,6 +85,8 @@ private:
     using Database_t = std::map<CDriverCfg::CfgUniqId_t, unique_ptr<CDriver> >;
     static bool loadResolveDrivers(Database_t & db);
 
+
+    static void prepare_confrm_reply(const RecvData &recv_data, ResolverRequest &request, string &out);
     static void prepare_request(const RecvData &recv_data, ResolverRequest &out);
 
     static void prepare_tagged_reply(const ResolverRequest &request,
