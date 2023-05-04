@@ -43,6 +43,10 @@ int Transport::bind_sock() {
         throw string("no listen endpoints specified. check your config");
     }
 
+    if(cfg.bind_urls.size() > 1) {
+        throw string("multiple listen endpoints are not supported");
+    }
+
     for(const auto &i : cfg.bind_urls) {
         const char *url = i.c_str();
         if (parseAddr(url, &uri_c) == -1)
@@ -108,11 +112,13 @@ int Transport::recv_data(RecvData &out) {
     return ret;
 }
 
-int Transport::send_data(string data, const ClientInfo &client_info) {
+int Transport::send_data(const string &data, const ClientInfo &client_info)
+{
     return send_data(data.c_str(), data.length(), client_info);
 }
 
-int Transport::send_data(const void *buf, size_t size, const ClientInfo &client_info) {
+int Transport::send_data(const void *buf, size_t size, const ClientInfo &client_info)
+{
     if (sock_fd < 0)
         return -1;
 
@@ -156,7 +162,7 @@ int Transport::handle_event(int fd, uint32_t events, bool &stop) {
     }
 
     if (handler != nullptr)
-        handler->data_received(this, data);
+        handler->on_data_received(this, data);
 
     return 0;
 }

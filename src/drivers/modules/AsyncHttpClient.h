@@ -49,8 +49,9 @@ struct HttpResponse {
 
 class AsyncHttpClientHandler {
 public:
-    virtual void response_received(AsyncHttpClient *http_client,
-                                   const HttpResponse &response) = 0;
+    virtual void on_http_response_received(
+        AsyncHttpClient *http_client,
+        const HttpResponse &response) = 0;
 };
 
 /**

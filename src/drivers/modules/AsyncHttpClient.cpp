@@ -228,7 +228,7 @@ int AsyncHttpClient::socket_cb(CURL *easy, curl_socket_t sock_fd, int what, Sock
     return 0;
 }
 
-int AsyncHttpClient::timer_cb(CURLM *multi, long timeout_ms) {
+int AsyncHttpClient::timer_cb(CURLM *, long timeout_ms) {
     set_timer_value(timeout_ms);
     return 0;
 }
@@ -450,13 +450,13 @@ void AsyncHttpClient::respose_notifier_event_handler() {
         response_queue.pop();
 
         if (handler != nullptr)
-            handler->response_received(this, *(move(response)));
+            handler->on_http_response_received(this, *(move(response)));
     }
 }
 
 /* EventHandler overrides */
 
-int AsyncHttpClient::handle_event(int fd, uint32_t events, bool &stop) {
+int AsyncHttpClient::handle_event(int fd, uint32_t events, bool &) {
     if (fd == timer_fd) {
         timer_event_handler();
     } else if (fd == respose_notifier_fd) {

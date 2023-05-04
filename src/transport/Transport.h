@@ -28,7 +28,7 @@ typedef struct RecvData {
 
 class TransportHandler {
 public:
-    virtual void data_received(Transport *transport, const RecvData &recv_data) = 0;
+    virtual void on_data_received(Transport *transport, const RecvData &recv_data) = 0;
 };
 
 class Transport: public EventHandler
@@ -38,7 +38,7 @@ public:
     virtual ~Transport();
 
     void set_handler(TransportHandler *transport_handler);
-    int send_data(string data, const ClientInfo &client_info);
+    int send_data(const string &data, const ClientInfo &client_info);
     int send_data(const void *buf, size_t size, const ClientInfo &client_info);
 
     /* EventHandler overrides */

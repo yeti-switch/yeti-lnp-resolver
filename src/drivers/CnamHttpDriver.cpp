@@ -180,9 +180,11 @@ void CCnamHttpDriver::showInfo() const
 /**
  * @brief Executing resolving procedure
  */
-void CCnamHttpDriver::resolve(ResolverRequest &request,
-                         Resolver *resolver,
-                         ResolverHandler *handler) const {
+void CCnamHttpDriver::resolve(
+    ResolverRequest &request,
+    Resolver *resolver,
+    ResolverHandler *handler) const
+{
 
     //parse inData as json
     std::unique_ptr<cJSON, void(*)(cJSON*)> request_json(

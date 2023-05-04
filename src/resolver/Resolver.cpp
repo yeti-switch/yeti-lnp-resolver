@@ -3,22 +3,137 @@
 #include "cache.h"
 #include "drivers/Driver.h"
 #include "drivers/DriverConfig.h"
-#include "statistics/prometheus/prometheus_exporter.h"
 
 #include <pqxx/pqxx>
-#include <sys/time.h>
-
-#define CNFRM_RESPONSE_HDR_SIZE 4
 
 #define TAGGED_REQ_VERSION 0
-#define TAGGED_PDU_HDR_SIZE 7
-#define TAGGED_ERR_RESPONSE_HDR_SIZE 6
-
 #define CNAM_REQ_VERSION 1
-#define CNAM_HDR_SIZE 10
-#define CNAM_RESPONSE_HDR_SIZE 8
 
 static const char * sLoadLNPConfigSTMT = "SELECT * FROM load_lnp_databases()";
+
+#pragma pack(1)
+
+struct hdr_common {
+    uint32_t id; //request/reply id
+};
+
+struct req_hdr_common {
+    hdr_common common;
+    uint8_t database_id;
+    uint8_t type; //0 - tagged, 1 - cnam
+};
+
+struct req_hdr_tagged {
+    uint8_t number_size;
+};
+
+struct req_hdr_cnam {
+    uint32_t json_size;
+};
+
+/* tagged req layout:
+*    4 byte - request id
+*    1 byte - database id
+*    1 byte - request type = 0
+*    1 byte - number length
+*    n bytes - number data
+*/
+/* cnam req layout:
+*    4 byte - request id
+*    1 byte - database id
+*    1 byte - request type = 1
+*    4 bytes - json length
+*    n bytes - json data
+*/
+struct req_hdr_cominbed {
+    req_hdr_common hdr;
+    union {
+        req_hdr_tagged tagged;
+        req_hdr_cnam cnam;
+    } spec;
+};
+
+struct reply_hdr_tagged {
+    hdr_common common;
+    uint8_t code;
+    uint8_t data_size;
+    uint8_t lrn_size;
+};
+
+struct reply_hdr_tagged_err {
+    hdr_common common;
+    uint8_t code;
+    uint8_t desc_size;
+};
+
+struct reply_hdr_cnam {
+    hdr_common common;
+    uint32_t json_size;
+};
+
+#pragma pack()
+
+#define TAGGED_PDU_HDR_SIZE (sizeof(req_hdr_common) + sizeof(req_hdr_tagged))
+#define CNAM_HDR_SIZE (sizeof(req_hdr_common) + sizeof(req_hdr_cnam))
+
+ResolverRequest::ResolverRequest()
+  : req_start(std::chrono::system_clock::now()),
+    is_done(false)
+{}
+
+void ResolverRequest::parse(const RecvData &recv_data)
+{
+    client_info = std::move(recv_data.client_info);
+
+    const auto &len = recv_data.length;
+
+    if (len < sizeof(req_hdr_common)) {
+        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request is too small");
+    }
+
+    const auto &req =
+        *reinterpret_cast<const req_hdr_cominbed *>(recv_data.data);
+
+    id = req.hdr.common.id;
+    db_id = req.hdr.database_id;
+    type = req.hdr.type;
+
+    dbg("db_id %d, type: %d", db_id, type);
+
+    size_t data_offset, data_len;
+
+    //check type
+    switch(type) {
+    case TAGGED_REQ_VERSION:
+        if(len < TAGGED_PDU_HDR_SIZE) {
+            throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request is too small");
+        }
+        data_offset = TAGGED_PDU_HDR_SIZE;
+        data_len = req.spec.tagged.number_size;
+        break;
+    case CNAM_REQ_VERSION:
+        if(len < CNAM_HDR_SIZE) {
+            throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request is too small");
+        }
+        data_offset = CNAM_HDR_SIZE;
+        data_len = req.spec.cnam.json_size;
+        break;
+    default:
+        type = TAGGED_REQ_VERSION; //force tagged reply
+        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "unknown request type");
+    }
+
+    if((data_offset+data_len) > len) {
+        err("malformed request: too big data_len:%lu", data_len);
+        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "malformed request");
+    }
+
+    data.assign(recv_data.data + data_offset, data_len);
+
+    dbg("parsed request: db_id:%d, type:%d, data:%.*s",
+        db_id, type, static_cast<int>(data.length()), data.c_str());
+}
+
 
 /**
  * @brief Load resolver drivers configuration from database table
@@ -95,7 +210,7 @@ bool Resolver::configure()
   bool rv = loadResolveDrivers(dbMap);
   if (rv)
   {
-    //Mutex required to proper processing SIGHUP signal
+    //Mutex required for proper SIGHUP signal processing
     guard(mDriversMutex);
     mDriversMap.swap(dbMap);
   }
@@ -106,38 +221,27 @@ bool Resolver::configure()
 /**
  * @brief Transport handler func
  */
-void Resolver::data_received(Transport *transport, const RecvData &recv_data) {
+void Resolver::on_data_received(Transport *, const RecvData &recv_data)
+{
     ResolverRequest request;
 
-    try
-    {
-        // make confirmational reply (RTT)
-        string reply;
-        prepare_confrm_reply(recv_data, request, reply);
-        transport::instance()->send_data(reply, recv_data.client_info);
-
-        // make resolvation
-        prepare_request(recv_data, request);
+    try {
+        request.parse(recv_data);
+        send_provisional_reply(request);
         resolve(request);
     } catch(const string & e) {
         err("got string exception: %s",e.c_str());
-
-        string reply;
-        prepare_error_reply(request, ECErrorId::GENERAL_ERROR, e, reply);
-        transport::instance()->send_data(reply, request.client_info);
-
+        send_error_reply(request, ECErrorId::GENERAL_ERROR, e);
     } catch(const CResolverError & e) {
         err("got resolve exception: <%u> %s", static_cast<uint>(e.code()), e.what());
-
-        string reply;
-        prepare_error_reply(request, e.code(), e.what(), reply);
-        transport::instance()->send_data(reply, request.client_info);
+        send_error_reply(request, e.code(), e.what());
     }
 }
 
-void Resolver::resolve(ResolverRequest &request) {
+void Resolver::resolve(ResolverRequest &request)
+{
 
-    //Mutex required to proper processing SIGHUP signal
+    //Mutex required for proper SIGHUP signal processing
     guard(mDriversMutex);
 
     auto mapItem = mDriversMap.find(request.db_id);
@@ -154,20 +258,16 @@ void Resolver::resolve(ResolverRequest &request) {
             "request type is unsupported");
     }
 
-    try
-    {
+    try {
         driver->requests_count_increment();
         driver->resolve(request, this, this);
-    }
-    catch(const CDriver::error &e) {
+    } catch(const CDriver::error &e) {
         driver->requests_failed_increment();
         throw CResolverError(ECErrorId::DRIVER_RESOLVING_ERROR, e.what());
-    }
-    catch(const AsyncHttpClient::error &e) {
+    } catch(const AsyncHttpClient::error &e) {
         driver->requests_failed_increment();
         throw CResolverError(ECErrorId::GENERAL_RESOLVING_ERROR, e.what());
-    }
-    catch(...) {
+    } catch(...) {
         driver->requests_failed_increment();
         throw CResolverError(ECErrorId::GENERAL_RESOLVING_ERROR,
                          "unknown resovling exception");
@@ -178,22 +278,24 @@ void Resolver::resolve(ResolverRequest &request) {
 }
 
 /* ResolverHandler */
-void Resolver::make_http_request(Resolver* resolver,
+void Resolver::make_http_request(Resolver*,
                                  const ResolverRequest &request,
-                                 const HttpRequest &http_request) {
+                                 const HttpRequest &http_request)
+{
 
     if (http_client == nullptr) {
         http_client = std::make_unique<AsyncHttpClient>(this);
     }
 
-    waiting_requests[request.id] = std::move(request);
+    waiting_requests.emplace(request.id, std::move(request));
     http_client->make_request(http_request);
 }
 
 /**
  * @brief AsyncHttpClient handler func
  */
-void Resolver::response_received(AsyncHttpClient *http_client, const HttpResponse &response) {
+void Resolver::on_http_response_received(AsyncHttpClient *, const HttpResponse &response)
+{
 
     auto it = waiting_requests.find(response.id);
     if (it == waiting_requests.end()) {
@@ -201,25 +303,19 @@ void Resolver::response_received(AsyncHttpClient *http_client, const HttpRespons
         return;
     }
 
-    ResolverRequest request = std::move(it->second);
+    ResolverRequest request(std::move(it->second));
     waiting_requests.erase(it);
 
-    try
-    {
+    try {
         parse_response(response, request);
-    } catch(const string & e){
+    } catch(const string & e) {
         err("got string exception: %s", e.c_str());
 
-        string reply;
-        prepare_error_reply(request, ECErrorId::GENERAL_ERROR, e, reply);
-        transport::instance()->send_data(reply, request.client_info);
-
-    } catch(const CResolverError & e){
+        send_error_reply(request, ECErrorId::GENERAL_ERROR, e);
+    } catch(const CResolverError & e) {
         err("got resolve exception: <%u> %s", static_cast<uint>(e.code()), e.what());
 
-        string reply;
-        prepare_error_reply(request, e.code(), e.what(), reply);
-        transport::instance()->send_data(reply, request.client_info);
+        send_error_reply(request, e.code(), e.what());
     }
 
     if (waiting_requests.empty() && this->http_client != nullptr) {
@@ -228,13 +324,14 @@ void Resolver::response_received(AsyncHttpClient *http_client, const HttpRespons
 }
 
 void Resolver::parse_response(const HttpResponse &response,
-                              ResolverRequest &request) {
+                              ResolverRequest &request)
+{
 
     //Mutex required to proper processing SIGHUP signal
     guard(mDriversMutex);
 
     auto mapItem = mDriversMap.find(request.db_id);
-    if (mapItem == mDriversMap.end()) {
+    if(mapItem == mDriversMap.end()) {
         throw CResolverError(ECErrorId::GENERAL_RESOLVING_ERROR, "unknown database id");
     }
 
@@ -255,16 +352,13 @@ void Resolver::parse_response(const HttpResponse &response,
         return;
     }
 
-    try
-    {
+    try {
         driver->parse(response.data, request);
         request.is_done = true;
-    }
-    catch (const CDriver::error &e) {
+    } catch (const CDriver::error &e) {
         driver->requests_failed_increment();
         throw CResolverError(ECErrorId::DRIVER_RESOLVING_ERROR, e.what());
-    }
-    catch (...) {
+    } catch (...) {
         driver->requests_failed_increment();
         throw CResolverError(ECErrorId::GENERAL_RESOLVING_ERROR,
                          "unknown resovling exception");
@@ -274,34 +368,30 @@ void Resolver::parse_response(const HttpResponse &response,
         handle_request_is_done(request, driver);
 }
 
-void Resolver::handle_request_is_done(const ResolverRequest &request, CDriver *driver) {
+void Resolver::handle_request_is_done(const ResolverRequest &request, CDriver *driver)
+{
 
     // metrics
     if (driver != nullptr) {
-        timeval req_end;
-        timeval req_diff;
-        uint64_t req_diff_millis;
-
-        gettimeofday(&req_end, nullptr);
-        timersub(&req_end, &request.req_start, &req_diff);
-        req_diff_millis = req_diff.tv_sec * 1000 + req_diff.tv_usec / 1000;
+        auto req_diff = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now() - request.req_start);
 
         if(driver->getDriverType() == CDriver::DriverTypeTagged) {
-            dbg("Resolved (by '%s/%d'): %s -> %s (tag: '%s') [in %ld.%06ld seconds]",
+            dbg("Resolved (by '%s/%d'): %s -> %s (tag: '%s') [in %ld ms]",
                 driver->getName(), driver->getUniqueId(),
                 request.data.c_str(),
                 request.result.localRoutingNumber.c_str(),
                 request.result.localRoutingTag.c_str(),
-                req_diff.tv_sec, req_diff.tv_usec);
+                req_diff.count());
         } else {
-            dbg("Resolved (by '%s/%d'): %s -> %s [in %ld.%06ld seconds]",
+            dbg("Resolved (by '%s/%d'): %s -> %s [in %ld ms]",
                 driver->getName(), driver->getUniqueId(),
                 request.data.data(),
                 request.result.rawData.data(),
-                req_diff.tv_sec, req_diff.tv_usec);
+                req_diff.count());
         }
 
-        driver->requests_finished_increment(req_diff_millis);
+        driver->requests_finished_increment(req_diff.count());
     }
 
     // cache result
@@ -310,202 +400,114 @@ void Resolver::handle_request_is_done(const ResolverRequest &request, CDriver *d
             new cache_entry(driver->getUniqueId(), request.data, request.result));
 
     // reply to client
-    string reply;
-    prepare_reply(request, reply);
-    transport::instance()->send_data(reply, request.client_info);
+    send_reply(request);
 }
 
-/* Static functions */
-
-void Resolver::prepare_confrm_reply(const RecvData &recv_data, ResolverRequest &request, string &out) {
-
-    /* common req layout:
-    *    4 byte - request id
-    */
-
-    uint32_t id;
-    auto &msg = recv_data.data;
-    auto &len = recv_data.length;
-
-    request.type = TAGGED_REQ_VERSION;
-    request.client_info = std::move(recv_data.client_info);
-
-    if (len < CNFRM_RESPONSE_HDR_SIZE) {
-        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request too small");
-    }
-
-    id = *(uint32_t *)msg;
-
-    // compose header
-    char header[CNFRM_RESPONSE_HDR_SIZE];
-    memset(header, '\0', CNFRM_RESPONSE_HDR_SIZE);
-    *(uint32_t *)header = id;
-
-    // compose result
-    out = string(header, CNFRM_RESPONSE_HDR_SIZE);
+void Resolver::send_provisional_reply(const ResolverRequest &request)
+{
+    transport::instance()->send_data(
+        &request.id, sizeof(request.id), request.client_info);
 }
 
-void Resolver::prepare_request(const RecvData &recv_data, ResolverRequest &out) {
-
-    /* common req layout:
-    *    4 byte - request id
-    *    1 byte - database id
-    *    1 byte - request type
-    *      * 0: lnp_resolve_tagged
-    *      * 1: lnp_resolve_cnam
-    */
-
-    auto & msg = recv_data.data;
-    auto & len = recv_data.length;
-
-    out.type = TAGGED_REQ_VERSION;
-    out.client_info = std::move(recv_data.client_info);
-    out.is_done = false;
-    gettimeofday(&out.req_start, nullptr);
-
-    if (len < 6) {
-        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request too small");
-    }
-
-    out.id = *(uint32_t *)msg;
-    out.db_id = msg[4];
-    out.type = msg[5];
-    dbg("db_id %d, type: %d", out.db_id, out.type);
-
-    size_t data_offset, data_len;
-
-    //check type
-    switch(out.type) {
-    case TAGGED_REQ_VERSION:
-        /* tagged req layout:
-        *    4 byte - request id
-        *    1 byte - database id
-        *    1 byte - request type = 0
-        *    1 byte - number length
-        *    n bytes - number data
-        */
-        if(len < TAGGED_PDU_HDR_SIZE) {
-            throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request too small");
-        }
-        data_offset = TAGGED_PDU_HDR_SIZE;
-        data_len = msg[6];
-        break;
-    case CNAM_REQ_VERSION:
-        /* cnam req layout:
-        *    4 byte - request id
-        *    1 byte - database id
-        *    1 byte - request type = 1
-        *    4 bytes - json length
-        *    n bytes - json data
-        */
-        if(len < CNAM_HDR_SIZE) {
-            throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "request too small");
-        }
-        data_offset = CNAM_HDR_SIZE;
-        data_len = *(uint32_t *)(msg+6);
-        break;
-    default:
-        out.type = TAGGED_REQ_VERSION; //force tagged reply
-        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "uknown request type");
-    }
-
-    if((data_offset+data_len) > len) {
-        err("malformed request: too big data_len");
-        throw CResolverError(ECErrorId::PSQL_INVALID_REQUEST, "malformed request");
-    }
-
-    out.data = string(msg+data_offset,static_cast<size_t>(data_len));
-    dbg("prepare request: db_id:%d, type:%d, data:%s", out.db_id, out.type, out.data.c_str());
-}
-
-void Resolver::prepare_reply(const ResolverRequest &request,
-                            string &out) {
+void Resolver::send_reply(const ResolverRequest &request)
+{
     switch(request.type) {
     case TAGGED_REQ_VERSION:
-        prepare_tagged_reply(request, out);
+        send_tagged_reply(request);
         break;
     case CNAM_REQ_VERSION:
-        prepare_json_reply(request, out);
+        send_json_reply(request);
         break;
     }
 }
 
-void Resolver::prepare_tagged_reply(const ResolverRequest &request,
-                                    string &out) {
-    // compose header
-    char header[TAGGED_PDU_HDR_SIZE];
-    memset(header, '\0', TAGGED_PDU_HDR_SIZE);
-    *(uint32_t *)header = request.id;
-    header[4]= char(ECErrorId::NO_ERROR);
-    header[5]= char(request.result.localRoutingNumber.size()
-        + request.result.localRoutingTag.size());
-    header[6]= char(request.result.localRoutingNumber.size());
+void Resolver::send_tagged_reply(const ResolverRequest &request)
+{
+    string buf;
+    buf.resize(sizeof(reply_hdr_tagged));
 
-    // compose result
-    out = string(header, TAGGED_PDU_HDR_SIZE)
-        + request.result.localRoutingNumber
-        + request.result.localRoutingTag;
+    auto &reply = *reinterpret_cast<reply_hdr_tagged *>(&buf[0]);
+
+    reply.common.id = request.id;
+    reply.code = static_cast<typeof(reply.code)>(ECErrorId::NO_ERROR);
+    reply.data_size =
+        request.result.localRoutingNumber.size() +
+        request.result.localRoutingTag.size();
+    reply.lrn_size = request.result.localRoutingNumber.size();
+
+    buf += request.result.localRoutingNumber;
+    buf += request.result.localRoutingTag;
+
+    transport::instance()->send_data(buf, request.client_info);
 }
 
-void Resolver::prepare_json_reply(const ResolverRequest &request,
-                                  string &out) {
-    // compose header
-    char header[CNAM_RESPONSE_HDR_SIZE];
-    memset(header, '\0', CNAM_RESPONSE_HDR_SIZE);
-    *(uint32_t *)header = request.id;
-    *(uint32_t *)(header+4) = request.result.rawData.size();
+void Resolver::send_json_reply(const ResolverRequest &request)
+{
+    string buf;
+    buf.resize(sizeof(reply_hdr_cnam));
 
-    // compose result
-    out = string(header, CNAM_RESPONSE_HDR_SIZE) + request.result.rawData;
+    auto &reply = *reinterpret_cast<reply_hdr_cnam *>(&buf[0]);
+
+    reply.common.id = request.id;
+    reply.json_size = request.result.rawData.size();
+
+    buf += request.result.rawData;
+
+    transport::instance()->send_data(buf, request.client_info);
 }
 
-void Resolver::prepare_error_reply(const ResolverRequest &request,
-                                   const ECErrorId code,
-                                   const string &description,
-                                   string &out) {
+void Resolver::send_error_reply(const ResolverRequest &request,
+                                const ECErrorId code,
+                                const string &description)
+{
     switch(request.type) {
     case TAGGED_REQ_VERSION:
-        prepare_tagged_error_reply(request, code, description, out);
+        send_tagged_error_reply(request, code, description);
         break;
     case CNAM_REQ_VERSION:
-        prepare_json_error_reply(request, code, description, out);
+        send_json_error_reply(request, code, description);
         break;
     }
 }
 
-void Resolver::prepare_tagged_error_reply(const ResolverRequest &request,
-                                          const ECErrorId code,
-                                          const string &s,
-                                          string &out) {
-    // compose header
-    char header[TAGGED_ERR_RESPONSE_HDR_SIZE];
-    memset(header, '\0', TAGGED_ERR_RESPONSE_HDR_SIZE);
-    *(uint32_t *)header = request.id;
-    header[4]= static_cast<char>(code);
-    header[5]= static_cast<char>(s.size());
+void Resolver::send_tagged_error_reply(const ResolverRequest &request,
+                                       const ECErrorId code,
+                                       const string &description)
+{
+    string buf;
+    buf.resize(sizeof(reply_hdr_tagged_err));
 
-    // compose result
-    out = string(header, TAGGED_ERR_RESPONSE_HDR_SIZE) + s;
+    auto &reply = *reinterpret_cast<reply_hdr_tagged_err *>(&buf[0]);
+
+    reply.common.id = request.id;
+    reply.code = static_cast<typeof(reply.code)>(code);
+    reply.desc_size = static_cast<typeof(reply.desc_size)>(description.size());
+
+    buf += description;
+
+    transport::instance()->send_data(buf, request.client_info);
 }
 
-void Resolver::prepare_json_error_reply(const ResolverRequest &request,
-                                        const ECErrorId code,
-                                        const string &s,
-                                        string &out) {
+void Resolver::send_json_error_reply(const ResolverRequest &request,
+                                     const ECErrorId code,
+                                     const string &status)
+{
     // compose json
     string json("{\"error\":{\"code\":");
     json += std::to_string((int)code);
     json += ",\"reason\":\"";
-    json += s;
+    json += status;
     json += "\"}}";
 
-    // compose header
-    char header[CNAM_RESPONSE_HDR_SIZE];
-    memset(header, '\0', CNAM_RESPONSE_HDR_SIZE);
+    string buf;
+    buf.resize(sizeof(reply_hdr_cnam));
 
-    *(uint32_t *)header = request.id;
-    *(uint32_t *)(header+4) = json.size();
+    auto &reply = *reinterpret_cast<reply_hdr_cnam *>(&buf[0]);
 
-    // compose result
-    out = string(header, CNAM_RESPONSE_HDR_SIZE) + json;
+    reply.common.id = request.id;
+    reply.json_size = json.size();
+
+    buf += json;
+
+    transport::instance()->send_data(buf, request.client_info);
 }
