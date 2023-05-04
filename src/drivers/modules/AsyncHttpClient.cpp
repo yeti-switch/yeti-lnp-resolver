@@ -340,7 +340,7 @@ void AsyncHttpClient::socket_event_handler(curl_socket_t sock_fd, int events) {
     check_multi_info();
 
     if (still_running <= 0) {
-        dbg("last transfer done, kill timeout");
+        dbg("last transfer done. clear timeout");
         set_timer_value(-1);
     }
 }
