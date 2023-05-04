@@ -1,3 +1,12 @@
+yeti-lnp-resolver (1.0.0) stable; urgency=medium
+  * drop nanomsg support
+  * asynchronous requests processing
+  * use asynchronous HTTP client for all related drivers
+  * change PDU. add request_id
+  * send pong-PDU for the requests to be processed. used for RTT failover.
+  * remove forking. service: use Restart=always
+ -- Michael Furmur <furmur@pm.me>  Thu, 04 May 2023 23:57:01 +0300
+
 yeti-lnp-resolver (0.1.6) stable; urgency=medium
   * PrometheusExporter
     - add 'yeti_lnp_resolver_' prefix for metrics
