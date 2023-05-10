@@ -8,43 +8,58 @@
 #include <unistd.h>
 
 Transport::Transport()
-    : EventHandler() {
-    init_sock();
-    bind_sock();
+  : EventHandler()
+{
+    bind_endpoints();
 }
 
-Transport::~Transport() {
-    shutdown_sock();
+Transport::~Transport()
+{
+    shutdown_endpoints();
 }
 
-void Transport::set_handler(TransportHandler *transport_handler) {
+void Transport::set_handler(TransportHandler *transport_handler)
+{
     handler = transport_handler;
 }
 
-int Transport::init_sock() {
-    // create udp socket
-    sock_fd = socket(PF_INET, SOCK_DGRAM, 0);
+int Transport::init_sock()
+{
+    int fd = socket(PF_INET, SOCK_DGRAM, 0);
 
-    if (sock_fd >= 0)
-        link(sock_fd, EPOLLIN);
+    if(fd < 0)
+        return fd;
 
-    return sock_fd;
-}
-
-int Transport::bind_sock() {
-    if (sock_fd < 0)
+    if(0!=link(fd, EPOLLIN)) {
+        close(fd);
         return -1;
-
-    bool binded = false;
-    int ret;
-    UriComponents uri_c;
-
-    if(cfg.bind_urls.empty()){
-        throw string("no listen endpoints specified. check your config");
     }
 
-    if(cfg.bind_urls.size() > 1) {
-        throw string("multiple listen endpoints are not supported");
+    return fd;
+}
+
+int Transport::bind_sock_to(int fd, const char *host, int port)
+{
+    if (fd < 0)
+        return -1;
+
+    struct sockaddr_in s_addr;
+    memset(&s_addr, 0, sizeof(s_addr));
+    s_addr.sin_family = AF_INET;
+    s_addr.sin_addr.s_addr = inet_addr(host);
+    s_addr.sin_port = htons(port);
+
+    return bind(fd, (struct sockaddr*) &s_addr, sizeof(s_addr));
+}
+
+int Transport::bind_endpoints()
+{
+    int ret;
+    bool binded = false;
+    UriComponents uri_c;
+
+    if(cfg.bind_urls.empty()) {
+        throw string("no listen endpoints specified. check your config");
     }
 
     for(const auto &i : cfg.bind_urls) {
@@ -54,18 +69,27 @@ int Transport::bind_sock() {
 
         // if 'protocol' is empty use udp transport
         if (strlen(uri_c.proto) == 0) {
-            ret = bind_sock_to(uri_c.host, uri_c.port);
+            int fd = init_sock();
+            if (ret < 0) {
+                err("failed to create socket for url '%s': %d (%s)",
+                    url, errno, strerror(errno));
+                continue;
+            }
+
+            ret = bind_sock_to(fd, uri_c.host, uri_c.port);
 
             if (ret < 0) {
-                err("can't bind to url '%s': %d (%s)", url, errno, strerror(errno));
+                err("can't bind to url '%s': %d (%s)",
+                    url, errno, strerror(errno));
                 continue;
             }
         } else {
-            err("unsupported '%s' protocol for url '%s'", uri_c.proto, url);
+            err("unsupported '%s' protocol for url '%s'",
+                uri_c.proto, url);
             continue;
         }
 
-        binded = binded || true;
+        binded |= true;
         info("listen on %s",url);
     }
 
@@ -77,29 +101,28 @@ int Transport::bind_sock() {
     return 0;
 }
 
-int Transport::bind_sock_to(const char *host, int port) {
-    if (sock_fd < 0)
-        return -1;
-
-    struct sockaddr_in s_addr;
-    memset(&s_addr, 0, sizeof(s_addr));
-    s_addr.sin_family = AF_INET;
-    s_addr.sin_addr.s_addr = inet_addr(host);
-    s_addr.sin_port = htons(port);
-
-    return bind(sock_fd, (struct sockaddr*) &s_addr, sizeof(s_addr));
+int Transport::shutdown_endpoints()
+{
+    iterate_events_map([](int fd, uint32_t) {
+        shutdown(fd, SHUT_RDWR);
+        close(fd);
+    });
+    return 0;
 }
 
-int Transport::recv_data(RecvData &out) {
-    if (sock_fd < 0)
+int Transport::recv_data(int fd, RecvData &out)
+{
+    if (fd < 0)
         return -1;
 
     memset(&out.data, 0, sizeof(char) * MSG_SZ);
     out.length = 0;
+
+    out.client_info.recv_fd = fd;
     memset(&out.client_info.addr, 0, sizeof(out.client_info.addr));
     out.client_info.addr_size = sizeof(out.client_info.addr);
 
-    int ret = recvfrom(sock_fd,
+    int ret = recvfrom(fd,
                        out.data, MSG_SZ, 0,
                        (struct sockaddr*)&out.client_info.addr,
                        &out.client_info.addr_size);
@@ -119,11 +142,11 @@ int Transport::send_data(const string &data, const ClientInfo &client_info)
 
 int Transport::send_data(const void *buf, size_t size, const ClientInfo &client_info)
 {
-    if (sock_fd < 0)
+    if (client_info.recv_fd < 0)
         return -1;
 
     int len;
-    len = sendto(sock_fd, buf, size, 0,
+    len = sendto(client_info.recv_fd, buf, size, 0,
                 (struct sockaddr*)&client_info.addr,
                  client_info.addr_size);
 
@@ -133,20 +156,12 @@ int Transport::send_data(const void *buf, size_t size, const ClientInfo &client_
     return len;
 }
 
-int Transport::shutdown_sock() {
-    if (sock_fd < 0)
-        return -1;
-
-    shutdown(sock_fd, SHUT_RDWR);
-    close(sock_fd);
-    return 0;
-}
-
 /* EventHandler overrides */
 
-int Transport::handle_event(int fd, uint32_t events, bool &stop) {
+int Transport::handle_event(int fd, uint32_t events, bool &stop)
+{
     RecvData data;
-    int ret = recv_data(data);
+    int ret = recv_data(fd, data);
 
     if (ret < 0) {
         if (errno == EINTR) return -1;

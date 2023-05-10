@@ -55,6 +55,13 @@ int EventHandler::unlink_all_events() {
     return 0;
 }
 
+void EventHandler::iterate_events_map(
+    std::function<void (int fd, uint32_t events)> callback)
+{
+    for(const auto &ev: events_map)
+        callback(ev.first, ev.second);
+}
+
 int EventHandler::link(int fd, uint32_t events) {
     if (epoll_fd < 0)
         return -1;

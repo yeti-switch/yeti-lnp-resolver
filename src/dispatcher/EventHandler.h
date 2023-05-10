@@ -2,6 +2,7 @@
 
 #include <map>
 #include <stdint.h>
+#include <functional>
 
 using namespace std;
 
@@ -22,6 +23,8 @@ protected:
     int modify_link(int fd, uint32_t events);
     int unlink(int fd);
     int unlink_all_events();
+
+    void iterate_events_map(std::function<void (int fd, uint32_t events)> callback);
 
 private:
     void add_events(int fd, uint32_t events);

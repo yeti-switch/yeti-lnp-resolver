@@ -18,6 +18,7 @@ using transport = singleton<Transport>;
 typedef struct ClientInfo {
     struct sockaddr_in addr;
     socklen_t addr_size;
+    int recv_fd;
 } ClientInfo;
 
 typedef struct RecvData {
@@ -46,12 +47,12 @@ public:
 
 protected:
     int init_sock();
-    int bind_sock();
-    int bind_sock_to(const char *host, int port);
-    int recv_data(RecvData &out);
-    int shutdown_sock();
+    int bind_sock_to(int fd, const char *host, int port);
+    int bind_endpoints();
+    int shutdown_endpoints();
+
+    int recv_data(int fd, RecvData &out);
 
 private:
-    int sock_fd = -1;
     TransportHandler *handler;
 };
