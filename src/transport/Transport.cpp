@@ -70,7 +70,7 @@ int Transport::bind_endpoints()
         // if 'protocol' is empty use udp transport
         if (strlen(uri_c.proto) == 0) {
             int fd = init_sock();
-            if (ret < 0) {
+            if (fd < 0) {
                 err("failed to create socket for url '%s': %d (%s)",
                     url, errno, strerror(errno));
                 continue;
