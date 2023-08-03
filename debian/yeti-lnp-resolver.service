@@ -1,6 +1,7 @@
 [Unit]
 Description=YETI Local Number Portability remote database driver
 Documentation=https://yeti-switch.org/docs/
+After=postgresql.service network-online.target
 
 [Install]
 WantedBy=multi-user.target
