@@ -123,7 +123,7 @@ CHttpBulkvsDriver::CHttpBulkvsDriver(const CDriverCfg::RawConfig_t & data)
  */
 void CHttpBulkvsDriver::showInfo() const
 {
-    info("[%u/%s] '%s' driver => address <%s> [timeout - %u seconds]",
+    info("[%u/%s] '%s' driver => address <%s> [timeout - %u milliseconds]",
     mCfg->getUniqId(),
     mCfg->getLabel(), getName(),
     mCfg->getUrl().c_str(),

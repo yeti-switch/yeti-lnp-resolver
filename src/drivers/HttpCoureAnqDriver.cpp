@@ -133,7 +133,7 @@ CHttpCoureAnqDriver::CHttpCoureAnqDriver(const CDriverCfg::RawConfig_t & data)
  */
 void CHttpCoureAnqDriver::showInfo() const
 {
-    info("[%u/%s] '%s' driver => base_url:<%s>, timeout:%u, country_code:%s",
+    info("[%u/%s] '%s' driver => base_url:<%s>, timeout:%u milliseconds, country_code:%s",
         cfg.getUniqId(),
         cfg.getLabel(), getName(),\
         cfg.base_url.c_str(),

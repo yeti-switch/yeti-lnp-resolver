@@ -170,7 +170,7 @@ CCnamHttpDriver::CCnamHttpDriver(const CDriverCfg::RawConfig_t & data)
  */
 void CCnamHttpDriver::showInfo() const
 {
-    info("[%u/%s] '%s' driver => url:<%s>, timeout:%u",
+    info("[%u/%s] '%s' driver => url:<%s>, timeout:%u milliseconds",
         cfg.getUniqId(),
         cfg.getLabel(), getName(),\
         cfg.url.c_str(),

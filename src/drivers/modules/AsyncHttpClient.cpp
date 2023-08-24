@@ -77,7 +77,7 @@ AsyncHttpClient::~AsyncHttpClient() {
 /* request */
 
 int AsyncHttpClient::make_request(const HttpRequest &request) {
-    dbg("AsyncHttpClient make request");
+    //dbg("AsyncHttpClient make request");
     CURL *easy = curl_easy_init();
 
     if (!easy) {
@@ -186,7 +186,7 @@ int AsyncHttpClient::make_request(const HttpRequest &request) {
         throw error("error buffer initializing error");
     }
 
-    dbg("adding easy %p to multi %p (%s)", easy, multi, url);
+    //dbg("adding easy %p to multi %p (%s)", easy, multi, url);
 
     // add handle
     CURLMcode rc = curl_multi_add_handle(multi, easy);
@@ -206,21 +206,21 @@ int AsyncHttpClient::make_request(const HttpRequest &request) {
 /* callbacks */
 
 int AsyncHttpClient::socket_cb(CURL *easy, curl_socket_t sock_fd, int what, SockInfo *sock_info) {
-    const char *whatstr[] = { "none", "IN", "OUT", "INOUT", "REMOVE" };
+    //const char *whatstr[] = { "none", "IN", "OUT", "INOUT", "REMOVE" };
 
     if(what == CURL_POLL_NONE) return 0;
 
     if (what == CURL_POLL_REMOVE) {
-        dbg("remove socket");
+        //dbg("remove socket");
         rem_sock(sock_info);
     }
     else {
         if(!sock_info) {
-            dbg("adding data: %s", whatstr[what]);
+            //dbg("adding data: %s", whatstr[what]);
             add_sock(sock_fd, easy, what);
         }
         else {
-            dbg("changing action from %s to %s", whatstr[sock_info->action], whatstr[what]);
+            //dbg("changing action from %s to %s", whatstr[sock_info->action], whatstr[what]);
             set_sock(sock_info, sock_fd, easy, what);
         }
     }
@@ -264,7 +264,7 @@ void AsyncHttpClient::check_multi_info() {
         }
 
         response_queue.push(move(response));
-        dbg("DONE: %s => (%d) %s", eff_url, res, conn->error);
+        //dbg("DONE: %s => (%d) %s", eff_url, res, conn->error);
 
         curl_multi_remove_handle(multi, easy);
         curl_easy_cleanup(easy);

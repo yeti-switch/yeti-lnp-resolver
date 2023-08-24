@@ -148,7 +148,7 @@ CHttpThinqDriver::CHttpThinqDriver(const CDriverCfg::RawConfig_t & data)
 void CHttpThinqDriver::showInfo() const
 {
   info("[%u/%s] '%s' driver => address <%s://%s:%u> "
-       "[username - %s, timeout - %u seconds]",
+       "[username - %s, timeout - %u milliseconds]",
        mCfg->getUniqId(),
        mCfg->getLabel(), getName(),
        mCfg->getProtocol(),

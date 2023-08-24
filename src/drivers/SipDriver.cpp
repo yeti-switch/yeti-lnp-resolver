@@ -138,7 +138,7 @@ CSipDriver::CSipDriver(const CDriverCfg::RawConfig_t & data)
 void CSipDriver::showInfo() const
 {
   info("[%u/%s] '%s' driver => address <%s://%s:%u> "
-       "[timeout - %u seconds]",
+       "[timeout - %u milliseconds]",
        mCfg->getUniqId(),
        mCfg->getLabel(), getName(),
        mCfg->getProtocol(),

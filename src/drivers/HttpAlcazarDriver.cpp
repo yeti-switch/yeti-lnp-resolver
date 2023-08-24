@@ -134,7 +134,7 @@ CHttpAlcazarDriver::CHttpAlcazarDriver(const CDriverCfg::RawConfig_t & data)
  */
 void CHttpAlcazarDriver::showInfo() const
 {
-  info("[%u/%s] '%s' driver => address <%s://%s:%u> [timeout - %u seconds]",
+  info("[%u/%s] '%s' driver => address <%s://%s:%u> [timeout - %u milliseconds]",
       mCfg->getUniqId(),
       mCfg->getLabel(), getName(),
       mCfg->getProtocol(),
