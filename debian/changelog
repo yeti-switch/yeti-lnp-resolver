@@ -1,3 +1,8 @@
+yeti-lnp-resolver (1.0.3) stable; urgency=medium
+  * remove excess debug logging
+  * fix time units in drivers initialization logs
+ -- Michael Furmur <furmur@pm.me>  Fri, 25 Aug 2023 14:43:07 +0300
+
 yeti-lnp-resolver (1.0.2) stable; urgency=medium
   * fix endpoints binding
   * yeti-lnp-resolver.service add deps from postgresql, network-online
