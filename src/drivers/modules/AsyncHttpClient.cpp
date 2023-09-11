@@ -72,8 +72,10 @@ AsyncHttpClient::AsyncHttpClient(AsyncHttpClientHandler *http_handler)
 
 AsyncHttpClient::~AsyncHttpClient() {
     curl_multi_cleanup(multi);
-    if (timer_fd >= 0)
+    if (timer_fd >= 0) {
+        unlink(timer_fd);
         close(timer_fd);
+    }
 }
 
 /* request */
