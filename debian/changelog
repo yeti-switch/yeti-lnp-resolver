@@ -1,3 +1,7 @@
+yeti-lnp-resolver (1.0.6) stable; urgency=medium
+  * AsyncHttpClient: fix response notifier eventfd leak
+ -- Michael Furmur <furmur@pm.me>  Wed, 13 Sep 2023 12:13:16 +0300
+
 yeti-lnp-resolver (1.0.5) stable; urgency=medium
   * AsyncHttpClient: fix timerfd unlink
  -- Michael Furmur <furmur@pm.me>  Mon, 11 Sep 2023 23:47:18 +0300
