@@ -72,6 +72,12 @@ AsyncHttpClient::AsyncHttpClient(AsyncHttpClientHandler *http_handler)
 
 AsyncHttpClient::~AsyncHttpClient() {
     curl_multi_cleanup(multi);
+
+    if (respose_notifier_fd >= 0) {
+        unlink(respose_notifier_fd);
+        close(respose_notifier_fd);
+    }
+
     if (timer_fd >= 0) {
         unlink(timer_fd);
         close(timer_fd);
