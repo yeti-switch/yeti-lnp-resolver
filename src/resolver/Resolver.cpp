@@ -134,6 +134,8 @@ void ResolverRequest::parse(const RecvData &recv_data)
         db_id, type, static_cast<int>(data.length()), data.c_str());
 }
 
+Resolver::Resolver()
+    :http_client(this) {}
 
 /**
  * @brief Load resolver drivers configuration from database table
@@ -282,13 +284,8 @@ void Resolver::make_http_request(Resolver*,
                                  const ResolverRequest &request,
                                  const HttpRequest &http_request)
 {
-
-    if (http_client == nullptr) {
-        http_client = std::make_unique<AsyncHttpClient>(this);
-    }
-
     waiting_requests.emplace(request.id, std::move(request));
-    http_client->make_request(http_request);
+    http_client.make_request(http_request);
 }
 
 /**
@@ -316,10 +313,6 @@ void Resolver::on_http_response_received(AsyncHttpClient *, const HttpResponse &
         err("got resolve exception: <%u> %s", static_cast<uint>(e.code()), e.what());
 
         send_error_reply(request, e.code(), e.what());
-    }
-
-    if (waiting_requests.empty() && this->http_client != nullptr) {
-        this->http_client = nullptr;
     }
 }
 

@@ -56,7 +56,7 @@ class Resolver :
     public ResolverHandler {
 
 public:
-    Resolver() = default;
+    Resolver();
     ~Resolver() = default;
 
     bool configure();
@@ -105,7 +105,7 @@ private:
     Database_t mDriversMap;
     mutex mDriversMutex;
 
-    unique_ptr<AsyncHttpClient> http_client;
+    AsyncHttpClient http_client;
     map<uint32_t, ResolverRequest> waiting_requests;
 };
 
