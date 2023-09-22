@@ -135,7 +135,8 @@ void ResolverRequest::parse(const RecvData &recv_data)
 }
 
 Resolver::Resolver()
-    :http_client(this) {}
+  : http_client(this)
+{}
 
 /**
  * @brief Load resolver drivers configuration from database table
