@@ -52,12 +52,14 @@ jobs:
       - name: install curl
         run: apt update && apt -y --no-install-recommends install curl
 
+      - name: clone yeti-lnp-resolver repo for ci/deploy.sh
+        uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v3
         with:
           name: pkg
 
-      - name: clone yeti-lnp-resolver repo for ci/deploy.sh
-        uses: actions/checkout@v4
+      - run: ls -l
 
       - name: upload pkg to the bookworm 1.13
         run: ci/deploy.sh bookworm 1.13 main *.deb
