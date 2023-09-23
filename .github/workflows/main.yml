@@ -50,7 +50,7 @@ jobs:
     container: debian:bookworm
     steps:
       - name: install curl
-        run: apt update && apt -y --no-install-recommends install curl
+        run: apt update && apt -y --no-install-recommends install curl ca-certificates
 
       - name: clone yeti-lnp-resolver repo for ci/deploy.sh
         uses: actions/checkout@v4
