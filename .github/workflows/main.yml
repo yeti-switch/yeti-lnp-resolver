@@ -40,7 +40,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: pkg
-          path: *.deb
+          path: '*.deb'
           retention-days: 1
 
   deploy:
