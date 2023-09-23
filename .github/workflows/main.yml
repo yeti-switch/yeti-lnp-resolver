@@ -34,10 +34,13 @@ jobs:
       - name: build package
         run: dpkg-buildpackage -us -uc -b
 
+      - name: mv *.deb to the cwd
+        run: mv ../*.deb .
+
       - uses: actions/upload-artifact@v3
         with:
           name: pkg
-          path: ../*.deb
+          path: *.deb
           retention-days: 1
 
   deploy:
