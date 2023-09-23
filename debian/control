@@ -2,7 +2,7 @@ Source: yeti-lnp-resolver
 Section: net
 Priority: optional
 Maintainer: Michael Furmur <furmur@pm.me>
-Build-Depends: build-essential, debhelper, devscripts, dh-make, pkg-config, libcurl4-openssl-dev, libnanomsg-dev, libpqxx-dev, libssl-dev, zlib1g-dev
+Build-Depends: build-essential, debhelper, devscripts, dh-make, pkg-config, libcurl4-openssl-dev, libpqxx-dev, libssl-dev, zlib1g-dev
 Standards-Version: 3.9.5
 
 Package: yeti-lnp-resolver
