@@ -15,8 +15,18 @@ jobs:
 
       - run: apt update
 
-      - name: clone repo
-        uses: actions/checkout@v3
+      - name: clone yeti-lnp-resolver repo
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: clone prometheus-cpp
+        uses: actions/checkout@v4
+        with:
+          repository: jupp0r/prometheus-cpp
+          ref: v1.1.0
+          path: third/prometheus-cpp
+          submodules: true
 
       - name: install build deps
         run: apt -y --no-install-recommends build-dep .
