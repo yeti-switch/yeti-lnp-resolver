@@ -188,15 +188,20 @@ void CHttpAlcazarDriver::parse(const string &data, ResolverRequest &request) con
      * }
      */
 
-    try {
-      request.result.localRoutingNumber =
-          static_cast<decltype(request.result.localRoutingNumber)> (jsonxx(data)["LRN"]);
-    }
-    catch (std::exception & e)
-    {
-      warn("couldn't parse reply as JSON format: '%s'", data.c_str());
-      throw error(e.what());
-    }
+  try {
+    jsonxx jdata{data};
+    request.result.localRoutingNumber =
+      static_cast<decltype(request.result.localRoutingNumber)> (
+        data["LRN"]);
+    request.result.localRoutingTag =
+      static_cast<decltype(request.result.localRoutingTag)> (
+        data["JURISDICTION"]);
+  }
+  catch (std::exception & e)
+  {
+    warn("couldn't parse reply as JSON format: '%s'", data.c_str());
+    throw error(e.what());
+  }
 
-    request.result.rawData = data;
+  request.result.rawData = data;
 }
