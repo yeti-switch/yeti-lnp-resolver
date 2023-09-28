@@ -192,10 +192,10 @@ void CHttpAlcazarDriver::parse(const string &data, ResolverRequest &request) con
     jsonxx jdata{data};
     request.result.localRoutingNumber =
       static_cast<decltype(request.result.localRoutingNumber)> (
-        data["LRN"]);
+        jdata["LRN"]);
     request.result.localRoutingTag =
       static_cast<decltype(request.result.localRoutingTag)> (
-        data["JURISDICTION"]);
+        jdata["JURISDICTION"]);
   }
   catch (std::exception & e)
   {
